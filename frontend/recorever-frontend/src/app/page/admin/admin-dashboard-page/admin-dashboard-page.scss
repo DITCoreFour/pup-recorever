@@ -15,7 +15,7 @@
       @media (max-width: 768px) {
         display: flex;
         align-items: center;
-        gap: 1.5rem;;
+        gap: 1.5rem;
         margin-bottom: 25px;
       }
     }
@@ -27,9 +27,9 @@
       margin: 0;
 
       @media (max-width: 768px) {
-      font-size: 2rem;
-      text-align: center;
-      line-height: normal;
+        font-size: 2rem;
+        text-align: center;
+        line-height: normal;
       }
     }
 
@@ -68,9 +68,10 @@
     }
   }
 
-  .chart-section {
-    width: 100%;
-    margin-bottom: 24px;
+  .content-area {
+    display: flex;
+    flex-direction: column;
+    gap: 24px; 
   }
 
   .stats-grid {
@@ -78,6 +79,15 @@
     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
     gap: 24px;
     width: 100%;
+  }
+
+  .chart-section {
+    width: 100%;
+    background-color: #ffffff;
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    box-sizing: border-box;
   }
 
   .loading-state {
