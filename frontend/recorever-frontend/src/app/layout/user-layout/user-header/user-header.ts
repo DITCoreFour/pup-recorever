@@ -172,4 +172,14 @@ export class UserHeader implements OnDestroy {
     this.destroy$.next();
     this.destroy$.complete();
   }
+
+  public onLogoClick(): void {
+    const targetRoute = '/app/browse';
+
+    if (this.router.url.includes(targetRoute)) {
+      window.location.reload();
+    } else {
+      this.router.navigate([targetRoute]);
+    }
+  }
 }
