@@ -1,0 +1,198 @@
+@use "sass:color";
+
+$primary-color: #2c3e50;
+$text-main: #333;
+$text-muted: #888;
+$bg-hover: #f5f7fa;
+$border-light: #e0e0e0;
+$header-height: 64px;
+
+.user-top-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: $header-height;
+  padding: 0 10rem;
+  background-color: #ffffff;
+  border-bottom: 1px solid $border-light;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  font-family: 'Inter', sans-serif;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+
+  .app-logo {
+    height: 36px;
+    object-fit: contain;
+  }
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-grow: 1;
+  margin-left: 48px;
+
+  .nav-item {
+    color: $text-muted;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 14px;
+    cursor: pointer;
+    padding: 8px 12px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+
+    &:hover {
+      color: $text-main;
+      background-color: $bg-hover;
+    }
+
+    &.active {
+      color: $primary-color;
+      background-color: color.adjust($primary-color, $lightness: 75%);
+    }
+  }
+}
+
+.user-actions {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.notification-click-area {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.user-profile-wrapper {
+  position: relative;
+}
+
+.profile-click-area {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 8px;
+  transition: background-color 0.2s ease;
+
+  &:hover, &.dropdown-open {
+    background-color: $bg-hover;
+  }
+
+  .profile-avatar-img {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-right: 10px;
+  }
+
+  .profile-info {
+    display: flex;
+    align-items: center;
+
+    .profile-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: $text-main;
+      display: hidden;
+    }
+
+    .profile-dropdown-arrow {
+      margin-left: 6px;
+      font-size: 12px;
+      color: $text-muted;
+    }
+  }
+}
+
+.profile-click-area.dropdown-open .profile-dropdown-arrow {
+      transform: rotate(180deg);
+    }
+    .profile-dropdown-menu {
+      position: absolute;
+      top: 100%;
+      width: 300px;
+      left: -7rem;
+      background-color: $text-main;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      z-index: 100;
+      padding: 10px 0;
+      margin-top: 5px;
+      color: white;
+
+      .dropdown-user-info {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 10px;
+        margin-bottom: 10px;
+        border-bottom: 1px solid $border-light;
+
+        .dropdown-avatar-img {
+          width: 50px;
+          height: 50px;
+          border-radius: 50%;
+          margin-bottom: 5px;
+        }
+
+        .dropdown-name {
+          font-weight: bold;
+          font-size: 16px;
+          /* FIX: Handle long names in dropdown */
+          max-width: 100%;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          padding: 0 10px;
+        }
+
+        .dropdown-email {
+          font-size: 12px;
+          color: color.adjust($text-muted, $lightness: 20%);
+          max-width: 100%;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          padding: 0 10px;
+        }
+      }
+
+      .dropdown-item {
+        display: flex;
+        align-items: center;
+        padding: 10px 15px;
+        cursor: pointer;
+        text-decoration: none;
+        color: white;
+        transition: background-color 0.1s ease;
+
+        &:hover {
+          background-color: $text-muted;
+        }
+
+        .dropdown-item-icon {
+          width: 20px;
+          height: 20px;
+          margin-right: 10px;
+        }
+      }
+
+      .dropdown-divider {
+        height: 1px;
+        background-color: $border-light;
+        margin: 5px 0;
+      }
+    }

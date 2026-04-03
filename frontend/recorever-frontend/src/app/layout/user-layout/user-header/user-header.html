@@ -1,0 +1,67 @@
+<header class="user-top-nav">
+  <div class="logo-container" routerLink="/">
+    <img src="assets/temp_logo.png" alt="Logo" class="app-logo">
+  </div>
+
+  <nav class="nav-links">
+    @for (item of navItems; track item.label) {
+      <a class="nav-item"
+          [class.active]="isRouteActive(item.route || '')"
+          [routerLink]="item.route"
+          [fragment]="item.fragment">
+        {{ item.label }}
+      </a>
+    }
+  </nav>
+
+  <div class="user-actions">
+    @if (currentUser()) {
+      <div class="notification-click-area">
+        <app-notification></app-notification>
+      </div>
+
+      <div class="user-profile-wrapper" #profileSection>
+        <div class="profile-click-area" 
+            (click)="toggleProfileDropdown()" 
+            [class.dropdown-open]="isProfileDropdownOpen">
+          <img [src]="getProfileImageUrl(currentUser()?.profile_picture)" 
+              alt="Profile Avatar" 
+              class="profile-avatar-img">
+          <div class="profile-info">
+            <span class="profile-dropdown-arrow">▿</span>
+          </div>
+        </div>
+
+        @if (isProfileDropdownOpen) {
+          <div class="profile-dropdown-menu">
+            <div class="dropdown-user-info">
+              <img [src]="getProfileImageUrl(currentUser()?.profile_picture)" 
+                  alt="Profile Avatar" 
+                  class="dropdown-avatar-img">
+              <div class="dropdown-name">{{ currentUser()?.name }}</div>
+              <div class="dropdown-email">{{ currentUser()?.email }}</div>
+            </div>
+            
+            @for (item of profileDropdownItems; track item.label) {
+              <div class="dropdown-item" (click)="handleDropdownAction(item)">
+                <img [src]="item.iconPath" alt="" class="dropdown-item-icon">
+                <span>{{ item.label }}</span>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    }
+  </div>
+</header>
+
+@if (isLogoutModalOpen) {
+  <app-confirmation-modal
+      title="Confirm Logout"
+      message="Are you sure you want to log out?"
+      confirmButtonText="Log Out"
+      cancelButtonText="Cancel"
+      (confirm)="onLogoutConfirm()"
+      (cancel)="onLogoutCancel()">
+  </app-confirmation-modal>
+}

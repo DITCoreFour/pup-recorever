@@ -379,4 +379,12 @@ export class UserItemListPage implements OnInit, AfterViewInit, OnDestroy {
     const item = this.selectedItem();
     return item?.reporter_profile_picture ?? null;
   }
+
+  public toggleItemType(type: 'lost' | 'found'): void {
+    if (this.itemType() !== type) {
+      this.itemType.set(type);
+      
+      this.currentPage.set(1); 
+    }
+  }
 }

@@ -70,17 +70,13 @@ export const routes: Routes = [
     path: 'app',
     component: UserLayout,
     children: [
-      { path: 'lost-items',
+      {
+        path: 'browse',
         loadComponent: () =>
           import('./page/user/user-item-list-page/user-item-list-page')
-            .then(m => m.UserItemListPage),
-        data: { itemType: 'lost' }
-      },
-      { path: 'found-items',
-        loadComponent: () =>
-          import('./page/user/user-item-list-page/user-item-list-page')
-            .then(m => m.UserItemListPage),
-        data: { itemType: 'found' }
+              .then((m) => m.UserItemListPage),
+        title: 'Browse Items - Recorever',
+        data: { itemType: 'LOST' } 
       },
       { path: 'report-lost',
         canActivate: [authGuard],

@@ -1,14 +1,33 @@
 <div class="item-list-page">
   <header class="item-list-page__header">
-    <h1 class="item-list-page__title">{{ pageTitle() }}</h1>
+    
+    <div class="header-top-row">
+      <h1 class="item-list-page__title">Browse Items</h1>
+      
+      <div class="type-toggle-container">
+        <button type="button"
+                class="type-toggle-btn" 
+                [class.active]="itemType() === 'lost'" 
+                (click)="toggleItemType('lost')">
+          Lost Items
+        </button>
+        <button type="button"
+                class="type-toggle-btn" 
+                [class.active]="itemType() === 'found'" 
+                (click)="toggleItemType('found')">
+          Found Items
+        </button>
+      </div>
+    </div>
+
     <div class="item-list-page__search-wrapper">
       <div class="search-section">
-      <app-search-bar
-        [suggestions]="searchSuggestions()"
-        (queryChange)="onQueryChange($event)"
-        (search)="onSearchSubmit($event)">
-      </app-search-bar>
-    </div>
+        <app-search-bar
+          [suggestions]="searchSuggestions()"
+          (queryChange)="onQueryChange($event)"
+          (search)="onSearchSubmit($event)">
+        </app-search-bar>
+      </div>
     </div>
 
     <div class="item-list-page__toggle-wrapper">
