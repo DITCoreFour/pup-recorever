@@ -380,11 +380,16 @@ export class UserItemListPage implements OnInit, AfterViewInit, OnDestroy {
     return item?.reporter_profile_picture ?? null;
   }
 
-  public toggleItemType(type: 'lost' | 'found'): void {
+ public toggleItemType(type: 'lost' | 'found'): void {
     if (this.itemType() !== type) {
       this.itemType.set(type);
       
-      this.currentPage.set(1); 
+      this.filters.update(curr => ({ ...curr, type }));
+
+      this.showResolved.set(false);
+      this.filters.update(curr => ({ ...curr, status: 'approved' }));
+
+      this.resetPagination(); 
     }
   }
 }

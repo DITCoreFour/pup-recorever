@@ -28,9 +28,17 @@ $header-height: 64px;
   cursor: pointer;
 
   .app-logo {
-    height: 36px;
+    height: 60px;
     object-fit: contain;
   }
+
+  .app-name {
+    font-size: 18px;
+    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande',
+    'Lucida Sans', Arial, sans-serif;
+    color: #ad1111;
+    margin-left: 5px;
+}
 }
 
 .nav-links {
@@ -52,12 +60,14 @@ $header-height: 64px;
 
     &:hover {
       color: $text-main;
-      background-color: $bg-hover;
     }
 
     &.active {
-      color: $primary-color;
-      background-color: color.adjust($primary-color, $lightness: 75%);
+      background-color: transparent;
+      color: #ad1111;
+      font-weight: bold;
+      text-decoration: underline;
+      text-underline-offset: 10px;
     }
   }
 }
