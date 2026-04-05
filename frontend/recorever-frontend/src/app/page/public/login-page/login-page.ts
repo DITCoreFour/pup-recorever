@@ -40,7 +40,7 @@ export class LoginPage {
             this.router.navigate(['/app']);
           }
         },
-        error: (err) => {
+        error: (err: Error) => {
           this.hasLoginError = true;
           console.error('Login failed:', err);
           this.cdr.detectChanges();
