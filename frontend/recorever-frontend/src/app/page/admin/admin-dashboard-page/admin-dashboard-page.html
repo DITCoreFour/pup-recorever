@@ -20,12 +20,6 @@
 
   @if (dashboardData) {
     <div class="content-area">
-      
-      <div class="chart-section">
-        <app-chart-component [data]="dashboardData.reportsOverTime">
-        </app-chart-component>
-      </div>
-
       <div class="stats-grid">
         <app-stats-card
           title="Total Report"
@@ -50,6 +44,11 @@
           [count]="dashboardData.stats.lostFoundRatio"
           icon="assets/found-items.png">
         </app-stats-card>
+      </div>
+
+      <div class="chart-section">
+        <app-chart-component [data]="dashboardData.reportsOverTime">
+        </app-chart-component>
       </div>
 
     </div>
