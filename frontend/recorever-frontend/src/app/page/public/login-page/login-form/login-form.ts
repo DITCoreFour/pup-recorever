@@ -22,19 +22,19 @@ import { LoginRequest } from '../../../../models/auth-model';
     RouterLink,
   ],
   templateUrl: './login-form.html',
-  styleUrl: './login-form.scss',
+  styleUrls: ['./login-form.scss'],
 })
 export class LoginForm implements OnInit {
   private fb = inject(FormBuilder);
 
-  @Input() loginError = false;
-  @Input() isSubmitting = false;
-  @Output() loginSubmit = new EventEmitter<LoginRequest>();
-  @Output() clearError = new EventEmitter<void>();
+  @Input() public loginError = false;
+  @Input() public isSubmitting = false;
+  @Output() public loginSubmit = new EventEmitter<LoginRequest>();
+  @Output() public clearError = new EventEmitter<void>();
 
-  isPasswordVisible = false;
+  public isPasswordVisible = false;
 
-  loginForm = this.fb.group({
+  public loginForm = this.fb.group({
     email: ['', {
       validators: [Validators.required, Validators.email],
       updateOn: 'change'
@@ -45,7 +45,7 @@ export class LoginForm implements OnInit {
     }],
   });
 
-  ngOnInit(): void {
+  public ngOnInit(): void {
     this.loginForm.valueChanges.subscribe(() => {
       if (this.loginError) {
         this.clearError.emit();
@@ -53,15 +53,15 @@ export class LoginForm implements OnInit {
     });
   }
 
-  get emailControl() {
+  public get emailControl() {
     return this.loginForm.get('email');
   }
 
-  get passwordControl() {
+  public get passwordControl() {
     return this.loginForm.get('password');
   }
 
-  submitForm(): void {
+  public submitForm(): void {
     if (this.loginForm.valid) {
       this.loginSubmit.emit(
         this.loginForm.getRawValue() as LoginRequest
@@ -71,7 +71,21 @@ export class LoginForm implements OnInit {
     }
   }
 
-  togglePasswordVisibility(): void {
+  public togglePasswordVisibility(): void {
     this.isPasswordVisible = !this.isPasswordVisible;
+  }
+
+  public getPasswordInputType(): string {
+    if (this.isPasswordVisible) {
+      return 'text';
+    }
+    return 'password';
+  }
+
+  public getToggleIconSrc(): string {
+    if (this.isPasswordVisible) {
+      return '../../../../../assets/eye-open.png';
+    }
+    return '../../../../../assets/eye-close.png';
   }
 }
