@@ -29,28 +29,12 @@
         </app-search-bar>
       </div>
     </div>
-
-    <div class="item-list-page__toggle-wrapper">
-      <button
-        type="button"
-        class="toggle-button"
-        [class.toggle-button--active]="!showResolved()"
-        (click)="toggleStatus(false)">
-        {{ itemType() === 'found' ? 'Unclaimed Items' : 'Unresolved Items' }}
-      </button>
-      <button
-          type="button"
-          class="toggle-button"
-          [class.toggle-button--active]="showResolved()"
-          (click)="toggleStatus(true)">
-          {{ itemType() === 'found' ? 'Claimed Items' : 'Resolved Items' }}
-      </button>
-    </div>
   </header>
 
   <app-filter
     [locations]="locations()"
     [itemType]="itemType()"
+    [isUserPage]="true"
     (filterChange)="onFilterChange($event)">
   </app-filter>
 

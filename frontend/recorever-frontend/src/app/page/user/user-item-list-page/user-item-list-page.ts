@@ -95,18 +95,18 @@ export class UserItemListPage implements OnInit, AfterViewInit, OnDestroy {
     return this.itemType() === 'found';
   }
 
-  public showResolved = signal<boolean>(false);
   public searchSuggestions = signal<string[]>([]);
-
   public showDeleteModal = signal<boolean>(false);
   public itemToDelete = signal<Report | null>(null);
   public viewCodeItem = signal<Report | null>(null);
   public selectedItem = signal<Report | null>(null);
 
-
   public currentSort = signal<'newest' | 'oldest'>('newest');
   public currentDateFilter = signal<Date | null>(null);
   public currentLocationFilter = signal<string>('');
+  
+  public currentStatusFilter = signal<string>('unresolved');
+  public currentCategoryFilter = signal<string[]>([]);
 
   protected locations = computed(() => {
     const locs = this.allReports()
@@ -128,6 +128,7 @@ export class UserItemListPage implements OnInit, AfterViewInit, OnDestroy {
     let reports = [...this.allReports()];
     const dateFilter = this.currentDateFilter();
     const locationFilter = this.currentLocationFilter();
+    const categoryFilter = this.currentCategoryFilter();
     const sort = this.currentSort();
 
     if (dateFilter) {
@@ -145,6 +146,14 @@ export class UserItemListPage implements OnInit, AfterViewInit, OnDestroy {
       );
     }
 
+    if (categoryFilter && categoryFilter.length > 0) {
+      reports = reports.filter(r => {
+        const lowerName = r.item_name.toLowerCase();
+        return categoryFilter.some((cat: string) =>
+            lowerName.includes(cat.toLowerCase()));
+      });
+    }
+
     reports.sort((a, b) => {
         const dateA = new Date(a.date_reported).getTime();
         const dateB = new Date(b.date_reported).getTime();
@@ -153,7 +162,6 @@ export class UserItemListPage implements OnInit, AfterViewInit, OnDestroy {
 
     return reports;
   });
-
   public codeModalTitle = computed((): string => {
     const item = this.viewCodeItem();
     if (!item) return '';
@@ -238,18 +246,34 @@ export class UserItemListPage implements OnInit, AfterViewInit, OnDestroy {
     this.currentDateFilter.set(state.date);
     this.currentLocationFilter.set(state.location);
 
+    if (state.category !== undefined) {
+      this.currentCategoryFilter.set(state.category);
+    }
+
+    if (state.status !== undefined) {
+      this.currentStatusFilter.set(state.status);
+      this.applyStatusFilter(state.status, this.itemType());
+    } else {
+      this.resetPagination();
+    }
+  }
+
+  private applyStatusFilter(statusVal: string, type: ItemType): void {
+    const isResolved = statusVal === 'resolved';
+    const apiStatus = type === 'found'
+      ? (isResolved ? 'claimed' : 'approved')
+      : (isResolved ? 'resolved' : 'approved');
+
+    this.filters.update(curr => ({ ...curr, status: apiStatus as any }));
     this.resetPagination();
   }
 
-  public toggleStatus(showResolved: boolean): void {
-    this.showResolved.set(showResolved);
-    const type = this.itemType();
-    const statusFilter = type === 'found'
-      ? (showResolved ? 'claimed' : 'approved')
-      : (showResolved ? 'resolved' : 'approved');
-
-    this.filters.update(curr => ({ ...curr, status: statusFilter as any }));
-    this.resetPagination();
+  public toggleItemType(type: 'lost' | 'found'): void {
+    if (this.itemType() !== type) {
+      this.itemType.set(type);
+      this.filters.update(curr => ({ ...curr, type }));
+      this.applyStatusFilter(this.currentStatusFilter(), type);
+    }
   }
 
   public onQueryChange(query: string): void {
@@ -378,18 +402,5 @@ export class UserItemListPage implements OnInit, AfterViewInit, OnDestroy {
   public getUserProfilePicture(): string | null {
     const item = this.selectedItem();
     return item?.reporter_profile_picture ?? null;
-  }
-
- public toggleItemType(type: 'lost' | 'found'): void {
-    if (this.itemType() !== type) {
-      this.itemType.set(type);
-      
-      this.filters.update(curr => ({ ...curr, type }));
-
-      this.showResolved.set(false);
-      this.filters.update(curr => ({ ...curr, status: 'approved' }));
-
-      this.resetPagination(); 
-    }
   }
 }
