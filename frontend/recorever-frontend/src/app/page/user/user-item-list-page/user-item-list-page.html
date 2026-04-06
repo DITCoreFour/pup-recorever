@@ -1,9 +1,17 @@
 <div class="item-list-page">
   <header class="item-list-page__header">
     
-    <div class="header-top-row">
-      <h1 class="item-list-page__title">Browse Items</h1>
-      
+    <div class="header-title-row">
+      <img [src]="itemType() === 'lost' ? 'assets/lost-items.png' :
+          'assets/found-items.png'" 
+           alt="Category Icon" 
+           class="title-icon">
+      <h1 class="item-list-page__title">{{ pageTitle() }}</h1>
+    </div>
+
+    <hr class="header-divider">
+
+    <div class="header-toggle-row">
       <div class="type-toggle-container">
         <button type="button"
                 class="type-toggle-btn" 
@@ -19,6 +27,8 @@
         </button>
       </div>
     </div>
+
+    <hr class="header-divider">
 
     <div class="item-list-page__search-wrapper">
       <div class="search-section">
