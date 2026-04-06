@@ -101,17 +101,8 @@
       }
     </mat-autocomplete>
   </mat-form-field>
-  
-    <mat-form-field appearance="outline" class="filter-field fixed-size">
-      <mat-label>Category</mat-label>
-      <mat-select formControlName="category" multiple>
-        @for (cat of categories(); track cat) {
-          <mat-option [value]="cat">{{ cat }}</mat-option>
-        }
-      </mat-select>
-    </mat-form-field>
 
-    @if (isAdminPage()) {
+  @if (isAdminPage()) {
     <mat-form-field appearance="outline" class="filter-field fixed-size">
       <mat-label>Surrendered Location</mat-label>
       <mat-select formControlName="surrenderedLocation">
@@ -121,5 +112,14 @@
       </mat-select>
     </mat-form-field>
   }
+  
+    <mat-form-field appearance="outline" class="filter-field fixed-size">
+      <mat-label>Category</mat-label>
+      <mat-select formControlName="category" multiple>
+        @for (cat of categories(); track cat) {
+          <mat-option [value]="cat">{{ cat }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
 
 </div>
