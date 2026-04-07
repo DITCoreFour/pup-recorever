@@ -49,6 +49,64 @@
   object-fit: contain;
 }
 
+.toggleable-title {
+  position: relative;
+  height: 1.5rem;
+  width: 460px;
+  margin: 0;
+  font-size: 1rem;
+
+  .title-option, .title-separator {
+    position: absolute;
+    top: 0;
+    white-space: nowrap;
+    transition: left 0.5s cubic-bezier(0.4, 0, 0.2, 1), color 0.3s ease;
+  }
+
+  .title-option {
+    color: #94a3b8;
+    cursor: pointer;
+    font-weight: 500;
+    user-select: none;
+
+    &:hover {
+      color: #64748b;
+    }
+
+    &.active {
+      color: #ad1111;
+      font-weight: 600;
+
+
+      
+    }
+  }
+
+  .title-separator {
+    color: #e2e8f0;
+    font-weight: 300;
+  }
+
+  .option-lost { left: 0; }
+  .title-separator { left: 110px; }
+  .option-found { left: 150px; }
+
+
+  &.swapped {
+    .option-found { left: 0; }
+    .title-separator { left: 110px; }
+  }
+}
+
+// 3. HORIZONTAL DIVIDER
+.header-divider {
+  border: none;
+  height: 1px;
+  background-color: #e2e8f0; 
+  margin: 1.25rem 0;
+  width: 100%;
+}
+
 .item-list-page__title {
   font-size: 1rem;
   font-weight: 600;
@@ -56,49 +114,6 @@
   margin: 0;
 }
 
-.header-divider {
-  border: none;
-  height: 1px;
-  background-color: #e2e8f0;
-  width: 100%;
-}
-
-.header-toggle-row {
-  display: flex;
-  justify-content: center;
-  width: 100%;
-}
-
-.type-toggle-container {
-  display: inline-flex;
-  background-color: #f1f5f9;
-  border-radius: 8px;
-  padding: 4px;
-  border: 1px solid #e2e8f0;
-}
-
-.type-toggle-btn {
-  background: transparent;
-  border: none;
-  padding: 8px 32px;
-  font-size: 14px;
-  font-weight: 500;
-  color: #64748b;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-
-  &:hover {
-    color: #0f172a;
-  }
-
-  &.active {
-    background-color: #ad1111;
-    color: #ffffff;
-    font-weight: 600;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  }
-}
 
 .item-list-page__search-wrapper {
   width: 100%;
@@ -160,19 +175,32 @@
   }
 
   .item-list-page {
-    padding: 1rem;
+    padding: 1rem; 
   }
 
   .header-title-row {
-    justify-content: center;
+    justify-content: center; 
   }
 
-  .item-list-page__title {
-    font-size: 2rem;
-    text-align: center;
-  }
-  
   .title-icon {
-    height: 1.5rem;
+    width: 36px;
+    height: 36px;
+    opacity: 50%;
+  }
+
+  .toggleable-title {
+    height: 36px;
+    width: 330px;
+    font-size: 1.75rem; 
+
+    .option-lost { left: 0; }
+    .title-separator { left: 145px; }
+    .option-found { left: 175px; }
+
+    &.swapped {
+      .option-found { left: 0; }
+      .title-separator { left: 165px; }
+      .option-lost { left: 195px; }
+    }
   }
 }

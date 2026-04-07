@@ -3,29 +3,24 @@
     
     <div class="header-title-row">
       <img [src]="itemType() === 'lost' ? 'assets/lost-items.png' :
-          'assets/found-items.png'" 
+           'assets/found-items.png'" 
            alt="Category Icon" 
            class="title-icon">
-      <h1 class="item-list-page__title">{{ pageTitle() }}</h1>
-    </div>
-
-    <hr class="header-divider">
-
-    <div class="header-toggle-row">
-      <div class="type-toggle-container">
-        <button type="button"
-                class="type-toggle-btn" 
-                [class.active]="itemType() === 'lost'" 
-                (click)="toggleItemType('lost')">
+           
+      <h1 class="item-list-page__title toggleable-title"
+        [class.swapped]="itemType() === 'found'">
+        <span class="title-option option-lost"
+              [class.active]="itemType() === 'lost'"
+              (click)="toggleItemType('lost')">
           Lost Items
-        </button>
-        <button type="button"
-                class="type-toggle-btn" 
-                [class.active]="itemType() === 'found'" 
-                (click)="toggleItemType('found')">
+        </span>
+        <span class="title-separator">|</span>
+        <span class="title-option option-found"
+              [class.active]="itemType() === 'found'"
+              (click)="toggleItemType('found')">
           Found Items
-        </button>
-      </div>
+        </span>
+      </h1>
     </div>
 
     <hr class="header-divider">
