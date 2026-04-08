@@ -2,7 +2,7 @@
   display: flex;
   flex-wrap: wrap;
   align-items: flex-start;
-  gap: 12px;
+  gap: 9px;
 
   .all-btn {
     height: 56px;
@@ -42,15 +42,12 @@
   }
 }
 
-// STRICTLY HIDE ON DESKTOP
 .mobile-toggle-btn {
   display: none !important;
 }
 
-// Mobile Breakpoint (Matches your existing 768px)
 @media (max-width: 768px) {
 
-  // SHOW ONLY ON MOBILE
   .mobile-toggle-btn {
     display: flex !important;
     width: 100%;
@@ -64,7 +61,6 @@
     flex-direction: column;
     align-items: stretch;
 
-    // Hide the form container when the toggle is off
     &.mobile-hidden {
       display: none;
     }
@@ -77,5 +73,9 @@
       max-width: none;
       margin-bottom: 8px;
     }
+  }
+
+  .vertical-divider {
+    display: none;
   }
 }

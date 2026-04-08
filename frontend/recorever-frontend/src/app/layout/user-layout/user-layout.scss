@@ -12,3 +12,9 @@
   position: relative;
   padding: 24px; 
 }
+
+@media (max-width: 900px) {
+  .user-layout-content {
+    padding: 5px; 
+  }
+}

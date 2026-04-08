@@ -23,7 +23,7 @@
 }
 
 .item-list-page {
-  max-width: 1200px;
+  max-width: 1150px;
   margin: 0 auto;
   background-color: #ffffff;
   padding: 20px;
@@ -47,6 +47,7 @@
 .title-icon {
   height: 1.5rem;
   object-fit: contain;
+  opacity: 50%;
 }
 
 .toggleable-title {
@@ -76,9 +77,6 @@
     &.active {
       color: #ad1111;
       font-weight: 600;
-
-
-      
     }
   }
 
@@ -91,14 +89,13 @@
   .title-separator { left: 110px; }
   .option-found { left: 150px; }
 
-
   &.swapped {
     .option-found { left: 0; }
-    .title-separator { left: 110px; }
+    .title-separator { left: 115px; } 
+    .option-lost { left: 155px; }
   }
 }
 
-// 3. HORIZONTAL DIVIDER
 .header-divider {
   border: none;
   height: 1px;
@@ -170,9 +167,6 @@
 }
 
 @media (max-width: 900px) {
-  :host {
-    padding: 1rem;
-  }
 
   .item-list-page {
     padding: 1rem; 
@@ -182,25 +176,19 @@
     justify-content: center; 
   }
 
-  .title-icon {
-    width: 36px;
-    height: 36px;
-    opacity: 50%;
-  }
 
   .toggleable-title {
-    height: 36px;
     width: 330px;
-    font-size: 1.75rem; 
+    font-size: 1.1rem; 
 
     .option-lost { left: 0; }
-    .title-separator { left: 145px; }
-    .option-found { left: 175px; }
+    .title-separator { left: 110px; }
+    .option-found { left: 150px; }
 
     &.swapped {
       .option-found { left: 0; }
-      .title-separator { left: 165px; }
-      .option-lost { left: 195px; }
+      .title-separator { left: 120px; } 
+      .option-lost { left: 150px; }
     }
   }
 }
