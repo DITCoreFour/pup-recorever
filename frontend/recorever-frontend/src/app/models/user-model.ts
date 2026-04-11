@@ -1,11 +1,13 @@
 export type User = {
   user_id: number;
-  name: string;
+  first_name: string;
+  last_name: string;
   email: string;
-  phone_number: string;
   profile_picture: string;
   role: 'user' | 'admin';
   reports?: Report[];
+  program_id: number | null;
+  year_level: number | null;
 };
 
 export type NavItem = {
