@@ -24,7 +24,7 @@ jobs:
 
       - name: Install Dependencies
         # Installs the Google AI SDK and GitHub Actions Core
-        run: npm install @google/generative-ai @actions/core @actions/github
+        run: npm install @google/generative-ai @actions/core@1.11.1 @actions/github@6.0.0
 
       - name: Run Gemini 2.5 Flash Review
         env:
