@@ -49,10 +49,13 @@ public class UserController {
     private UserResponseDTO mapToUserResponseDTO(User user) {
         UserResponseDTO dto = new UserResponseDTO();
         dto.setUser_id(user.getUserId());
-        dto.setName(user.getName());
+        dto.setFirst_name(user.getFirstName());
+        dto.setLast_name(user.getLastName());
         dto.setEmail(user.getEmail());
         dto.setRole(user.getRole());
         dto.setProfile_picture(user.getProfilePicture());
+        dto.setProgram_id(user.getProgramId());
+        dto.setYear_level(user.getYear());
         dto.setCreated_at(user.getCreatedAt());
         return dto;
     }

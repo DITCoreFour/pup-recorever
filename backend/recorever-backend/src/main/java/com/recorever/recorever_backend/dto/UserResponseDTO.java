@@ -10,10 +10,12 @@ import lombok.Data;
 @Data
 public class UserResponseDTO {
     private int user_id;
-    private String name;
+    private String first_name;
+    private String last_name;
     private String email;
     private String role;
     private String profile_picture;
-    private String phone_number;
+    private Integer program_id;
+    private Integer year_level;
     private String created_at;
 }
