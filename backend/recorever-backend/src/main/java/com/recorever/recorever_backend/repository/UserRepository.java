@@ -40,13 +40,6 @@ public interface UserRepository extends JpaRepository<User, Integer> {
         @Param("userId") int userId
     );
 
-    @Query("SELECT COUNT(u) > 0 FROM User u WHERE u.phoneNumber = :phoneNumber " +
-           "AND u.userId != :userId")
-    boolean isPhoneNumberTaken(
-        @Param("phoneNumber") String phoneNumber, 
-        @Param("userId") int userId
-    );
-
     @Query("SELECT COUNT(u) > 0 FROM User u WHERE u.email = :email " +
            "AND u.userId != :userId")
     boolean isEmailTaken(
