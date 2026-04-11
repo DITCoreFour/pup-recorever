@@ -2,6 +2,7 @@ package com.recorever.recorever_backend.config;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
@@ -10,9 +11,11 @@ import java.util.Date;
 @Component
 public class JwtUtil {
 
-  private static final String secret = 
-      "my_super_secret_key_which_is_at_least_32_chars!";
-  private final long expiration = 3600000; // 1 hour in milliseconds
+  @Value("${JWT_SECRET}")
+  private String secret;
+  
+  @Value("${JWT_EXPIRATION}")
+  private long expiration;
 
   private Key getSigningKey() {
     return Keys.hmacShaKeyFor(secret.getBytes());
