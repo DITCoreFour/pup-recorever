@@ -42,11 +42,15 @@ public class User implements UserDetails {
     @Column(name = "profile_picture")
     @JsonProperty("profile_picture")
     private String profilePicture;
-
-    @Column(name = "phone_number")
-    @JsonProperty("phone_number")
-    private String phoneNumber;
     
+    @Column(name = "program")
+    @JsonProperty("program")
+    private String program;
+
+    @Column(name = "year_level") 
+    @JsonProperty("year")
+    private Integer year;
+
     @Column(name = "created_at", updatable = false)
     @JsonProperty("created_at")
     private String createdAt;
@@ -62,6 +66,15 @@ public class User implements UserDetails {
     @Column(name = "is_deleted", nullable = false)
     @JsonProperty("is_deleted")
     private boolean isDeleted;
+
+    @Column(name = "first_name", nullable = false)
+    private String firstName;
+
+    @Column(name = "last_name", nullable = false)
+    private String lastName;
+
+    @Column(name = "program_id")
+    private Integer programId;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
