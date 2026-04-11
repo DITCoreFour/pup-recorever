@@ -119,8 +119,6 @@ public class ClaimService {
           claim.setClaimantName(u.getName());
         if (claim.getContactEmail() == null)
           claim.setContactEmail(u.getEmail());
-        if (claim.getContactPhone() == null)
-          claim.setContactPhone(u.getPhoneNumber());
       });
 
       repo.findClaimCode(claim.getUserId(), claim.getReportId())
