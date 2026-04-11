@@ -1,73 +1,116 @@
 :host {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 90vh;
+  display: block;
+}
+
+.register-background {
   width: 100%;
-  background-color: #f9fafb;
+  height: calc(100vh - 61px);
+  background-image: linear-gradient(
+      rgba(128, 0, 0, 0.6), 
+      rgba(128, 0, 0, 0.7)
+    ),
+    url('../../../../assets/register_img.jpg');
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
   box-sizing: border-box;
 }
 
-.page-container {
+.register-card {
   display: flex;
-  flex-direction: row;
-  justify-content: center;
+  /* CRITICAL FIX: Swaps the visual order of the panels */
+  flex-direction: row-reverse; 
+  width: 100%;
+  max-width: 1000px;
+  height: 650px;
+  border-radius: 1.5rem;
+  overflow: hidden;
+  box-shadow: 0 25px 50px -12px rgba(24, 23, 23, 0.5);
+}
+
+.branding-panel {
+  width: 55%;
+  background: linear-gradient(170deg, #ef4444 0%, #800000 90%);
+  color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 3rem;
+  text-align: center;
+  box-sizing: border-box;
+
+  @media (max-width: 768px) {
+    display: none; 
+  }
+}
+
+.branding-content {
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  width: 100%;
-  max-width: 1200px;
-  gap: 3rem;
-}
 
-.image-container {
-  flex: 1;
-  display: none;
+  .logo {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    border: 4px solid #ffffff;
+    margin-bottom: 1.5rem;
+  }
 
-  @media (min-width: 768px) {
-    display: flex;
-    justify-content: center;
-    align-items: center;
+  .branding-title {
+    font-size: 2rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+  }
+
+  .branding-subtitle {
+    font-size: 2rem;
+    font-weight: 300;
+    margin-bottom: 0.1rem;
+  }
+
+  .branding-desc {
+    font-size: 1rem;
+    opacity: 0.9;
   }
 }
 
-.image-placeholder {
-  width: 100%;
-  max-width: 500px;
-  height: 500px;
-  box-shadow:
-    0 20px 40px rgba(0, 0, 0, 0.4),
-    0 10px 15px rgba(0, 0, 0, 0.3);
-}
-
-.image-placeholder img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 8px;
-  background-image: linear-gradient(to top right,
-      transparent 49.5%,
-      #d1d5db 49.5%,
-      #d1d5db 50.5%,
-      transparent 50.5%),
-    linear-gradient(to top left,
-      transparent 49.5%,
-      #d1d5db 49.5%,
-      #d1d5db 50.5%,
-      transparent 50.5%);
-}
-
-.form-container {
-  flex: 1;
+.branding-footer {
   display: flex;
-  justify-content: center;
-  width: 100%;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
 
-  @media (min-width: 768px) {
-    justify-content: flex-start;
+  p {
+    margin: 0;
   }
 
-  ::ng-deep app-register-form {
+  .login-btn {
+    background-color: #ffffff;
+    color: #333333;
+    border: none;
+    padding: 0.75rem 2.5rem;
+    border-radius: 9999px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    
+    &:hover {
+      background-color: #f3f4f6;
+    }
+  }
+}
+
+.form-panel {
+  width: 60%;
+  background-color: #ffffff;
+  display: flex;
+  box-sizing: border-box;
+
+  @media (max-width: 768px) {
     width: 100%;
-    max-width: 450px;
   }
 }
