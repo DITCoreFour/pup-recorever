@@ -11,10 +11,11 @@
             </div>
           </div>
           <div class="info-wrapper">
-            <h2 class="user-name">{{ user.name }}</h2>
+            <h2 class="user-name">
+               {{ user.first_name }} {{ user.last_name }}
+             </h2>
             <div class="details">
               <p class="user-detail email">{{ user.email }}</p>
-              <p class="user-detail phone">{{ user.phone_number }}</p>
             </div>
           </div>
         </div>

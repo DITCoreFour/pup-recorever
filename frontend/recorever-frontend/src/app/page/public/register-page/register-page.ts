@@ -2,22 +2,11 @@ import { Component, inject, ChangeDetectorRef } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { finalize, switchMap } from 'rxjs/operators';
-import { 
-  RegisterForm, 
-  RegisterFormPayload 
-} from './register-form/register-form';
+import { RegisterForm } from './register-form/register-form';
 import { AuthService } from '../../../core/auth/auth-service';
 import { ToastService } from '../../../core/services/toast-service';
 import { RegisterRequest } from '../../../models/auth-model';
-
-type BackendRegisterPayload = {
-  firstName: string;
-  lastName: string;
-  email: string;
-  password: string;
-  programId: number | null;
-  year: number | null;
-};
+import { RegisterFormPayload } from '../../../models/user-model';
 
 @Component({
   selector: 'app-register-page',
@@ -42,7 +31,7 @@ export class RegisterPage {
     this.isLoading = true;
     this.serverErrorMessage = null;
 
-    const rawPayload: BackendRegisterPayload = {
+    const rawPayload: RegisterRequest = {
       firstName: payload.firstName,
       lastName: payload.lastName,
       email: payload.email,
@@ -51,7 +40,7 @@ export class RegisterPage {
       year: payload.year || null
     };
 
-    this.authService.register(rawPayload as unknown as RegisterRequest)
+    this.authService.register(rawPayload)
       .pipe(
         switchMap(() => this.authService.login({
           email: payload.email,
@@ -82,10 +71,12 @@ export class RegisterPage {
     
     if (err.error && Array.isArray(err.error.errors)) {
       const messages = err.error.errors
-        .map((e: any) => e.defaultMessage)
-        .filter((msg: any) => msg);
+        .map((e: { defaultMessage: string }) => e.defaultMessage)
+        .filter((msg: string) => msg);
         
-      if (messages.length > 0) return messages.join(' • ');
+      if (messages.length > 0) {
+        return messages.join(' • ');
+      }
     }
     
     return 'Registration failed. Please check your data.';
