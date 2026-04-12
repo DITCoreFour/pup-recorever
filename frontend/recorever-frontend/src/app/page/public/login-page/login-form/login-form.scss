@@ -1,11 +1,21 @@
+:host {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
 .form-container {
-  width: 120%;
-  height: 90%;
+  width: 100%;
+  height: 100%;
   box-sizing: border-box;
   padding: 3rem;
   display: flex;
   flex-direction: column;
   justify-content: center;
+
+  @media (max-width: 768px) {
+    padding: 1.5rem;
+  }
 }
 
 .form-title {
@@ -14,6 +24,11 @@
   color: #000000;
   text-align: center;
   margin-bottom: 2.5rem;
+
+  @media (max-width: 768px) {
+    font-size: 2rem;
+    margin-bottom: 1.5rem;
+  }
 }
 
 .login-form {
@@ -84,8 +99,24 @@
 }
 
 .error-msg {
-  color: #ef4444;
-  font-size: 0.75rem;
+  display: block;
+  color: #f44336 !important; 
+  font-size: 0.75rem; 
+  margin-top: 0.15rem;
+  font-style: italic; 
+}
+
+.error-banner {
+  background-color: #fee2e2; 
+  color: #ef4444; 
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  border: 1px solid #fca5a5; 
+  text-align: center;
+  font-size: 0.85rem;
+  margin-top: 0.5rem; 
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .submit-btn {
@@ -98,14 +129,18 @@
   border: none;
   cursor: pointer;
   margin-top: 1rem;
+  transition: all 0.3s ease;
   
   &:hover {
-    background-color: #600000;
+    background-color: #991b1b;
+    transform: translateY(-2px);
   }
 
   &:disabled {
     background-color: #e5e7eb;
+    color: #9ca3af;
     cursor: not-allowed;
+    transform: none;
   }
 }
 
@@ -122,4 +157,26 @@
       text-decoration: underline;
     }
   }
+}
+
+/* --- Loading Spinner Styling --- */
+.btn-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.spinner {
+  display: inline-block;
+  width: 1.1rem;
+  height: 1.1rem;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-bottom-color: #ffffff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }

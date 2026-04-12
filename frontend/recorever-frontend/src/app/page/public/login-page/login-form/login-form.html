@@ -6,18 +6,12 @@
       (ngSubmit)="submitForm()" 
       class="login-form">
 
-    @if (loginError) {
-      <div class="error-msg">
-        Invalid email or password. Please try again.
-      </div>
-    }
-
     <div class="input-group">
       <label>Email</label>
       <input 
           type="email"
           formControlName="email"
-          placeholder="Enter your email" />
+          placeholder="example@gmail.com" />
 
       @if (emailControl?.touched && emailControl?.invalid) {
         <span class="error-msg">A valid email is required.</span>
@@ -53,12 +47,20 @@
         [disabled]="loginForm.invalid || isSubmitting">
       
       @if (isSubmitting) {
-        SIGNING IN...
+        <div class="btn-content">
+          <span class="spinner"></span> SIGNING IN...
+        </div>
       } @else {
         SIGN IN
       }
       
     </button>
+
+    @if (loginErrorMessage) {
+      <div class="error-banner">
+        {{ loginErrorMessage }}
+      </div>
+    }
 
     <div class="forgot-password">
       <a routerLink="/forgot-password">Forgot Password?</a>
