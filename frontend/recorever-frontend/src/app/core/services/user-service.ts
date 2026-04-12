@@ -10,7 +10,11 @@ import {
   ValidationErrors,
 } from '@angular/forms';
 
-import type { User, ChangePasswordRequest, UniqueCheckResponse } from '../../models/user-model';
+import type { 
+  User, 
+  ChangePasswordRequest, 
+  UniqueCheckResponse 
+} from '../../models/user-model';
 
 @Injectable({
   providedIn: 'root',
@@ -49,7 +53,7 @@ export class UserService {
   }
 
   checkUniqueness(
-    field: 'email' | 'phone_number' | 'name',
+    field: 'email' | 'name',
     value: string
   ): Observable<boolean> {
     const key = `${field}:${value}`;
@@ -76,7 +80,7 @@ export class UserService {
   }
 
   uniqueValidator(
-    field: 'email' | 'phone_number' | 'name',
+    field: 'email' | 'name',
     initialValue: string
   ): AsyncValidatorFn {
     return (control: AbstractControl): Observable<ValidationErrors | null> => {
@@ -93,8 +97,9 @@ export class UserService {
 
   updateProfile(user: User, file: File | null): Observable<User> {
     const formData = new FormData();
-    formData.append('name', user.name);
-    formData.append('phone_number', user.phone_number);
+    if (user.first_name && user.last_name) {
+      formData.append('name', `${user.first_name} ${user.last_name}`);
+    }
     formData.append('email', user.email);
 
     if (file) {
