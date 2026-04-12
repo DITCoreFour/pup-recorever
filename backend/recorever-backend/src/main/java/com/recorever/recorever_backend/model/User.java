@@ -26,9 +26,6 @@ public class User implements UserDetails {
     @JsonProperty("user_id")
     private int userId;
 
-    @Column(nullable = false)
-    private String name;
-
     @Column(nullable = false, unique = true)
     private String email;
 
@@ -42,10 +39,6 @@ public class User implements UserDetails {
     @Column(name = "profile_picture")
     @JsonProperty("profile_picture")
     private String profilePicture;
-    
-    @Column(name = "program")
-    @JsonProperty("program")
-    private String program;
 
     @Column(name = "year_level") 
     @JsonProperty("year")
@@ -81,6 +74,11 @@ public class User implements UserDetails {
         String userRole = (this.role == null || this.role.isEmpty()) 
             ? "USER" : this.role.toUpperCase();
         return List.of(new SimpleGrantedAuthority("ROLE_" + userRole));
+    }
+
+    @Transient
+    public String getFullName() {
+        return firstName + " " + lastName;
     }
 
     @Override
