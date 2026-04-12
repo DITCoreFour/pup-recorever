@@ -108,23 +108,9 @@ export class EditProfileModal implements OnInit, OnChanges, OnDestroy {
     if (!this.user) return;
 
     this.editForm = this.fb.group({
-      name: [
-        this.user.name, 
-        {
-          validators: [Validators.required, Validators.maxLength(30)],
-          asyncValidators: [this.userService.uniqueValidator('name', 
-                this.user.name)],
-          updateOn: 'change'
-        }
-      ],
-      phone_number: [
-        this.user.phone_number, 
-        {
-          validators: [Validators.required, this.phPhoneNumberValidator()],
-          asyncValidators: [this.userService.uniqueValidator('phone_number', 
-                this.user.phone_number)],
-          updateOn: 'change'
-        }
+name: [
+        `${this.user.first_name} ${this.user.last_name}`, 
+        [Validators.required]
       ],
       email: [
         this.user.email, 

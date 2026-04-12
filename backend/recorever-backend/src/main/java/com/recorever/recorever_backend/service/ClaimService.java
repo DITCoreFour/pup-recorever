@@ -116,11 +116,9 @@ public class ClaimService {
     if (claim.getUserId() != null) {
       userRepository.findById(claim.getUserId()).ifPresent(u -> {
         if (claim.getClaimantName() == null)
-          claim.setClaimantName(u.getName());
+          claim.setClaimantName(u.getFullName());
         if (claim.getContactEmail() == null)
           claim.setContactEmail(u.getEmail());
-        if (claim.getContactPhone() == null)
-          claim.setContactPhone(u.getPhoneNumber());
       });
 
       repo.findClaimCode(claim.getUserId(), claim.getReportId())

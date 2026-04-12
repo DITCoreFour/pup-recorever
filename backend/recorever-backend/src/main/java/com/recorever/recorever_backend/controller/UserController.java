@@ -49,40 +49,46 @@ public class UserController {
     private UserResponseDTO mapToUserResponseDTO(User user) {
         UserResponseDTO dto = new UserResponseDTO();
         dto.setUser_id(user.getUserId());
-        dto.setName(user.getName());
+        dto.setFirst_name(user.getFirstName());
+        dto.setLast_name(user.getLastName());
         dto.setEmail(user.getEmail());
         dto.setRole(user.getRole());
         dto.setProfile_picture(user.getProfilePicture());
-        dto.setPhone_number(user.getPhoneNumber());
+        dto.setProgram_id(user.getProgramId());
+        dto.setYear_level(user.getYear());
         dto.setCreated_at(user.getCreatedAt());
         return dto;
     }
 
     @PostMapping("/register-user")
     public ResponseEntity<?> registerUser(
-            @Valid @RequestBody UserRegistrationDTO registrationDto) {
+        @Valid @RequestBody UserRegistrationDTO registrationDto
+    ) {
         try {
-            int userId = service.register(
-                    registrationDto.getName(),
-                    registrationDto.getPhone_number(),
-                    registrationDto.getEmail(),
-                    registrationDto.getPassword()
-            );
+        int userId = service.register(
+                registrationDto.getFirstName(),
+                registrationDto.getLastName(),
+                registrationDto.getEmail(),
+                registrationDto.getPassword(),
+                registrationDto.getProgramId(),
+                registrationDto.getYear()
+        );
 
-            User newUser = repo.findByIdAndIsDeletedFalse(userId)
-                    .orElseThrow(() -> new RuntimeException(
-                            "User not found after registration"));
+        User newUser = repo.findByIdAndIsDeletedFalse(userId)
+            .orElseThrow(() -> new RuntimeException(
+                "User not found after registration"
+            ));
 
-            UserResponseDTO responseDto = mapToUserResponseDTO(newUser);
-            return ResponseEntity.status(201).body(responseDto);
+        UserResponseDTO responseDto = mapToUserResponseDTO(newUser);
+        return ResponseEntity.status(201).body(responseDto);
 
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest()
-                    .body(Map.of("error", e.getMessage()));
+        return ResponseEntity.badRequest()
+            .body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
-            return ResponseEntity.status(500).body(Map.of(
-                    "error", "An unexpected error occurred."
-            ));
+        return ResponseEntity.status(500).body(Map.of(
+            "error", "An unexpected error occurred."
+        ));
         }
     }
 
@@ -166,7 +172,7 @@ public class UserController {
         return ResponseEntity.ok(userDTOs);
     }
 
-    @GetMapping("/check-unique")
+   @GetMapping("/check-unique")
     public ResponseEntity<Map<String, Boolean>> checkUnique(
             Authentication authentication,
             @RequestParam String field,
@@ -184,10 +190,6 @@ public class UserController {
 
         if ("email".equals(field)) {
             isUnique = !repo.isEmailTaken(value, userId);
-        } else if ("phone_number".equals(field)) {
-            isUnique = !repo.isPhoneNumberTaken(value, userId);
-        } else if ("name".equals(field)) {
-            isUnique = !repo.isNameTaken(value, userId);
         }
 
         return ResponseEntity.ok(Map.of("isUnique", isUnique));
@@ -197,7 +199,6 @@ public class UserController {
     public ResponseEntity<?> updateUser(
             Authentication authentication,
             @RequestParam(required = false) String name,
-            @RequestParam(required = false) String phone_number,
             @RequestParam(required = false) String email,
             @RequestParam(required = false) MultipartFile profile_picture_file) {
 
@@ -213,7 +214,7 @@ public class UserController {
         }
 
         Map<String, Object> result = service.updateUserProfile(
-                user, name, phone_number, email, profilePictureFilename
+                user, name, email, profilePictureFilename
         );
 
         if (result.containsKey("error")) {

@@ -112,7 +112,7 @@ public class ReportService {
 
         items.forEach(report -> {
             userRepository.findById(report.getUserId()).ifPresent(user -> {
-                report.setReporterName(user.getName());
+                report.setReporterName(user.getFullName());
             });
         });
 
@@ -143,7 +143,7 @@ public class ReportService {
                         .getOrDefault(report.getReportId(), new ArrayList<>()));
 
                 userRepository.findById(report.getUserId()).ifPresent(user -> {
-                    report.setReporterName(user.getName());
+                    report.setReporterName(user.getFullName());
                 });
 
                 // Set expiry_date from schedule
@@ -236,7 +236,7 @@ public class ReportService {
             report.setImages(images);
 
             userRepository.findById(report.getUserId()).ifPresent(user -> {
-                report.setReporterName(user.getName());
+                report.setReporterName(user.getFullName());
             });
 
             scheduleRepo.findByReportId(id).ifPresent(schedule -> {

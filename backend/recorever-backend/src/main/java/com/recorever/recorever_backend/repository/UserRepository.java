@@ -26,25 +26,12 @@ public interface UserRepository extends JpaRepository<User, Integer> {
         @Param("id") int id
     );
 
-    @Query("SELECT u FROM User u WHERE (LOWER(u.name) " +
-           "LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(u.email) " +
-           "LIKE LOWER(CONCAT('%', :query, '%'))) AND u.isDeleted = false")
+    @Query("SELECT u FROM User u WHERE (" +
+           "LOWER(CONCAT(u.firstName, ' ', u.lastName)) LIKE LOWER(CONCAT('%', :query, '%')) " +
+           "OR LOWER(u.email) LIKE LOWER(CONCAT('%', :query, '%'))" +
+           ") AND u.isDeleted = false")
     List<User> searchUsers(
         @Param("query") String query
-    );
-
-    @Query("SELECT COUNT(u) > 0 FROM User u WHERE u.name = :name " +
-           "AND u.userId != :userId")
-    boolean isNameTaken(
-        @Param("name") String name, 
-        @Param("userId") int userId
-    );
-
-    @Query("SELECT COUNT(u) > 0 FROM User u WHERE u.phoneNumber = :phoneNumber " +
-           "AND u.userId != :userId")
-    boolean isPhoneNumberTaken(
-        @Param("phoneNumber") String phoneNumber, 
-        @Param("userId") int userId
     );
 
     @Query("SELECT COUNT(u) > 0 FROM User u WHERE u.email = :email " +

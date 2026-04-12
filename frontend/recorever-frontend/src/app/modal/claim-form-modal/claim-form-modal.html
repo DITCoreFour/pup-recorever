@@ -173,12 +173,15 @@
                           @if (getUserAvatar(user)) {
                             <img [src]="getUserAvatar(user)" alt="">
                           } @else {
-                            <span class="initial">{{ user.name.charAt(0) }}
-                            </span>
+                            <span class="initial">
+                                {{ user.first_name.charAt(0) }}
+                                </span>
                           }
                         </div>
                         <div class="option-info">
-                          <span class="name">{{ user.name }}</span>
+                          <span class="name">
+                                {{ user.first_name }} {{ user.last_name }}
+                                </span>
                           <span class="email">{{ user.email }}</span>
                         </div>
                       </div>

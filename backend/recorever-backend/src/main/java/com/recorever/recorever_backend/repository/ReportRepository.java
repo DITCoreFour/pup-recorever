@@ -29,7 +29,7 @@ public interface ReportRepository extends JpaRepository<Report, Integer> {
            "LOWER(CONCAT('%',:query,'%')) " +
            "OR LOWER(r.description) LIKE LOWER(CONCAT('%',:query,'%')) " +
            "OR LOWER(r.location) LIKE LOWER(CONCAT('%',:query,'%')) " +
-           "OR LOWER(u.name) LIKE LOWER(CONCAT('%',:query,'%')) " +
+           "OR LOWER(CONCAT(u.firstName, ' ', u.lastName)) LIKE LOWER(CONCAT('%', :query, '%')) " +
            "OR LOWER(r.surrenderCode) LIKE LOWER(CONCAT('%',:query,'%'))) " +
            "ORDER BY r.reportId DESC")
     List<Report> searchReports(
@@ -49,7 +49,7 @@ public interface ReportRepository extends JpaRepository<Report, Integer> {
            "LOWER(CONCAT('%',:query,'%')) " +
            "OR LOWER(r.description) LIKE LOWER(CONCAT('%',:query,'%')) " +
            "OR LOWER(r.location) LIKE LOWER(CONCAT('%',:query,'%')) " +
-           "OR LOWER(u.name) LIKE LOWER(CONCAT('%',:query,'%')) " +
+           "OR LOWER(CONCAT(u.firstName, ' ', u.lastName)) LIKE LOWER(CONCAT('%', :query, '%')) " +
            "OR LOWER(r.surrenderCode) LIKE LOWER(CONCAT('%',:query,'%')))")
     int countSearchReports(
             @Param("userId") Integer userId,

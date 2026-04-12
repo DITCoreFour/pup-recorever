@@ -236,7 +236,7 @@ export class ClaimFormModal implements OnInit {
   }
 
   protected displayUserFn(user: User): string {
-    return user && user.name ? user.name : '';
+    return user ? `${user.first_name} ${user.last_name}` : '';
   }
 
   protected onUserSelected(event: MatAutocompleteSelectedEvent): void {
@@ -244,7 +244,7 @@ export class ClaimFormModal implements OnInit {
 
     this.claimForm.patchValue({
       contactEmail: user.email,
-      contactPhone: user.phone_number
+      contactPhone: '' // Phone removed from system; leave empty
     });
 
     this.fetchMatchingLostReports(user.user_id);
@@ -301,7 +301,8 @@ export class ClaimFormModal implements OnInit {
           finalize(() => this.isLoading.set(false))
         ).subscribe({
           next: (user) => {
-            this.reportOwnerName.set(user?.name || 'Unknown User');
+            this.reportOwnerName.set(user ? `${user.first_name} 
+                    ${user.last_name}` : 'Unknown User');
             this.reportOwnerPicture.set(user?.profile_picture || null); 
           },
           error: () => this.isLoading.set(false)
@@ -311,8 +312,9 @@ export class ClaimFormModal implements OnInit {
           finalize(() => this.isLoading.set(false))
         ).subscribe({
           next: (user) => {
-            this.reportOwnerName.set(user?.name || 'Unknown User');
-            this.reportOwnerPicture.set(user?.profile_picture || null); 
+            this.reportOwnerName.set(user ? `${user.first_name} 
+                    {user.last_name}` : 'Unknown User');
+            this.reportOwnerPicture.set(user?.profile_picture || null);
           },
           error: (err) => console.error('Error loading report owner', err)
         });
@@ -331,7 +333,8 @@ export class ClaimFormModal implements OnInit {
       ).subscribe({
         next: (owner) => {
           if (owner) {
-            this.reportOwnerName.set(owner.name || 'Unknown User');
+            this.reportOwnerName.set(owner ? `${owner.first_name} 
+                    ${owner.last_name}` : 'Unknown User');
             // Capture the reporter's profile picture filename
             this.reportOwnerPicture.set(owner.profile_picture || null);
           }

@@ -40,6 +40,7 @@ public class SecurityConfig {
           "/api/image/download/**",
           "/api/forgot-password",
           "/api/reset-password-public",
+          "/api/programs",
           "/error"
         ).permitAll()
         .requestMatchers("/api/admin/**").hasRole("ADMIN") 
