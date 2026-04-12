@@ -23,7 +23,7 @@ import {
   ProgramService, 
   ProgramResponse 
 } from '../../../../core/services/program-service';
-
+import { UserService } from '../../../../core/services/user-service';
 import { 
   RegisterFormPayload, 
   YearLevel 
@@ -52,11 +52,17 @@ function strongPasswordValidator(): ValidatorFn {
 
 function noWhitespaceValidator(): ValidatorFn {
   return (control: AbstractControl): ValidationErrors | null => {
-    const isWhitespace = (control.value || '').trim().length === 0;
+    const val = control.value;
+    
+    if (!val || val.length === 0) {
+      return null;
+    }
+
+    const isWhitespace = val.trim().length === 0;
     
     return !isWhitespace 
       ? null 
-      : { whitespace: 'Name cannot contain only spaces' };
+      : { whitespace: 'Cannot contain only spaces' };
   };
 }
 
@@ -90,6 +96,7 @@ function programYearDependencyValidator(): ValidatorFn {
 export class RegisterForm implements OnInit {
   private fb: FormBuilder = inject(FormBuilder);
   private programService: ProgramService = inject(ProgramService);
+  private userService: UserService = inject(UserService);
 
   @Input() public isSubmitting: boolean = false;
   @Input() public errorMessage: string | null = null;
@@ -100,13 +107,12 @@ export class RegisterForm implements OnInit {
   protected hideConfirmPassword = signal(true);
   protected isPasswordFocused = signal(false);
   protected passwordStrength = signal<PasswordStrength>('none');
-
+  
   protected programs = signal<ProgramResponse[]>([]);
-
   public readonly years: YearLevel[] = [
-    YearLevel.FIRST_YEAR,
-    YearLevel.SECOND_YEAR,
-    YearLevel.THIRD_YEAR,
+    YearLevel.FIRST_YEAR, 
+    YearLevel.SECOND_YEAR, 
+    YearLevel.THIRD_YEAR, 
     YearLevel.FOURTH_YEAR
   ];
 
@@ -139,7 +145,11 @@ export class RegisterForm implements OnInit {
       lastName: ['', [Validators.required, noWhitespaceValidator()]],
       programId: [null], 
       year: [null],    
-      email: ['', [Validators.required, Validators.email]],
+      email: [
+        '', 
+        [Validators.required, Validators.email],
+        [this.userService.uniqueValidator('email', '')]
+      ],
       password: ['', [
         Validators.required, 
         Validators.minLength(8),
@@ -228,6 +238,4 @@ export class RegisterForm implements OnInit {
     }
     return '../../../../../assets/eye-open.png';
   }
-
-  
 }
