@@ -132,11 +132,6 @@ export const routes: Routes = [
           import('./page/admin/admin-dashboard-page/admin-dashboard-page')
             .then(m => m.AdminDashboardPage)
       },
-      { path: 'manage-items',
-        loadComponent: () =>
-          import('./page/admin/manage-items-page/manage-items-page')
-            .then(m => m.ManageItemsPage)
-      },
       { path: 'lost-items',
         loadComponent: () =>
           import('./page/admin/admin-item-list-page/admin-item-list-page')
