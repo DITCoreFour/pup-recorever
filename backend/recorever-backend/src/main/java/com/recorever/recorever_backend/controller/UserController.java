@@ -190,8 +190,6 @@ public class UserController {
 
         if ("email".equals(field)) {
             isUnique = !repo.isEmailTaken(value, userId);
-        } else if ("name".equals(field)) {
-            isUnique = !repo.isNameTaken(value, userId);
         }
 
         return ResponseEntity.ok(Map.of("isUnique", isUnique));
