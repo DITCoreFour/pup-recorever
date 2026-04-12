@@ -86,6 +86,7 @@ export class ClaimStatusPage implements OnInit, AfterViewInit, OnDestroy {
 
   protected currentStatusFilter = signal<StatusFilter>('All Statuses');
   protected highlightId = signal<number | null>(null);
+  protected currentSurrenderedLocationFilter = signal<string>('');
 
   protected currentFilter = signal<FilterState>({
     sort: 'newest',
@@ -112,11 +113,19 @@ export class ClaimStatusPage implements OnInit, AfterViewInit, OnDestroy {
     let data = this.reports().filter(r => r.status !== 'claimed');
     
     const filter = this.currentFilter();
+    const surrenderedFilter = this.currentSurrenderedLocationFilter();
 
     if (filter.location) {
       const locTerm = filter.location.toLowerCase();
       data = data.filter(r =>
         (r.location || '').toLowerCase().includes(locTerm)
+      );
+    }
+
+    if (surrenderedFilter) {
+      const surTerm = surrenderedFilter.toLowerCase();
+      data = data.filter(r =>
+        (r.location || '').toLowerCase().includes(surTerm)
       );
     }
 
@@ -211,6 +220,13 @@ export class ClaimStatusPage implements OnInit, AfterViewInit, OnDestroy {
 
   protected onFilterChange(state: FilterState): void {
     this.currentFilter.set(state);
+    this.currentSurrenderedLocationFilter.set(state.surrenderedLocation || '');
+
+    if (state.status !== undefined && state.status !==
+        this.currentStatusFilter()) {
+            this.currentStatusFilter.set(state.status as StatusFilter);
+            this.resetPagination();
+    }
   }
 
   private resetPagination(): void {

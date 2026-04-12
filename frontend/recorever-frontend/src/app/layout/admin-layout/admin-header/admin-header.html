@@ -1,0 +1,115 @@
+<header class="admin-top-nav">
+  <div class="logo-container" (click)="onLogoClick()">
+    <img src="assets/temp_logo.png" alt="Logo" class="app-logo">
+    <span class="app-name">PUP•RECOVER</span>
+  </div>
+
+    <nav class="nav-links">
+      @for (item of navItems; track item.label) {
+        <a class="nav-item"
+            [class.active]="isRouteActive(item.route || '')"
+            [routerLink]="item.route"
+            [fragment]="item.fragment">
+          {{ item.label }}
+        </a>
+      }
+
+      <div class="nav-dropdown-wrapper" #reportSection>
+        <div class="nav-item nav-dropdown-toggle" 
+             (click)="toggleReportDropdown()" 
+             [class.active]="isReportDropdownOpen">
+          Report Item
+          <span class="dropdown-arrow">▿</span>
+        </div>
+
+        @if (isReportDropdownOpen) {
+          <div class="nav-dropdown-menu">
+            <a class="dropdown-item" routerLink="/null"
+                (click)="closeReportDropdown()">My Reports</a>
+            <a class="dropdown-item" routerLink="/null"
+                (click)="closeReportDropdown()">Report found item</a>
+            <a class="dropdown-item" routerLink="/null"
+                (click)="closeReportDropdown()">Report lost item</a>
+          </div>
+        }
+      </div>
+
+      <div class="nav-dropdown-wrapper" #archiveSection>
+        <div class="nav-item nav-dropdown-toggle" 
+             (click)="toggleArchiveDropdown()" 
+             [class.active]="isArchiveDropdownOpen">
+          Archive items
+          <span class="dropdown-arrow">▿</span>
+        </div>
+
+        @if (isArchiveDropdownOpen) {
+          <div class="nav-dropdown-menu">
+            <a class="dropdown-item" 
+              [class.active-dropdown-item]="isRouteActive('/admin/resolved-items')" 
+              routerLink="/admin/archive/resolved"
+              (click)="closeArchiveDropdown()">Resolved items</a>
+
+            <a class="dropdown-item" 
+              [class.active-dropdown-item]="isRouteActive('/admin/claimed-items')" 
+              routerLink="/admin/archive/claimed"
+              (click)="closeArchiveDropdown()">Claimed Items</a>
+          </div>
+        }
+      </div>
+
+    </nav>
+
+  <div class="right-section">
+    @if (currentUser()) {
+      <div class="notification-click-area">
+        <app-notification></app-notification>
+      </div>
+
+      <div class="user-profile-wrapper" #profileSection>
+        <div class="profile-click-area" 
+            (click)="toggleProfileDropdown()" 
+            [class.dropdown-open]="isProfileDropdownOpen">
+          <img [src]="getProfileImageUrl(currentUser()?.profile_picture)" 
+              alt="Profile Avatar" 
+              class="profile-avatar-img">
+          <div class="profile-info">
+            <span class="profile-dropdown-arrow">▿</span>
+          </div>
+        </div>
+
+        @if (isProfileDropdownOpen) {
+          <div class="profile-dropdown-menu">
+            <div class="dropdown-user-info">
+              <img [src]="getProfileImageUrl(currentUser()?.profile_picture)" 
+                  alt="Profile Avatar" 
+                  class="dropdown-avatar-img">
+              <div class="dropdown-name">
+                {{ currentUser()?.first_name || '' }}
+                {{ currentUser()?.last_name || '' }}
+              </div>
+              <div class="dropdown-email">{{ currentUser()?.email }}</div>
+            </div>
+            
+            @for (item of profileDropdownItems; track item.label) {
+              <div class="dropdown-item" (click)="handleDropdownAction(item)">
+                <img [src]="item.iconPath" alt="" class="dropdown-item-icon">
+                <span>{{ item.label }}</span>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    }
+  </div>
+</header>
+
+@if (isLogoutModalOpen) {
+  <app-confirmation-modal
+      title="Confirm Logout"
+      message="Are you sure you want to log out?"
+      confirmButtonText="Log Out"
+      cancelButtonText="Cancel"
+      (confirm)="onLogoutConfirm()"
+      (cancel)="onLogoutCancel()">
+  </app-confirmation-modal>
+}

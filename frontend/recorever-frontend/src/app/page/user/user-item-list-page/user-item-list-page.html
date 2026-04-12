@@ -1,37 +1,45 @@
 <div class="item-list-page">
   <header class="item-list-page__header">
-    <h1 class="item-list-page__title">{{ pageTitle() }}</h1>
-    <div class="item-list-page__search-wrapper">
-      <div class="search-section">
-      <app-search-bar
-        [suggestions]="searchSuggestions()"
-        (queryChange)="onQueryChange($event)"
-        (search)="onSearchSubmit($event)">
-      </app-search-bar>
-    </div>
+    
+    <div class="header-title-row">
+      <img [src]="itemType() === 'lost' ? 'assets/lost-items.png' :
+           'assets/found-items.png'" 
+           alt="Category Icon" 
+           class="title-icon">
+           
+      <h1 class="item-list-page__title toggleable-title"
+        [class.swapped]="itemType() === 'found'">
+        <span class="title-option option-lost"
+              [class.active]="itemType() === 'lost'"
+              (click)="toggleItemType('lost')">
+          Lost Items
+        </span>
+        <span class="title-separator">|</span>
+        <span class="title-option option-found"
+              [class.active]="itemType() === 'found'"
+              (click)="toggleItemType('found')">
+          Found Items
+        </span>
+      </h1>
     </div>
 
-    <div class="item-list-page__toggle-wrapper">
-      <button
-        type="button"
-        class="toggle-button"
-        [class.toggle-button--active]="!showResolved()"
-        (click)="toggleStatus(false)">
-        {{ itemType() === 'found' ? 'Unclaimed Items' : 'Unresolved Items' }}
-      </button>
-      <button
-          type="button"
-          class="toggle-button"
-          [class.toggle-button--active]="showResolved()"
-          (click)="toggleStatus(true)">
-          {{ itemType() === 'found' ? 'Claimed Items' : 'Resolved Items' }}
-      </button>
+    <hr class="header-divider">
+
+    <div class="item-list-page__search-wrapper">
+      <div class="search-section">
+        <app-search-bar
+          [suggestions]="searchSuggestions()"
+          (queryChange)="onQueryChange($event)"
+          (search)="onSearchSubmit($event)">
+        </app-search-bar>
+      </div>
     </div>
   </header>
 
   <app-filter
     [locations]="locations()"
     [itemType]="itemType()"
+    [isUserPage]="true"
     (filterChange)="onFilterChange($event)">
   </app-filter>
 

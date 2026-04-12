@@ -42,7 +42,7 @@ export class LoginPage {
           if (user.role === 'admin') {
             this.router.navigate(['/admin']);
           } else {
-            this.router.navigate(['/app']);
+            this.router.navigate(['/app/browse']);
           }
         },
         error: (err: HttpErrorResponse): void => {
