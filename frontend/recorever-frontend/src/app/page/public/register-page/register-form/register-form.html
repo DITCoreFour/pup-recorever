@@ -10,6 +10,7 @@
       <div class="input-group">
         <label>First name<span class="asterisk">*</span></label>
         <input type="text" formControlName="firstName" />
+        
         @if (getControl('firstName')?.touched) {
           @if (getControl('firstName')?.hasError('required')) {
             <span class="error-msg">This is a required question</span>
@@ -19,9 +20,11 @@
           }
         }
       </div>
+      
       <div class="input-group">
         <label>Last name<span class="asterisk">*</span></label>
         <input type="text" formControlName="lastName" />
+        
         @if (getControl('lastName')?.touched) {
           @if (getControl('lastName')?.hasError('required')) {
             <span class="error-msg">This is a required question</span>
@@ -45,6 +48,7 @@
           }
         </select>
       </div>
+      
       <div class="input-group">
         <label>Year <span class="optional-text">(student only)</span></label>
         <select formControlName="year">
@@ -65,14 +69,21 @@
 
     <div class="input-group">
       <label>Email<span class="asterisk">*</span></label>
-      <input type="email" formControlName="email" />
-      @if (getControl('email')?.touched && 
-           getControl('email')?.hasError('required')) {
-        <span class="error-msg">This is a required question</span>
-      }
-      @if (getControl('email')?.touched && 
-           getControl('email')?.hasError('email')) {
-        <span class="error-msg">Please enter a valid email format</span>
+      <input 
+        type="email" 
+        formControlName="email" 
+        placeholder="example@gmail.com" />
+      
+      @if (getControl('email')?.touched) {
+        @if (getControl('email')?.hasError('required')) {
+          <span class="error-msg">This is a required question</span>
+        }
+        @if (getControl('email')?.hasError('email')) {
+          <span class="error-msg">Please enter a valid email format</span>
+        }
+        @if (getControl('email')?.hasError('notUnique')) {
+          <span class="error-msg">This email is already registered</span>
+        }
       }
     </div>
 
@@ -118,8 +129,7 @@
         </div>
       }
 
-      @if (isPasswordFocused() && 
-           getControl('password')?.value &&
+      @if (getControl('password')?.value && 
            getControl('password')?.errors?.['passwordStrength']) {
         <div class="custom-error-text error-msg">
           @if (getControl('password')?.errors?.['passwordStrength']?.hasNumber){
@@ -151,8 +161,10 @@
            getControl('confirmPassword')?.touched) {
         <span class="error-msg">This is a required question</span>
       }
+      
       @if (getControl('confirmPassword')?.hasError('mismatch') && 
-           getControl('confirmPassword')?.touched) {
+          (getControl('confirmPassword')?.dirty || 
+           getControl('confirmPassword')?.touched)) {
         <span class="error-msg">Passwords do not match</span>
       }
     </div>
@@ -160,10 +172,19 @@
     <button 
       type="submit" 
       class="submit-btn" 
-      [disabled]="registerForm.invalid || isSubmitting">
+      [disabled]="registerForm.invalid || isSubmitting || registerForm.pending">
+      
       @if (isSubmitting) {
-        REGISTERING...
-      } @else {
+        <div class="btn-content">
+          <span class="spinner"></span> REGISTERING...
+        </div>
+      } 
+      @else if (registerForm.pending) {
+        <div class="btn-content">
+          <span class="spinner"></span> CHECKING DATA...
+        </div>
+      } 
+      @else {
         REGISTER
       }
     </button>

@@ -65,6 +65,11 @@ export class RegisterPage {
   }
 
   private extractErrorMessage(err: HttpErrorResponse): string {
+    if (err.status === 0) {
+      return 'Network error. Please check your internet connection ' +
+             'and try again.';
+    }
+
     if (err.error && typeof err.error.error === 'string') {
       return err.error.error;
     }
