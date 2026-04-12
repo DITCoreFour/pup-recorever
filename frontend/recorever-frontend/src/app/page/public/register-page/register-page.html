@@ -1,13 +1,36 @@
-<div class="page-container">
-  <div class="image-container">
-    <div class="image-placeholder">
-      <img src="assets/register.jpg">
-    </div>
-  </div>
+<div class="register-background">
+  <div class="register-card">
 
-  <div class="form-container">
-    <app-register-form (formSubmit)="onRegisterSubmit($event)"
-       [isLoading]="isLoading"
-      [errorMessage]="errorMessage"></app-register-form>
+    <div class="branding-panel">
+      <div class="branding-content">
+        <img 
+          src="../../../../../assets/temp_logo.png" 
+          alt="PUP Recover Logo" 
+          class="logo" />
+        <h2 class="branding-subtitle">Welcome to</h2>
+        <h1 class="branding-title">PUP Recover</h1>
+        <p class="branding-desc">
+          Your campus hub for lost and found items.
+        </p>
+      </div>
+      <div class="branding-footer">
+        <p>Already have an account?</p>
+        <button 
+          type="button" 
+          class="login-btn"
+          routerLink="/login">
+          Login
+        </button>
+      </div>
+    </div>
+
+    <div class="form-panel">
+      <app-register-form
+        [isSubmitting]="isLoading"
+        [errorMessage]="serverErrorMessage"
+        (registerSubmit)="onRegister($event)">
+      </app-register-form>
+    </div>
+
   </div>
 </div>

@@ -1,197 +1,154 @@
-import {
-  ChangeDetectionStrategy,
-  ChangeDetectorRef,
-  Component,
-  EventEmitter,
+import { 
+  Component, 
+  EventEmitter, 
   Input,
-  OnChanges,
-  Output,
-  SimpleChanges,
+  OnInit, 
+  Output, 
   inject,
+  signal
 } from '@angular/core';
 import { CommonModule, NgClass } from '@angular/common';
 import {
   AbstractControl,
   FormBuilder,
+  FormGroup,
   ReactiveFormsModule,
   ValidationErrors,
   ValidatorFn,
   Validators,
 } from '@angular/forms';
-import { RouterLink } from '@angular/router';
-import { RegisterRequest } from '../../../../models/auth-model';
-import { UserService } from '../../../../core/services/user-service';
+import { take } from 'rxjs/operators';
 
-type PasswordFieldType = 'password' | 'text';
+import { 
+  ProgramService, 
+  ProgramResponse 
+} from '../../../../core/services/program-service';
+
+import { 
+  RegisterFormPayload, 
+  YearLevel 
+} from '../../../../models/user-model';
+
 type PasswordStrength = 'none' | 'weak' | 'medium' | 'strong';
 
-export function noWhitespaceValidator(): ValidatorFn {
-  return (control: AbstractControl): ValidationErrors | null => {
-    const isWhitespace = (control.value || '').toString().indexOf(' ') >= 0;
-    return isWhitespace ? { hasSpaces: true } : null;
-  };
-}
-
-export function passwordMatchValidator(
-  controlName: string,
-  matchingControlName: string
-): ValidatorFn {
-  return (formGroup: AbstractControl): ValidationErrors | null => {
-    const control = formGroup.get(controlName);
-    const matchingControl = formGroup.get(matchingControlName);
-
-    if (!control || !matchingControl) {
-      return null;
-    }
-
-    if (control.value !== matchingControl.value) {
-      matchingControl.setErrors({ passwordMismatch: true });
-      return { passwordMismatch: true };
-    }
-
-    if (matchingControl.hasError('passwordMismatch')) {
-      matchingControl.setErrors(null);
-    }
-    return null;
-  };
-}
-
-export function strongPasswordValidator(): ValidatorFn {
+function strongPasswordValidator(): ValidatorFn {
   return (control: AbstractControl): ValidationErrors | null => {
     const value = control.value;
-    if (!value) {
-      return null;
-    }
+    if (!value) return null;
 
     const hasNumber = /\d/.test(value);
     const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(value);
 
-    if (hasNumber && hasSpecialChar) {
-      return null;
-    }
-
-    return {
-      passwordStrength: {
-        hasNumber: !hasNumber,
-        hasSpecialChar: !hasSpecialChar,
-      },
-    };
+    return (hasNumber && hasSpecialChar) 
+      ? null 
+      : { 
+          passwordStrength: { 
+            hasNumber: !hasNumber, 
+            hasSpecialChar: !hasSpecialChar 
+          } 
+        };
   };
 }
 
 @Component({
   selector: 'app-register-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, NgClass],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    NgClass
+  ],
   templateUrl: './register-form.html',
-  styleUrl: './register-form.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+  styleUrls: ['./register-form.scss'],
 })
-export class RegisterFormComponent implements OnChanges {
-  private formBuilder = inject(FormBuilder);
-  private userService = inject(UserService);
-  private cdr = inject(ChangeDetectorRef);
+export class RegisterForm implements OnInit {
+  private fb: FormBuilder = inject(FormBuilder);
+  private programService: ProgramService = inject(ProgramService);
 
-  @Input() isLoading = false;
-  @Input() errorMessage: string | null = null;
-  @Output() formSubmit = new EventEmitter<RegisterRequest>();
+  @Input() public isSubmitting: boolean = false;
+  @Input() public errorMessage: string | null = null;
+  @Output() public registerSubmit = new EventEmitter<RegisterFormPayload>();
 
-  passwordFieldType: PasswordFieldType = 'password';
-  confirmPasswordFieldType: PasswordFieldType = 'password';
-  passwordStrength: PasswordStrength = 'none';
+  public registerForm!: FormGroup;
+  protected hidePassword = signal(true);
+  protected hideConfirmPassword = signal(true);
+  protected isPasswordFocused = signal(false);
+  protected passwordStrength = signal<PasswordStrength>('none');
 
-  registerForm = this.formBuilder.group(
-    {
-      name: [
-        '',
-        {
-          validators: [
-            Validators.required,
-            noWhitespaceValidator(),
-          ],
-          asyncValidators: [
-            this.userService.uniqueValidator('name', '')
-          ],
+  protected programs = signal<ProgramResponse[]>([]);
+
+  public readonly years: YearLevel[] = [
+    YearLevel.FIRST_YEAR,
+    YearLevel.SECOND_YEAR,
+    YearLevel.THIRD_YEAR,
+    YearLevel.FOURTH_YEAR
+  ];
+
+  public ngOnInit(): void {
+    this.initForm();
+    this.fetchPrograms();
+
+    this.registerForm.controls['password'].valueChanges
+      .subscribe(val => {
+        this.updatePasswordStrength(val || '');
+      });
+  }
+
+  private fetchPrograms(): void {
+    this.programService.getPrograms()
+      .pipe(take(1))
+      .subscribe({
+        next: (data: ProgramResponse[]): void => {
+          this.programs.set(data);
         },
-      ],
-
-      phone_number: [
-        '',
-        {
-          validators: [
-            Validators.required,
-            Validators.pattern(/^(\+63|0)9\d{9}$/),
-          ],
-          asyncValidators: [
-            this.userService.uniqueValidator('phone_number', '')
-          ],
-        },
-      ],
-
-      email: [
-        '',
-        {
-          validators: [Validators.required, Validators.email],
-          asyncValidators: [
-            this.userService.uniqueValidator('email', '')
-          ],
-        },
-      ],
-
-      password: [
-        '',
-        {
-          validators: [
-            Validators.required,
-            Validators.minLength(8),
-            strongPasswordValidator(),
-          ],
-        },
-      ],
-
-      confirmPassword: [
-        '',
-        {
-          validators: [Validators.required],
-        },
-      ],
-    },
-    {
-      validators: [passwordMatchValidator('password', 'confirmPassword')],
-    }
-  );
-
-  constructor() {
-    this.registerForm.get('password')?.valueChanges.subscribe((value) => {
-      this.updatePasswordStrength(value || '');
-    });
+        error: (err: unknown): void => {
+          console.error('Failed to load programs', err);
+        }
+      });
   }
 
-  ngOnChanges(changes: SimpleChanges): void {
-    if (changes['isLoading'] || changes['errorMessage']) {
-      this.cdr.detectChanges();
-    }
+  private initForm(): void {
+    this.registerForm = this.fb.group({
+      firstName: ['', [Validators.required]],
+      lastName: ['', [Validators.required]],
+      programId: [null], 
+      year: [null],    
+      email: ['', [Validators.required, Validators.email]],
+      password: ['', [
+        Validators.required, 
+        Validators.minLength(8),
+        strongPasswordValidator()
+      ]],
+      confirmPassword: ['', [Validators.required]]
+    }, { validators: this.passwordMatchValidator() });
   }
 
-  get name(): AbstractControl | null {
-    return this.registerForm.get('name');
-  }
-  get phone_number(): AbstractControl | null {
-    return this.registerForm.get('phone_number');
-  }
-  get email(): AbstractControl | null {
-    return this.registerForm.get('email');
-  }
-  get password(): AbstractControl | null {
-    return this.registerForm.get('password');
-  }
-  get confirmPassword(): AbstractControl | null {
-    return this.registerForm.get('confirmPassword');
+  private passwordMatchValidator(): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+      const password = control.get('password');
+      const confirmPass = control.get('confirmPassword');
+
+      if (!password || !confirmPass) return null;
+      
+      if (password.value !== confirmPass.value) {
+        confirmPass.setErrors({ mismatch: true });
+        return { mismatch: true };
+      }
+      
+      if (confirmPass.hasError('mismatch')) {
+        const errors = { ...confirmPass.errors };
+        delete errors['mismatch'];
+        confirmPass.setErrors(
+          Object.keys(errors).length ? errors : null
+        );
+      }
+      return null;
+    };
   }
 
   private updatePasswordStrength(value: string): void {
     if (!value) {
-      this.passwordStrength = 'none';
+      this.passwordStrength.set('none');
       return;
     }
 
@@ -202,31 +159,42 @@ export class RegisterFormComponent implements OnChanges {
     if (/[a-z]/.test(value)) score++;
     if (/[A-Z]/.test(value)) score++;
 
-    if (score <= 2) {
-      this.passwordStrength = 'weak';
-    } else if (score <= 4) {
-      this.passwordStrength = 'medium';
-    } else {
-      this.passwordStrength = 'strong';
-    }
+    if (score <= 2) this.passwordStrength.set('weak');
+    else if (score <= 4) this.passwordStrength.set('medium');
+    else this.passwordStrength.set('strong');
   }
 
-  togglePasswordVisibility(): void {
-    this.passwordFieldType =
-      this.passwordFieldType === 'password' ? 'text' : 'password';
+  public getControl(controlName: string): AbstractControl | null {
+    return this.registerForm.get(controlName);
   }
 
-  toggleConfirmPasswordVisibility(): void {
-    this.confirmPasswordFieldType =
-      this.confirmPasswordFieldType === 'password' ? 'text' : 'password';
-  }
-
-  onSubmit(): void {
-    this.errorMessage = null;
-    if (this.registerForm.valid) {
-      this.formSubmit.emit(this.registerForm.getRawValue() as RegisterRequest);
+  public submitForm(): void {
+    if (this.registerForm.valid && !this.isSubmitting) {
+      this.registerSubmit.emit(
+        this.registerForm.getRawValue() as RegisterFormPayload
+      );
     } else {
       this.registerForm.markAllAsTouched();
     }
+  }
+
+  public togglePasswordVisibility(field: 'password' | 'confirm'): void {
+    if (field === 'password') this.hidePassword.update(v => !v);
+    if (field === 'confirm') this.hideConfirmPassword.update(v => !v);
+  }
+
+  public onPasswordFocus(): void {
+    this.isPasswordFocused.set(true);
+  }
+
+  public onPasswordBlur(): void {
+    this.isPasswordFocused.set(false);
+  }
+
+  public getIconSrc(isHidden: boolean): string {
+    if (isHidden) {
+      return '../../../../../assets/eye-close.png';
+    }
+    return '../../../../../assets/eye-open.png';
   }
 }

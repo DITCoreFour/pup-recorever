@@ -1,62 +1,84 @@
-import { ChangeDetectionStrategy,
-         ChangeDetectorRef,
-         Component,
-         inject
-} from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { RegisterFormComponent } from './register-form/register-form';
-import { Router } from '@angular/router';
+import { Component, inject, ChangeDetectorRef } from '@angular/core';
+import { Router, RouterLink } from '@angular/router';
+import { HttpErrorResponse } from '@angular/common/http';
+import { finalize, switchMap } from 'rxjs/operators';
+import { RegisterForm } from './register-form/register-form';
 import { AuthService } from '../../../core/auth/auth-service';
+import { ToastService } from '../../../core/services/toast-service';
 import { RegisterRequest } from '../../../models/auth-model';
-import { AppRoutePaths } from '../../../app.routes';
-import { switchMap } from 'rxjs';
+import { RegisterFormPayload } from '../../../models/user-model';
 
 @Component({
   selector: 'app-register-page',
   standalone: true,
-  imports: [CommonModule, RegisterFormComponent],
+  imports: [
+    RegisterForm,
+    RouterLink
+  ],
   templateUrl: './register-page.html',
-  styleUrl: './register-page.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+  styleUrls: ['./register-page.scss']
 })
 export class RegisterPage {
-  private router = inject(Router);
-  private authService = inject(AuthService);
-  private cdr = inject(ChangeDetectorRef);
+  private authService: AuthService = inject(AuthService);
+  private router: Router = inject(Router);
+  private cdr: ChangeDetectorRef = inject(ChangeDetectorRef);
+  private toastService: ToastService = inject(ToastService);
 
-  isLoading: boolean = false;
-  errorMessage: string | null = null;
+  public isLoading: boolean = false;
+  public serverErrorMessage: string | null = null;
 
-  onRegisterSubmit(request: RegisterRequest): void {
+  public onRegister(payload: RegisterFormPayload): void {
     this.isLoading = true;
-    this.errorMessage = null;
+    this.serverErrorMessage = null;
 
-    this.authService.register(request).pipe(
-      switchMap(() => this.authService.login(request))
-    ).subscribe({
-      next: (response) => {
-        this.isLoading = false;
-        console.log('Registration & Login Success:', response);
-        
-        this.router.navigate([AppRoutePaths.PROFILE], { 
-          queryParams: { registered: true } 
-        });
-        
-        this.cdr.markForCheck();
-      },
-      error: (error) => {
-        this.isLoading = false;
-        console.error('Registration Failed:', error);
+    const rawPayload: RegisterRequest = {
+      firstName: payload.firstName,
+      lastName: payload.lastName,
+      email: payload.email,
+      password: payload.password,
+      programId: payload.programId || null, 
+      year: payload.year || null
+    };
 
-        if (error.error && error.error.error) {
-          this.errorMessage = error.error.error;
-        } else {
-          this.errorMessage = `
-            Registration failed. Check your connection or data.
-          `;
-        }
-        this.cdr.markForCheck();
-      },
-    });
+    this.authService.register(rawPayload)
+      .pipe(
+        switchMap(() => this.authService.login({
+          email: payload.email,
+          password: payload.password
+        })),
+        finalize((): void => {
+          this.isLoading = false;
+          this.cdr.detectChanges();
+        })
+      )
+      .subscribe({
+        next: (): void => {
+          this.toastService.showSuccess('Welcome to PUP Recover!');
+          this.router.navigate(['/app']); 
+        },
+        error: (err: HttpErrorResponse): void => {
+          this.serverErrorMessage = this.extractErrorMessage(err);
+          console.error('Registration error:', err);
+          this.cdr.detectChanges();
+        }
+      });
+  }
+
+  private extractErrorMessage(err: HttpErrorResponse): string {
+    if (err.error && typeof err.error.error === 'string') {
+      return err.error.error;
+    }
+    
+    if (err.error && Array.isArray(err.error.errors)) {
+      const messages = err.error.errors
+        .map((e: { defaultMessage: string }) => e.defaultMessage)
+        .filter((msg: string) => msg);
+        
+      if (messages.length > 0) {
+        return messages.join(' • ');
+      }
+    }
+    
+    return 'Registration failed. Please check your data.';
   }
 }

@@ -109,7 +109,7 @@ public class ReportController {
 
         User reporter = userRepository.findById(report.getUserId()).orElse(null);
         if (reporter != null) {
-            dto.setReporter_name(reporter.getName());
+            dto.setReporter_name(reporter.getFullName());
             dto.setReporter_profile_picture(reporter.getProfilePicture());
         }
         return dto;

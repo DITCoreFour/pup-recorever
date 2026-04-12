@@ -38,24 +38,25 @@ public class UserService {
     }
 
     @Transactional
-    public int register(String name, String phone, String email, String pwd) {
-        if (repo.isNameTaken(name, 0)) {
-            throw new IllegalArgumentException("Username is already taken.");
-        }
-
-        if (repo.isPhoneNumberTaken(phone, 0)) {
-            throw new IllegalArgumentException("Phone number is already registered.");
-        }
-
+    public int register(
+        String firstName, 
+        String lastName, 
+        String email, 
+        String pwd, 
+        Integer programId, 
+        Integer year
+    ) {
         if (repo.isEmailTaken(email, 0)) {
-            throw new IllegalArgumentException("Email is already in use.");
+        throw new IllegalArgumentException("Email is already in use.");
         }
 
         User user = new User();
-        user.setName(name);
-        user.setPhoneNumber(phone);
+        user.setFirstName(firstName);
+        user.setLastName(lastName);
         user.setEmail(email);
         user.setPasswordHash(BCrypt.hashpw(pwd, BCrypt.gensalt()));
+        user.setProgramId(programId);
+        user.setYear(year);
         user.setRole("user");
         user.setDeleted(false);
         user.setCreatedAt(LocalDateTime.now().toString());
@@ -74,7 +75,7 @@ public class UserService {
         }
 
         String accessToken = jwtUtil.generateToken(
-                user.getUserId(), user.getName());
+                user.getUserId(), user.getFullName());
         String refreshToken = UUID.randomUUID().toString();
         
         user.setRefreshToken(refreshToken);
@@ -89,7 +90,7 @@ public class UserService {
 
     @Transactional
     public Map<String, Object> refreshTokens(User user) {
-        String newAT = jwtUtil.generateToken(user.getUserId(), user.getName());
+        String newAT = jwtUtil.generateToken(user.getUserId(), user.getFullName());
         String newRT = UUID.randomUUID().toString();
 
         user.setRefreshToken(newRT);
@@ -103,23 +104,27 @@ public class UserService {
     }
 
     @Transactional
-    public Map<String, Object> updateUserProfile(User user, String name, 
-            String phone, String email, String profilePicture) {
+    public Map<String, Object> updateUserProfile(
+        User user, String name, String email, String profilePicture
+    ) {
         int userId = user.getUserId();
 
-        if (name != null && !name.isEmpty() && !name.equals(user.getName())) {
-            if (repo.isNameTaken(name, userId)) {
-                return Map.of("error", "Username is already taken.");
-            }
-            user.setName(name);
+        // temporary solution: split full name
+        String firstName = null;
+        String lastName = null;
+
+        if (name != null && !name.isEmpty()) {
+            String[] parts = name.split(" ", 2);
+            firstName = parts[0];
+            lastName = parts.length > 1 ? parts[1] : "";
         }
 
-        if (phone != null && !phone.isEmpty() && 
-                !phone.equals(user.getPhoneNumber())) {
-            if (repo.isPhoneNumberTaken(phone, userId)) {
-                return Map.of("error", "Phone number is already in use.");
-            }
-            user.setPhoneNumber(phone);
+        if (firstName != null && !firstName.equals(user.getFirstName())) {
+            user.setFirstName(firstName);
+        }
+
+        if (lastName != null && !lastName.equals(user.getLastName())) {
+            user.setLastName(lastName);
         }
 
         if (email != null && !email.isEmpty() && 

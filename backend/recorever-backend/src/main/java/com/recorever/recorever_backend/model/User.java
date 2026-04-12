@@ -26,9 +26,6 @@ public class User implements UserDetails {
     @JsonProperty("user_id")
     private int userId;
 
-    @Column(nullable = false)
-    private String name;
-
     @Column(nullable = false, unique = true)
     private String email;
 
@@ -43,10 +40,10 @@ public class User implements UserDetails {
     @JsonProperty("profile_picture")
     private String profilePicture;
 
-    @Column(name = "phone_number")
-    @JsonProperty("phone_number")
-    private String phoneNumber;
-    
+    @Column(name = "year_level") 
+    @JsonProperty("year")
+    private Integer year;
+
     @Column(name = "created_at", updatable = false)
     @JsonProperty("created_at")
     private String createdAt;
@@ -63,11 +60,25 @@ public class User implements UserDetails {
     @JsonProperty("is_deleted")
     private boolean isDeleted;
 
+    @Column(name = "first_name", nullable = false)
+    private String firstName;
+
+    @Column(name = "last_name", nullable = false)
+    private String lastName;
+
+    @Column(name = "program_id")
+    private Integer programId;
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         String userRole = (this.role == null || this.role.isEmpty()) 
             ? "USER" : this.role.toUpperCase();
         return List.of(new SimpleGrantedAuthority("ROLE_" + userRole));
+    }
+
+    @Transient
+    public String getFullName() {
+        return firstName + " " + lastName;
     }
 
     @Override
