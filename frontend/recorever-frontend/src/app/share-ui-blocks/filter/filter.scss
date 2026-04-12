@@ -2,9 +2,7 @@
   display: flex;
   flex-wrap: wrap;
   align-items: flex-start;
-  gap: 12px;
-  width: 100%;
-  padding: 8px 0;
+  gap: 9px;
 
   .all-btn {
     height: 56px;
@@ -12,7 +10,12 @@
     border-radius: 4px;
     font-weight: 500;
     margin-top: 0;
-  }
+
+  &.active-all-btn {
+      background-color: #ad1111;
+      color: white;
+  }}
+
 
   .filter-field {
     .mat-mdc-form-field-subscript-wrapper {
@@ -26,20 +29,25 @@
 
   .fixed-size {
     flex: 0 0 200px;
-    width: 200px;
+    width: 180px;
     min-width: 150px;
+  }
+
+  .vertical-divider {
+    width: 1px;
+    height: 56px;
+    background-color: #d1d5db;
+    margin: 0 4px;
+    
   }
 }
 
-// STRICTLY HIDE ON DESKTOP
 .mobile-toggle-btn {
   display: none !important;
 }
 
-// Mobile Breakpoint (Matches your existing 768px)
 @media (max-width: 768px) {
 
-  // SHOW ONLY ON MOBILE
   .mobile-toggle-btn {
     display: flex !important;
     width: 100%;
@@ -53,7 +61,6 @@
     flex-direction: column;
     align-items: stretch;
 
-    // Hide the form container when the toggle is off
     &.mobile-hidden {
       display: none;
     }
@@ -66,5 +73,9 @@
       max-width: none;
       margin-bottom: 8px;
     }
+  }
+
+  .vertical-divider {
+    display: none;
   }
 }

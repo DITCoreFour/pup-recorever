@@ -88,6 +88,7 @@ export class LostStatusPage implements OnInit, AfterViewInit, OnDestroy {
   protected currentLocationFilter = signal<string>('');
   protected currentStatusFilter = signal<LostReportStatusFilter>('All Statuses');
   protected highlightId = signal<number | null>(null);
+  protected currentSurrenderedLocationFilter = signal<string>('');
 
   protected readonly statusFilters: LostReportStatusFilter[] = [
     'All Statuses', 'pending', 'approved', 'rejected'
@@ -105,6 +106,7 @@ export class LostStatusPage implements OnInit, AfterViewInit, OnDestroy {
     const sortType = this.currentSort();
     const dateFilter = this.currentDateFilter();
     const locationFilter = this.currentLocationFilter();
+    const surrenderedFilter = this.currentSurrenderedLocationFilter(); // New
 
     if (dateFilter) {
       const filterDateStr = dateFilter.toDateString();
@@ -114,6 +116,13 @@ export class LostStatusPage implements OnInit, AfterViewInit, OnDestroy {
 
     if (locationFilter) {
       const term = locationFilter.toLowerCase();
+      data = data.filter(r =>
+        (r.location || '').toLowerCase().includes(term)
+      );
+    }
+
+    if (surrenderedFilter) {
+      const term = surrenderedFilter.toLowerCase();
       data = data.filter(r =>
         (r.location || '').toLowerCase().includes(term)
       );
@@ -136,6 +145,12 @@ export class LostStatusPage implements OnInit, AfterViewInit, OnDestroy {
     this.currentSort.set(state.sort);
     this.currentDateFilter.set(state.date);
     this.currentLocationFilter.set(state.location);
+    this.currentSurrenderedLocationFilter.set(state.surrenderedLocation || '');
+
+    if (state.status !== undefined && state.status !== this.currentStatusFilter()) {
+      this.currentStatusFilter.set(state.status as LostReportStatusFilter);
+      this.resetAndReload(); 
+    }
   }
 
   ngOnInit(): void {

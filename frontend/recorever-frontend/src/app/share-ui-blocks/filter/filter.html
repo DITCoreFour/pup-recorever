@@ -12,9 +12,43 @@
   class="filter-bar-container"
   [class.mobile-hidden]="!isFilterVisible()">
 
+  @if (isAdminPage()) {
+    @if (adminStatusOptions().length > 0) {
+      <mat-form-field appearance="outline" class="filter-field fixed-size">
+        <mat-label>Status</mat-label>
+        <mat-select formControlName="status">
+          @for (status of adminStatusOptions(); track status) {
+            <mat-option [value]="status">
+              {{ status === 'approved' ? 'Verified' : (status | titlecase) }}
+            </mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    }
+  }
+
+  @if (isUserPage()) {
+    <mat-form-field appearance="outline" class="filter-field fixed-size">
+      <mat-label>Status</mat-label>
+      <mat-select formControlName="status">
+        <mat-option value="unresolved">{{ itemType() === 
+        'found' ? 'Unclaimed Items' : 'Unresolved Items' }}</mat-option>
+        <mat-option value="resolved">{{ itemType() === 
+        'found' ? 'Claimed Items' : 'Resolved Items' }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+  }
+
+  <div class="vertical-divider"></div>
+
+  <div
+  [formGroup]="filterForm"
+  class="filter-bar-container"
+  [class.mobile-hidden]="!isFilterVisible()">
+
   @if (isDefaultState()) {
-    <button mat-flat-button color="primary" type="button"
-        (click)="resetFilters()" class="all-btn">
+    <button mat-flat-button type="button"
+        (click)="resetFilters()" class="all-btn active-all-btn">
       All
     </button>
   } @else {
@@ -67,5 +101,25 @@
       }
     </mat-autocomplete>
   </mat-form-field>
+
+  @if (isAdminPage()) {
+    <mat-form-field appearance="outline" class="filter-field fixed-size">
+      <mat-label>Surrendered Location</mat-label>
+      <mat-select formControlName="surrenderedLocation">
+        <mat-option value="">Any Location</mat-option>
+        <mat-option value="DOST Lab">DOST Lab</mat-option>
+        <mat-option value="Guard House">Guard House</mat-option>
+      </mat-select>
+    </mat-form-field>
+  }
+  
+    <mat-form-field appearance="outline" class="filter-field fixed-size">
+      <mat-label>Category</mat-label>
+      <mat-select formControlName="category" multiple>
+        @for (cat of categories(); track cat) {
+          <mat-option [value]="cat">{{ cat }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
 
 </div>

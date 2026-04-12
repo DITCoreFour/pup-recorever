@@ -1,23 +1,7 @@
-<div class="main-viewport-container">
-  <app-header
-    [showMenuButton]="true"
-    (menuToggled)="toggleSidebar()" />
+<div class="admin-viewport-container">
+  <app-admin-header></app-admin-header>
 
-  <div class="admin-layout-container">
-
-    @if (isSidebarOpen) {
-      <div class="sidebar-backdrop" (click)="closeSidebar()"></div>
-    }
-
-    <aside
-      class="sidebar-area"
-      [class.mobile-open]="isSidebarOpen"
-      aria-label="Primary navigation">
-      <app-admin-side-bar (closeSidebar)="closeSidebar()" />
-    </aside>
-
-    <main class="content-area">
-      <router-outlet />
-    </main>
-  </div>
+  <main class="admin-layout-content">
+     <router-outlet></router-outlet>
+  </main>
 </div>
