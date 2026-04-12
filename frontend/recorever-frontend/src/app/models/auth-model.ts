@@ -4,10 +4,12 @@ export type LoginRequest = {
 };
 
 export type RegisterRequest = {
-  name: string;
-  phone_number: string;
+  firstName: string;
+  lastName: string;
   email: string;
   password: string;
+  programId: number | null;
+  year: number | null;
 };
 
 export type LoginResponse = {
