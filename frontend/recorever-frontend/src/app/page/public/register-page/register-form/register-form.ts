@@ -24,7 +24,6 @@ import {
   ProgramResponse 
 } from '../../../../core/services/program-service';
 
-// IMPORTING FROM USER MODEL INSTEAD OF LOCAL
 import { 
   RegisterFormPayload, 
   YearLevel 
@@ -75,14 +74,13 @@ export class RegisterForm implements OnInit {
   protected hideConfirmPassword = signal(true);
   protected isPasswordFocused = signal(false);
   protected passwordStrength = signal<PasswordStrength>('none');
-  
+
   protected programs = signal<ProgramResponse[]>([]);
-  
-  // STRICTLY TYPED USING THE ENUM
+
   public readonly years: YearLevel[] = [
-    YearLevel.FIRST_YEAR, 
-    YearLevel.SECOND_YEAR, 
-    YearLevel.THIRD_YEAR, 
+    YearLevel.FIRST_YEAR,
+    YearLevel.SECOND_YEAR,
+    YearLevel.THIRD_YEAR,
     YearLevel.FOURTH_YEAR
   ];
 
