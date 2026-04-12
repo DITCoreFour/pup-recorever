@@ -50,6 +50,16 @@ function strongPasswordValidator(): ValidatorFn {
   };
 }
 
+function noWhitespaceValidator(): ValidatorFn {
+  return (control: AbstractControl): ValidationErrors | null => {
+    const isWhitespace = (control.value || '').trim().length === 0;
+    
+    return !isWhitespace 
+      ? null 
+      : { whitespace: 'Name cannot contain only spaces' };
+  };
+}
+
 @Component({
   selector: 'app-register-form',
   standalone: true,
@@ -109,8 +119,8 @@ export class RegisterForm implements OnInit {
 
   private initForm(): void {
     this.registerForm = this.fb.group({
-      firstName: ['', [Validators.required]],
-      lastName: ['', [Validators.required]],
+      firstName: ['', [Validators.required, noWhitespaceValidator()]],
+      lastName: ['', [Validators.required, noWhitespaceValidator()]],
       programId: [null], 
       year: [null],    
       email: ['', [Validators.required, Validators.email]],
@@ -197,4 +207,6 @@ export class RegisterForm implements OnInit {
     }
     return '../../../../../assets/eye-open.png';
   }
+
+  
 }

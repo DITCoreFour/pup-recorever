@@ -10,17 +10,25 @@
       <div class="input-group">
         <label>First name<span class="asterisk">*</span></label>
         <input type="text" formControlName="firstName" />
-        @if (getControl('firstName')?.touched && 
-             getControl('firstName')?.hasError('required')) {
-          <span class="error-msg">This is a required question</span>
+        @if (getControl('firstName')?.touched) {
+          @if (getControl('firstName')?.hasError('required')) {
+            <span class="error-msg">This is a required question</span>
+          }
+          @if (getControl('firstName')?.hasError('whitespace')) {
+            <span class="error-msg">Cannot contain only spaces</span>
+          }
         }
       </div>
       <div class="input-group">
         <label>Last name<span class="asterisk">*</span></label>
         <input type="text" formControlName="lastName" />
-        @if (getControl('lastName')?.touched && 
-             getControl('lastName')?.hasError('required')) {
-          <span class="error-msg">This is a required question</span>
+        @if (getControl('lastName')?.touched) {
+          @if (getControl('lastName')?.hasError('required')) {
+            <span class="error-msg">This is a required question</span>
+          }
+          @if (getControl('lastName')?.hasError('whitespace')) {
+            <span class="error-msg">Cannot contain only spaces</span>
+          }
         }
       </div>
     </div>

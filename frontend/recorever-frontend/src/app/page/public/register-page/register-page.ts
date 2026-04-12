@@ -78,6 +78,10 @@ export class RegisterPage {
         return messages.join(' • ');
       }
     }
+
+    if (err.error && typeof err.error.message === 'string') {
+      return err.error.message;
+    }
     
     return 'Registration failed. Please check your data.';
   }
