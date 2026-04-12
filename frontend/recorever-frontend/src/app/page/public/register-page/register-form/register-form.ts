@@ -60,6 +60,22 @@ function noWhitespaceValidator(): ValidatorFn {
   };
 }
 
+function programYearDependencyValidator(): ValidatorFn {
+  return (control: AbstractControl): ValidationErrors | null => {
+    const progId = control.get('programId')?.value;
+    const year = control.get('year')?.value;
+
+    const hasProg = progId !== null && progId !== '';
+    const hasYear = year !== null && year !== '';
+
+    if ((hasProg && !hasYear) || (!hasProg && hasYear)) {
+      return { dependencyError: 'Program and Year must be selected together' };
+    }
+    
+    return null;
+  };
+}
+
 @Component({
   selector: 'app-register-form',
   standalone: true,
@@ -130,7 +146,12 @@ export class RegisterForm implements OnInit {
         strongPasswordValidator()
       ]],
       confirmPassword: ['', [Validators.required]]
-    }, { validators: this.passwordMatchValidator() });
+    }, { 
+      validators: [
+        this.passwordMatchValidator(),
+        programYearDependencyValidator() 
+      ] 
+    });
   }
 
   private passwordMatchValidator(): ValidatorFn {

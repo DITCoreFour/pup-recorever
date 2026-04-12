@@ -37,9 +37,9 @@
       <div class="input-group">
         <label>Program <span class="optional-text">(student only)</span></label>
         <select formControlName="programId">
-          <option [value]="null" disabled selected hidden>Select Program</option>
+          <option [ngValue]="null">Select Program...</option>
           @for (prog of programs(); track prog.programId) {
-            <option [value]="prog.programId">
+            <option [ngValue]="prog.programId">
               {{ prog.programCode }} ({{ prog.programName }})
             </option>
           }
@@ -48,13 +48,20 @@
       <div class="input-group">
         <label>Year <span class="optional-text">(student only)</span></label>
         <select formControlName="year">
-          <option [value]="null" disabled selected hidden>Select Year</option>
+          <option [ngValue]="null">Select Year...</option>
           @for (yr of years; track yr) {
-            <option [value]="yr">{{ yr }}</option>
+            <option [ngValue]="yr">{{ yr }}</option>
           }
         </select>
       </div>
     </div>
+
+    @if (registerForm.hasError('dependencyError') && 
+        (getControl('programId')?.touched || getControl('year')?.touched)) {
+      <span class="error-msg" style="margin-top: -10px; margin-bottom: 10px;">
+        Program and Year must be selected together, or both left blank.
+      </span>
+    }
 
     <div class="input-group">
       <label>Email<span class="asterisk">*</span></label>
