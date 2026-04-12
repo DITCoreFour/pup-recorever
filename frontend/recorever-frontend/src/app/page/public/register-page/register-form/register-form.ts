@@ -18,19 +18,17 @@ import {
   Validators,
 } from '@angular/forms';
 import { take } from 'rxjs/operators';
+
 import { 
   ProgramService, 
   ProgramResponse 
 } from '../../../../core/services/program-service';
 
-export type RegisterFormPayload = {
-  firstName: string;
-  lastName: string;
-  programId?: number | null;
-  year?: number | null;
-  email: string;
-  password: string;
-};
+// IMPORTING FROM USER MODEL INSTEAD OF LOCAL
+import { 
+  RegisterFormPayload, 
+  YearLevel 
+} from '../../../../models/user-model';
 
 type PasswordStrength = 'none' | 'weak' | 'medium' | 'strong';
 
@@ -79,7 +77,14 @@ export class RegisterForm implements OnInit {
   protected passwordStrength = signal<PasswordStrength>('none');
   
   protected programs = signal<ProgramResponse[]>([]);
-  public readonly years: number[] = [1, 2, 3, 4];
+  
+  // STRICTLY TYPED USING THE ENUM
+  public readonly years: YearLevel[] = [
+    YearLevel.FIRST_YEAR, 
+    YearLevel.SECOND_YEAR, 
+    YearLevel.THIRD_YEAR, 
+    YearLevel.FOURTH_YEAR
+  ];
 
   public ngOnInit(): void {
     this.initForm();

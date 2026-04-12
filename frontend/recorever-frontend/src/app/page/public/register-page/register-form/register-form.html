@@ -27,20 +27,20 @@
 
     <div class="row-group">
       <div class="input-group">
-      <label>Program <span class="optional-text">(student only)</span></label>
-      <select formControlName="programId">
+        <label>Program <span class="optional-text">(student only)</span></label>
+        <select formControlName="programId">
           <option [value]="null" disabled selected hidden>Select Program</option>
           @for (prog of programs(); track prog.programId) {
-          <option [value]="prog.programId">
-              {{ prog.programCode }}
-          </option>
+            <option [value]="prog.programId">
+              {{ prog.programCode }} ({{ prog.programName }})
+            </option>
           }
-      </select>
+        </select>
       </div>
       <div class="input-group">
         <label>Year <span class="optional-text">(student only)</span></label>
         <select formControlName="year">
-          <option value="" disabled selected hidden>Select Year</option>
+          <option [value]="null" disabled selected hidden>Select Year</option>
           @for (yr of years; track yr) {
             <option [value]="yr">{{ yr }}</option>
           }
