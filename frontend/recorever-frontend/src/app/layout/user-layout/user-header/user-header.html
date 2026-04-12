@@ -39,7 +39,10 @@
               <img [src]="getProfileImageUrl(currentUser()?.profile_picture)" 
                   alt="Profile Avatar" 
                   class="dropdown-avatar-img">
-              <div class="dropdown-name">{{ currentUser()?.name }}</div>
+              <div class="dropdown-name">
+                {{ currentUser()?.first_name || '' }}
+                {{ currentUser()?.last_name || '' }}
+              </div>
               <div class="dropdown-email">{{ currentUser()?.email }}</div>
             </div>
             
