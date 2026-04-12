@@ -53,13 +53,10 @@ function strongPasswordValidator(): ValidatorFn {
 function noWhitespaceValidator(): ValidatorFn {
   return (control: AbstractControl): ValidationErrors | null => {
     const val = control.value;
-    
     if (!val || val.length === 0) {
       return null;
     }
-
     const isWhitespace = val.trim().length === 0;
-    
     return !isWhitespace 
       ? null 
       : { whitespace: 'Cannot contain only spaces' };
@@ -141,21 +138,33 @@ export class RegisterForm implements OnInit {
 
   private initForm(): void {
     this.registerForm = this.fb.group({
-      firstName: ['', [Validators.required, noWhitespaceValidator()]],
-      lastName: ['', [Validators.required, noWhitespaceValidator()]],
+      firstName: ['', {
+        validators: [Validators.required, noWhitespaceValidator()],
+        updateOn: 'change'
+      }],
+      lastName: ['', {
+        validators: [Validators.required, noWhitespaceValidator()],
+        updateOn: 'change'
+      }],
       programId: [null], 
       year: [null],    
-      email: [
-        '', 
-        [Validators.required, Validators.email],
-        [this.userService.uniqueValidator('email', '')]
-      ],
-      password: ['', [
-        Validators.required, 
-        Validators.minLength(8),
-        strongPasswordValidator()
-      ]],
-      confirmPassword: ['', [Validators.required]]
+      email: ['', {
+        validators: [Validators.required, Validators.email],
+        asyncValidators: [this.userService.uniqueValidator('email', '')],
+        updateOn: 'change'
+      }],
+      password: ['', {
+        validators: [
+          Validators.required, 
+          Validators.minLength(8),
+          strongPasswordValidator()
+        ],
+        updateOn: 'change'
+      }],
+      confirmPassword: ['', {
+        validators: [Validators.required],
+        updateOn: 'change'
+      }]
     }, { 
       validators: [
         this.passwordMatchValidator(),
@@ -172,15 +181,22 @@ export class RegisterForm implements OnInit {
       if (!password || !confirmPass) return null;
       
       if (password.value !== confirmPass.value) {
-        confirmPass.setErrors({ mismatch: true });
+        if (!confirmPass.hasError('mismatch')) {
+          confirmPass.setErrors(
+            { ...confirmPass.errors, mismatch: true }, 
+            { emitEvent: false }
+          );
+        }
         return { mismatch: true };
       }
       
       if (confirmPass.hasError('mismatch')) {
         const errors = { ...confirmPass.errors };
         delete errors['mismatch'];
+        
         confirmPass.setErrors(
-          Object.keys(errors).length ? errors : null
+          Object.keys(errors).length ? errors : null,
+          { emitEvent: false }
         );
       }
       return null;
