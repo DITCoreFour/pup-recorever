@@ -57,33 +57,6 @@
         </div>
 
       <div class="form-group">
-        <label for="phone">Contact Number</label>
-        <input id="phone"
-               type="text"
-               formControlName="phone_number"
-               placeholder="09xxxxxxxxx"
-               maxlength="11"
-               (input)="onPhoneInput($event)">
-
-        @if (editForm.get('phone_number')?.touched ||
-            editForm.get('phone_number')?.dirty) {
-          @if (editForm.get('phone_number')?.hasError('required')) {
-            <small class="error-text">Phone number is required.</small>
-          }
-          @if (editForm.get('phone_number')?.hasError('invalidPhNumber')) {
-            <small class="error-text">
-              Must start with 09 and contain exactly 11 digits.
-            </small>
-          }
-          @if (editForm.get('phone_number')?.hasError('notUnique')) {
-            <small class="error-text">
-              This phone number is already in use.
-            </small>
-          }
-        }
-      </div>
-
-      <div class="form-group">
           <label for="email">Email</label>
           <input id="email"
                  type="email"

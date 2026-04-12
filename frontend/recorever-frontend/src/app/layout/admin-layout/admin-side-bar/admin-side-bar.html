@@ -8,8 +8,13 @@
              class="profile-avatar-img">
 
         <div class="profile-info">
-          <span class="profile-name">{{ currentUser()?.name }}</span>
-          <span class="profile-dropdown-arrow">▿</span>
+          <span class="profile-name">
+            {{ currentUser()?.first_name }} {{ currentUser()?.last_name }}
+          </span>
+
+          <div class="dropdown-name">
+            {{ currentUser()?.first_name }} {{ currentUser()?.last_name }}
+          </div>
         </div>
       </div>
 
@@ -23,7 +28,9 @@
           <img [src]="getProfileImageUrl(currentUser()?.profile_picture)"
                alt="Profile Avatar"
                class="dropdown-avatar-img">
-          <div class="dropdown-name">{{ currentUser()?.name }}</div>
+          <div class="dropdown-name">
+             {{ currentUser()?.first_name }} {{ currentUser()?.last_name }}
+           </div>
           <div class="dropdown-email">{{ currentUser()?.email }}</div>
         </div>
 

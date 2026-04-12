@@ -65,7 +65,9 @@ export class ReportDetailModal implements OnInit {
   private fetchUserName(userId: number): void {
     this.userService.getUserById(userId).subscribe({
       next: (user: User) => {
-        this.userName.set(user.name || `User ${userId}`);
+        const fullName = user ? 
+            `${user.first_name} ${user.last_name}` : `User ${userId}`;
+            this.userName.set(fullName);
       },
       error: () => {
         this.userName.set(`User ${userId} (Error)`);
