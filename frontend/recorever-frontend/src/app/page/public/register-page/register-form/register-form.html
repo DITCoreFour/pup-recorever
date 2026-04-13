@@ -20,11 +20,11 @@
           }
         }
       </div>
-      
+
       <div class="input-group">
         <label>Last name<span class="asterisk">*</span></label>
         <input type="text" formControlName="lastName" />
-        
+
         @if (getControl('lastName')?.touched) {
           @if (getControl('lastName')?.hasError('required')) {
             <span class="error-msg">This is a required question</span>
@@ -48,7 +48,7 @@
           }
         </select>
       </div>
-      
+
       <div class="input-group">
         <label>Year <span class="optional-text">(student only)</span></label>
         <select formControlName="year">
@@ -70,8 +70,8 @@
     <div class="input-group">
       <label>Email<span class="asterisk">*</span></label>
       <input 
-        type="email" 
-        formControlName="email" 
+        type="email"
+        formControlName="email"
         placeholder="example@gmail.com" />
       
       @if (getControl('email')?.touched) {
@@ -91,12 +91,12 @@
       <label>Password<span class="asterisk">*</span></label>
       <div class="password-wrapper">
         <input 
-          [type]="hidePassword() ? 'password' : 'text'" 
+          [type]="hidePassword() ? 'password' : 'text'"
           formControlName="password"
           (focus)="onPasswordFocus()"
           (blur)="onPasswordBlur()" />
         <button 
-          type="button" 
+          type="button"
           class="toggle-btn" 
           (click)="togglePasswordVisibility('password')">
           <img [src]="getIconSrc(hidePassword())" class="toggle-icon" />
@@ -129,7 +129,7 @@
         </div>
       }
 
-      @if (getControl('password')?.value && 
+      @if (getControl('password')?.value &&
            getControl('password')?.errors?.['passwordStrength']) {
         <div class="custom-error-text error-msg">
           @if (getControl('password')?.errors?.['passwordStrength']?.hasNumber){
@@ -146,10 +146,10 @@
     <div class="input-group">
       <label>Confirm Password<span class="asterisk">*</span></label>
       <div class="password-wrapper">
-        <input 
+        <input
           [type]="hideConfirmPassword() ? 'password' : 'text'" 
           formControlName="confirmPassword" />
-        <button 
+        <button
           type="button" 
           class="toggle-btn" 
           (click)="togglePasswordVisibility('confirm')">
@@ -161,7 +161,7 @@
            getControl('confirmPassword')?.touched) {
         <span class="error-msg">This is a required question</span>
       }
-      
+
       @if (getControl('confirmPassword')?.hasError('mismatch') && 
           (getControl('confirmPassword')?.dirty || 
            getControl('confirmPassword')?.touched)) {
@@ -169,7 +169,7 @@
       }
     </div>
 
-    <button 
+    <button
       type="submit" 
       class="submit-btn" 
       [disabled]="registerForm.invalid || isSubmitting || registerForm.pending">

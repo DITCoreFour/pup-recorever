@@ -107,9 +107,9 @@ export class RegisterForm implements OnInit {
   
   protected programs = signal<ProgramResponse[]>([]);
   public readonly years: YearLevel[] = [
-    YearLevel.FIRST_YEAR, 
-    YearLevel.SECOND_YEAR, 
-    YearLevel.THIRD_YEAR, 
+    YearLevel.FIRST_YEAR,
+    YearLevel.SECOND_YEAR,
+    YearLevel.THIRD_YEAR,
     YearLevel.FOURTH_YEAR
   ];
 
@@ -193,7 +193,7 @@ export class RegisterForm implements OnInit {
       if (confirmPass.hasError('mismatch')) {
         const errors = { ...confirmPass.errors };
         delete errors['mismatch'];
-        
+
         confirmPass.setErrors(
           Object.keys(errors).length ? errors : null,
           { emitEvent: false }
