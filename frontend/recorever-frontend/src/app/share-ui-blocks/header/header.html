@@ -1,51 +1,38 @@
 <header class="app-header" [class.mobile-auth-header]="showMenuButton">
+  
   <div class="logo-container">
     @if (showMenuButton) {
       <button
-        mat-icon-button
-        class="menu-btn"
-        (click)="toggleMenu()"
-        aria-label="Toggle navigation">
+          mat-icon-button
+          class="menu-btn"
+          (click)="toggleMenu()"
+          aria-label="Toggle navigation">
         <mat-icon>menu</mat-icon>
       </button>
     }
 
     <div
-      class="branding"
-      (click)="onLogoClick()"
-      role="button"
-      tabindex="0"
-      (keydown.enter)="onLogoClick()">
-      <img src="../../../assets/temp_logo.png" class="app-logo" alt="Logo">
-      <div class="text-stack">
-        <div class="app-name"
-            [ngClass]="{ 'on-homepage': (isHomepage$ | async) }">
-          ReCorever
-        </div>
-        <div class="tagline">
-          Secure. Reliable. Connected.
-        </div>
-      </div>
+        class="branding"
+        (click)="onLogoClick()"
+        role="button"
+        tabindex="0"
+        (keydown.enter)="onLogoClick()">
+      <img src="assets/temp_logo.png" class="app-logo" alt="Logo">
+      <span class="app-name">PUP•RECOVER</span> 
     </div>
   </div>
 
   @if (showButtons) {
-  <div class="auth-buttons">
-    <a routerLink="/login" class="btn login-btn">
-      Log-in
-    </a>
+    <nav class="public-nav-links">
+      <a (click)="onNavClick('how-it-works')" class="nav-item">How it Works</a>
+      <a (click)="onNavClick('features')" class="nav-item">The Features</a>
+      <a (click)="onNavClick('about-us')" class="nav-item">Who We Are</a>
+    </nav>
 
-    <a routerLink="/register" class="btn register-btn">
-      Register
-    </a>
-  </div>
-  }
-
-  @if (isLoggedIn) {
-    <div class="user-info">
-      <div class="mobile-notification-wrapper">
-        <app-notification></app-notification>
-      </div>
+    <div class="auth-buttons">
+      <a routerLink="/login" class="btn login-btn">Sign In</a>
+      <a routerLink="/register" class="btn register-btn">Register</a>
     </div>
   }
+
 </header>

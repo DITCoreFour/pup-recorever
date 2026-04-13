@@ -6,7 +6,6 @@ import { MatButtonModule } from '@angular/material/button';
 import { Observable } from 'rxjs';
 import { filter, map, startWith } from 'rxjs/operators';
 
-import { Notification } from '../notification/notification';
 import { AuthService } from '../../core/auth/auth-service';
 
 @Component({
@@ -16,15 +15,15 @@ import { AuthService } from '../../core/auth/auth-service';
     CommonModule,
     RouterModule,
     MatIconModule,
-    MatButtonModule,
-    Notification
+    MatButtonModule
   ],
   templateUrl: './header.html',
   styleUrl: './header.scss',
 })
 export class Header implements OnInit {
-  @Input() showButtons: boolean = false;
-  @Input() showMenuButton: boolean = false;
+  
+  @Input() showButtons = false; 
+  @Input() showMenuButton = false; 
 
   @Output() menuToggled = new EventEmitter<void>();
 
@@ -67,5 +66,19 @@ export class Header implements OnInit {
         onSameUrlNavigation: 'reload'
       });
     }
+  }
+
+  public onNavClick(sectionId: string): void {
+    if (this.router.url !== '/') {
+      this.router.navigate(['/']).then(() => {
+        setTimeout(() => this.scrollTo(sectionId), 100);
+      });
+    } else {
+      this.scrollTo(sectionId);
+    }
+  }
+
+  private scrollTo(id: string): void {
+    this.scroller.scrollToAnchor(id); 
   }
 }

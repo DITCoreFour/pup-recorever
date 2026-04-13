@@ -1,151 +1,120 @@
+@use "sass:color";
+
+$primary-color: #2c3e50;
+$text-main: #333;
+$text-muted: #888;
+$brand-color: #ad1111;
+$header-height: 64px;
+
 .app-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: $header-height;
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 10px 20px;
-  background-color: #fff;
-  border-bottom: 1px solid #ccc;
-  height: 40px;
-  box-sizing: content-box;
-  flex-shrink: 0;
+  justify-content: space-between;
+  padding: 0 10rem; 
+  background-color: transparent; 
+  z-index: 1000;
 
-  .logo-container {
+  @media (max-width: 1200px) {
+    padding: 0 4rem;
+  }
+  @media (max-width: 768px) {
+    padding: 0 1rem;
+  }
+}
+
+.logo-container {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+
+  .branding {
     display: flex;
     align-items: center;
+    cursor: pointer;
 
-    .menu-btn {
-      display: none;
-      margin-right: 8px;
-      color: #333;
+    .app-logo {
+      height: 60px;
+      object-fit: contain;
     }
 
-    .branding {
-      display: flex;
-      align-items: center;
-      cursor: pointer;
-      outline: none;
-      transition: opacity 0.2s ease;
-
-      &:hover {
-        opacity: 0.8;
-      }
-
-      .app-logo {
-        height: 40px;
-        margin-right: 10px;
-      }
-
-      .text-stack {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-
-        .app-name {
-          font-weight: 700;
-          font-size: 1.1rem;
-          line-height: 1.1;
-          color: #333;
-
-          &.on-homepage {
-            @media (max-width: 600px) {
-              display: none;
-            }
-          }
-        }
-
-        .tagline {
-          font-size: 0.65rem;
-          color: #666;
-          letter-spacing: 0.5px;
-        }
-      }
-    }
-  }
-
-  .auth-buttons {
-    display: flex;
-    gap: 10px;
-
-    .btn {
-      text-decoration: none;
-      padding: 8px 16px;
-      border-radius: 6px;
-      font-weight: 600;
-      font-size: 0.9rem;
-      transition: all 0.2s ease;
-      min-width: 80px;
-      text-align: center;
-
-      &.login-btn {
-        color: #333;
-        &:hover { background-color: #f5f5f5; }
-      }
-
-      &.register-btn {
-        background-color: #333;
-        color: white;
-        &:hover { background-color: #000; }
-      }
-    }
-  }
-
-  .user-info {
-    display: flex;
-    align-items: center;
-
-    .mobile-notification-wrapper {
-      display: none;
-
-      @media (max-width: 768px) {
-        display: block;
-        margin-right: 10px;
-      }
+    .app-name {
+      font-size: 18px;
+      color: $brand-color;
+      margin-left: 5px;
     }
   }
 }
 
-@media (max-width: 900px) {
-  .app-header {
-    padding: 10px 15px;
+.public-nav-links {
+  
+  @media (min-width: 768px) {
+    flex: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 40px;
+    padding: 0px 100px;
+  }
 
-    .logo-container {
-      .menu-btn {
-        display: inline-flex !important;
-        align-items: center;
-        justify-content: center;
-      }
+  .nav-item {
+    color: $text-muted;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 14px;
+    cursor: pointer;
+    padding: 8px 12px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+
+    &:hover {
+      color: $text-main;
+    }
+
+    &.active, &:active {
+      background-color: transparent;
+      color: $brand-color;
+      font-weight: bold;
+      text-decoration: underline;
+      text-underline-offset: 25px;
     }
   }
 }
 
-@media (max-width: 600px) {
-  .app-header {
-    height: auto;
-    min-height: 50px;
-    flex-wrap: wrap;
+.auth-buttons {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+  gap: 20px;
+  padding-left: 200px;
 
-    .logo-container {
-      .branding {
-        .tagline {
-          display: none;
-        }
-      }
-    }
-
-    &.mobile-auth-header {
-      position: relative;
-
-      .logo-container {
-        .branding {
-          position: absolute;
-          left: 50%;
-          transform: translateX(-50%);
-
-          .app-logo {
-            display: none;
-          }
-        }
-      }
-    }
+  .btn {
+    padding: 8px 20px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 14px;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
   }
+
+  .login-btn, .register-btn {
+    color: #141313;
+
+
+  }
+}
+
+.user-info {
+  flex: 1;
+  display: flex;
+  justify-content: flex-end;
 }
