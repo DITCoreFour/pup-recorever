@@ -1,19 +1,23 @@
 import { Component, inject, ChangeDetectorRef } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
-import { finalize, switchMap } from 'rxjs/operators';
+import { finalize } from 'rxjs/operators';
+import { CommonModule } from '@angular/common';
 import { RegisterForm } from './register-form/register-form';
 import { AuthService } from '../../../core/auth/auth-service';
 import { ToastService } from '../../../core/services/toast-service';
 import { RegisterRequest } from '../../../models/auth-model';
 import { RegisterFormPayload } from '../../../models/user-model';
+import { VerificationModalComponent } from '../../../modal/verification-modal/verification-modal';
 
 @Component({
   selector: 'app-register-page',
   standalone: true,
   imports: [
+    CommonModule,
     RegisterForm,
-    RouterLink
+    RouterLink,
+    VerificationModalComponent
   ],
   templateUrl: './register-page.html',
   styleUrls: ['./register-page.scss']
@@ -26,6 +30,10 @@ export class RegisterPage {
 
   public isLoading: boolean = false;
   public serverErrorMessage: string | null = null;
+  
+  // State management for the form panels
+  public currentStep: 'register' | 'verify' = 'register';
+  public registeredEmail: string = '';
 
   public onRegister(payload: RegisterFormPayload): void {
     this.isLoading = true;
@@ -42,10 +50,6 @@ export class RegisterPage {
 
     this.authService.register(rawPayload)
       .pipe(
-        switchMap(() => this.authService.login({
-          email: payload.email,
-          password: payload.password
-        })),
         finalize((): void => {
           this.isLoading = false;
           this.cdr.detectChanges();
@@ -53,8 +57,10 @@ export class RegisterPage {
       )
       .subscribe({
         next: (): void => {
-          this.toastService.showSuccess('Welcome to PUP Recover!');
-          this.router.navigate(['/app']); 
+          this.toastService.showSuccess('Registration successful!');
+          this.registeredEmail = payload.email;
+          this.currentStep = 'verify'; // Switch to verification panel
+          this.cdr.detectChanges();
         },
         error: (err: HttpErrorResponse): void => {
           this.serverErrorMessage = this.extractErrorMessage(err);

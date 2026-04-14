@@ -3,33 +3,32 @@
 
     <div class="branding-panel">
       <div class="branding-content">
-        <img 
-          src="../../../../../assets/temp_logo.png" 
-          alt="PUP Recover Logo" 
-          class="logo" />
+        <img src="../../../../../assets/temp_logo.png" alt="PUP Recover Logo" class="logo" />
         <h2 class="branding-subtitle">Welcome to</h2>
         <h1 class="branding-title">PUP Recover</h1>
-        <p class="branding-desc">
-          Your campus hub for lost and found items.
-        </p>
+        <p class="branding-desc">Your campus hub for lost and found items.</p>
       </div>
       <div class="branding-footer">
         <p>Already have an account?</p>
-        <button 
-          type="button" 
-          class="login-btn"
-          routerLink="/login">
-          Login
-        </button>
+        <button type="button" class="login-btn" routerLink="/login">Login</button>
       </div>
     </div>
 
     <div class="form-panel">
-      <app-register-form
-        [isSubmitting]="isLoading"
-        [errorMessage]="serverErrorMessage"
-        (registerSubmit)="onRegister($event)">
-      </app-register-form>
+      <div class="step-container" [class.active]="currentStep === 'register'">
+        <app-register-form
+          [isSubmitting]="isLoading"
+          [errorMessage]="serverErrorMessage"
+          (registerSubmit)="onRegister($event)">
+        </app-register-form>
+      </div>
+
+      <div class="step-container" [class.active]="currentStep === 'verify'">
+        <app-verification-modal
+          [email]="registeredEmail"
+          (close)="currentStep = 'register'">
+        </app-verification-modal>
+      </div>
     </div>
 
   </div>
