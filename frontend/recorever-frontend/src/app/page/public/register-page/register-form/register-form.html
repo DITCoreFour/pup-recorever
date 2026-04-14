@@ -1,26 +1,24 @@
 <div class="form-container">
+  @if (!showVerification) {
   <h1 class="form-title">Register</h1>
 
-  <form 
-    [formGroup]="registerForm" 
-    (ngSubmit)="submitForm()" 
-    class="register-form">
-    
+  <form [formGroup]="registerForm" (ngSubmit)="submitRegister()" class="register-form">
+
     <div class="row-group">
       <div class="input-group">
         <label>First name<span class="asterisk">*</span></label>
         <input type="text" formControlName="firstName" />
-        @if (getControl('firstName')?.touched && 
-             getControl('firstName')?.hasError('required')) {
-          <span class="error-msg">This is a required question</span>
+        @if (getControl('register', 'firstName')?.touched &&
+        getControl('register', 'firstName')?.hasError('required')) {
+        <span class="error-msg">This is a required question</span>
         }
       </div>
       <div class="input-group">
         <label>Last name<span class="asterisk">*</span></label>
         <input type="text" formControlName="lastName" />
-        @if (getControl('lastName')?.touched && 
-             getControl('lastName')?.hasError('required')) {
-          <span class="error-msg">This is a required question</span>
+        @if (getControl('register', 'lastName')?.touched &&
+        getControl('register', 'lastName')?.hasError('required')) {
+        <span class="error-msg">This is a required question</span>
         }
       </div>
     </div>
@@ -51,13 +49,13 @@
     <div class="input-group">
       <label>Email<span class="asterisk">*</span></label>
       <input type="email" formControlName="email" />
-      @if (getControl('email')?.touched && 
-           getControl('email')?.hasError('required')) {
-        <span class="error-msg">This is a required question</span>
+      @if (getControl('register', 'email')?.touched) {
+      @if (getControl('register', 'email')?.hasError('required')) {
+      <span class="error-msg">This is a required question</span>
       }
-      @if (getControl('email')?.touched && 
-           getControl('email')?.hasError('email')) {
-        <span class="error-msg">Please enter a valid email format</span>
+      @if (getControl('register', 'email')?.hasError('email')) {
+      <span class="error-msg">Please enter a valid email format</span>
+      }
       }
     </div>
 
@@ -76,45 +74,43 @@
           <img [src]="getIconSrc(hidePassword())" class="toggle-icon" />
         </button>
       </div>
-      
-      @if (getControl('password')?.hasError('required') && 
-           getControl('password')?.touched) {
-        <span class="error-msg">This is a required question</span>
+
+      @if (getControl('register', 'password')?.touched) {
+      @if (getControl('register', 'password')?.hasError('required')) {
+      <span class="error-msg">This is a required question</span>
       }
-      @if (getControl('password')?.hasError('minlength') && 
-           getControl('password')?.touched) {
-        <span class="error-msg">Must be at least 8 characters</span>
+      @if (getControl('register', 'password')?.hasError('minlength')) {
+      <span class="error-msg">Must be at least 8 characters</span>
+      }
       }
 
-      @if (passwordStrength() !== 'none' && 
-           getControl('password')?.value &&
-           isPasswordFocused()) {
-        <div class="strength-meter">
-          <span class="strength-text">Strength:</span>
-          <div class="strength-bar-container">
-            <div class="strength-bar" 
-              [ngClass]="passwordStrength()">
-            </div>
-          </div>
-          <span class="strength-label" 
-            [ngClass]="passwordStrength()">
-            {{ passwordStrength() }}
-          </span>
+      @if (passwordStrength() !== 'none' &&
+      getControl('register', 'password')?.value &&
+      isPasswordFocused()) {
+      <div class="strength-meter">
+        <span class="strength-text">Strength:</span>
+        <div class="strength-bar-container">
+          <div class="strength-bar" [ngClass]="passwordStrength()"></div>
         </div>
+        <span class="strength-label" [ngClass]="passwordStrength()">
+          {{ passwordStrength() }}
+        </span>
+      </div>
       }
 
-      @if (isPasswordFocused() && 
-           getControl('password')?.value &&
-           getControl('password')?.errors?.['passwordStrength']) {
-        <div class="custom-error-text error-msg">
-          @if (getControl('password')?.errors?.['passwordStrength']?.hasNumber){
-            <span>• Must contain at least one number.</span>
-          }
-          @if (getControl('password')?.errors?.
-                ['passwordStrength']?.hasSpecialChar) {
-            <span>• Must contain at least one special character.</span>
-          }
-        </div>
+      @if (isPasswordFocused() &&
+      getControl('register', 'password')?.value &&
+      getControl('register', 'password')?.errors?.['passwordStrength']) {
+      <div class="custom-error-text error-msg">
+        @if (getControl('register', 'password')?.errors?.
+        ['passwordStrength']?.hasNumber) {
+        <span>• Must contain at least one number.</span>
+        }
+        @if (getControl('register', 'password')?.errors?.
+        ['passwordStrength']?.hasSpecialChar) {
+        <span>• Must contain at least one special character.</span>
+        }
+      </div>
       }
     </div>
 
@@ -131,33 +127,60 @@
           <img [src]="getIconSrc(hideConfirmPassword())" class="toggle-icon" />
         </button>
       </div>
-      
-      @if (getControl('confirmPassword')?.hasError('required') && 
-           getControl('confirmPassword')?.touched) {
-        <span class="error-msg">This is a required question</span>
+      @if (getControl('register', 'confirmPassword')?.touched) {
+      @if (getControl('register', 'confirmPassword')?.hasError('required')) {
+      <span class="error-msg">This is a required question</span>
       }
-      @if (getControl('confirmPassword')?.hasError('mismatch') && 
-           getControl('confirmPassword')?.touched) {
-        <span class="error-msg">Passwords do not match</span>
+      @if (getControl('register', 'confirmPassword')?.hasError('mismatch')) {
+      <span class="error-msg">Passwords do not match</span>
+      }
+      }
+    </div>
+
+    <button type="submit" class="submit-btn" [disabled]="registerForm.invalid || isSubmitting">
+      {{ isSubmitting ? 'REGISTERING...' : 'REGISTER' }}
+    </button>
+
+    @if (errorMessage) { <div class="error-banner">{{ errorMessage }}</div> }
+  </form>
+
+  } @else {
+  <h1 class="form-title">Verify Email</h1>
+  <p class="verification-subtitle">
+    We've sent a 5-digit code to
+    <strong>{{ registerForm.get('email')?.value }}</strong>
+  </p>
+
+  <form [formGroup]="verificationForm" (ngSubmit)="submitVerification()" class="register-form">
+    <div class="input-group">
+      <label>Verification Code<span class="asterisk">*</span></label>
+      <input type="text" formControlName="code" placeholder="Enter 5-digit code" maxlength="5" class="code-input" />
+      @if (getControl('verify', 'code')?.touched) {
+      @if (getControl('verify', 'code')?.hasError('required')) {
+      <span class="error-msg">Required</span>
+      }
+      @if (getControl('verify', 'code')?.hasError('pattern')) {
+      <span class="error-msg">Code must be 5 digits</span>
+      }
       }
     </div>
 
     <button 
       type="submit" 
       class="submit-btn" 
-      [disabled]="registerForm.invalid || isSubmitting">
-      @if (isSubmitting) {
-        REGISTERING...
-      } @else {
-        REGISTER
-      }
+      [disabled]="verificationForm.invalid || isSubmitting">
+      {{ isSubmitting ? 'VERIFYING...' : 'VERIFY' }}
     </button>
 
-    @if (errorMessage) {
-      <div class="error-banner">
-        {{ errorMessage }}
-      </div>
-    }
-    
+    <div class="resend-container">
+      <p>Didn't receive the code?
+        <button type="button" class="link-btn" (click)="resendCode.emit()">
+          Resend Code
+        </button>
+      </p>
+    </div>
+
+    @if (errorMessage) { <div class="error-banner">{{ errorMessage }}</div> }
   </form>
+  }
 </div>
