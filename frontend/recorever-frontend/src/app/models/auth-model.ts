@@ -25,3 +25,17 @@ export type LogoutResponse = {
   success: boolean;
   message: string;
 }
+
+export interface MessageResponse {
+  message: string;
+}
+
+export interface ErrorResponse {
+  error: string;
+}
+
+export interface VerificationResponse {
+  success: boolean;
+  message?: string;
+  error?: string;
+}
