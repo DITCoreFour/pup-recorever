@@ -3,6 +3,11 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { UserService } from '../../core/services/user-service';
 import { ToastService } from '../../core/services/toast-service';
+import { 
+  MessageResponse, 
+  VerificationResponse, 
+  ErrorResponse 
+} from '../../models/auth-model';
 
 @Component({
   selector: 'app-verification-modal',
@@ -19,10 +24,11 @@ export class VerificationModalComponent implements OnInit, OnDestroy {
   private toastService = inject(ToastService);
   private router = inject(Router);
 
-  // Using an array to track digits
-  public digits = ['', '', '', '', ''];
-  public timeLeft = signal(60);
-  private timerInterval: any;
+  // State management
+  public digits: string[] = ['', '', '', '', ''];
+  public timeLeft = signal<number>(60);
+  public isLoading = signal<boolean>(false);
+  private timerInterval: ReturnType<typeof setInterval> | null = null;
 
   ngOnInit(): void {
     this.startTimer();
@@ -45,7 +51,10 @@ export class VerificationModalComponent implements OnInit, OnDestroy {
   }
 
   stopTimer(): void {
-    if (this.timerInterval) clearInterval(this.timerInterval);
+    if (this.timerInterval) {
+      clearInterval(this.timerInterval);
+      this.timerInterval = null;
+    }
   }
 
   onInput(event: Event, index: number): void {
@@ -64,10 +73,6 @@ export class VerificationModalComponent implements OnInit, OnDestroy {
     }
   }
 
-  isConfirmDisabled(): boolean {
-    return this.digits.filter(d => d !== '').length < 5;
-  }
-
   onKeyDown(event: KeyboardEvent, index: number): void {
     if (event.key === 'Backspace' && !this.digits[index] && index > 0) {
       const prevInput = document.getElementById(`otp-${index - 1}`) as HTMLInputElement;
@@ -75,13 +80,34 @@ export class VerificationModalComponent implements OnInit, OnDestroy {
     }
   }
 
+  isConfirmDisabled(): boolean {
+    return this.digits.filter(d => d !== '').length < 5 || this.isLoading();
+  }
+
+  backToRegistration(): void {
+    this.isLoading.set(true);
+    this.userService.cancelRegistration(this.email).subscribe({
+      next: (res: MessageResponse) => {
+        this.isLoading.set(false);
+        this.toastService.showSuccess(res.message);
+        this.close.emit(); // Switches back to registration step
+      },
+      error: (err: { error: ErrorResponse }) => {
+        this.isLoading.set(false);
+        this.toastService.showError(err.error.error || 'Could not reset registration.');
+      }
+    });
+  }
+
   resendCode(): void {
     this.userService.sendNewVerificationCode(0, this.email).subscribe({
-      next: () => {
-        this.toastService.showSuccess('New code sent!');
+      next: (res: MessageResponse) => {
+        this.toastService.showSuccess(res.message);
         this.startTimer();
       },
-      error: (err) => this.toastService.showError(err.error?.error || 'Failed to resend.')
+      error: (err: { error: ErrorResponse }) => {
+        this.toastService.showError(err.error.error || 'Failed to resend code.');
+      }
     });
   }
 
@@ -89,13 +115,18 @@ export class VerificationModalComponent implements OnInit, OnDestroy {
     const code = this.digits.join('');
     if (code.length !== 5) return;
 
+    this.isLoading.set(true);
     this.userService.verifyUserEmail(code).subscribe({
-      next: () => {
-        this.toastService.showSuccess('Account activated!');
+      next: (res: VerificationResponse) => {
+        this.isLoading.set(false);
+        this.toastService.showSuccess(res.message || 'Account activated!');
         this.close.emit();
         this.router.navigate(['/login']);
       },
-      error: (err) => this.toastService.showError(err.error?.error || 'Invalid code.')
+      error: (err: { error: ErrorResponse }) => {
+        this.isLoading.set(false);
+        this.toastService.showError(err.error.error || 'Invalid verification code.');
+      }
     });
   }
 }
