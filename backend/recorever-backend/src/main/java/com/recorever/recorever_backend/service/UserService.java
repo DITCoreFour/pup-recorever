@@ -130,6 +130,16 @@ public class UserService {
         return true;
     }
 
+    @Transactional
+    public void cancelRegistration(String email) {
+        repo.findByEmail(email).ifPresent(user -> {
+            if (user.isDeleted()) {
+                securityCodeRepo.deleteByUserId(user.getUserId());
+                repo.delete(user);
+            }
+        });
+    }
+
     public Map<String, Object> login(String email, String password) {
         User user = repo.findByEmailAndIsDeletedFalse(email)
                 .orElseThrow(() -> new IllegalArgumentException(
