@@ -28,6 +28,15 @@ export class UserService {
 
   currentUser$ = this.authService.currentUser$;
 
+  sendNewVerificationCode(userId: number, email: string): Observable<any> {
+    return this.http.post(`${this.API_BASE_URL}/resend-verification`, { email });
+  }
+
+  verifyUserEmail(token: string): Observable<any> {
+    const params = new HttpParams().set('token', token);
+    return this.http.get(`${this.API_BASE_URL}/verify-email`, { params });
+  }
+
   getProfile(): Observable<User> {
     return this.http
       .get<User>(`${this.API_BASE_URL}/get-user-data`)
