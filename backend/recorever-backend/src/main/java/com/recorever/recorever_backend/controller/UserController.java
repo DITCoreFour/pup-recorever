@@ -74,7 +74,7 @@ public class UserController {
                 registrationDto.getYear()
         );
 
-        User newUser = repo.findByIdAndIsDeletedFalse(userId)
+        User newUser = repo.findById(userId)
             .orElseThrow(() -> new RuntimeException(
                 "User not found after registration"
             ));
@@ -90,6 +90,50 @@ public class UserController {
             "error", "An unexpected error occurred."
         ));
         }
+    }
+
+    // Email Verification Endpoint
+    @GetMapping("/verify-email")
+    public ResponseEntity<?> verifyEmail(@RequestParam String token) {
+        if (service.verifyUserEmail(token)) {
+            return ResponseEntity.ok(Map.of(
+                "success", true, 
+                "message", "Email verified successfully. You can now login."
+            ));
+        }
+        return ResponseEntity.badRequest().body(Map.of(
+            "success", false, 
+            "error", "Invalid or expired verification token."
+        ));
+    }
+
+    @PostMapping("/resend-verification")
+    public ResponseEntity<?> resendCode(
+        @RequestBody Map<String, String> request
+    ) {
+        String email = request.get("email");
+        // Verify user exists and is still inactive/deleted=true
+        return repo.findByEmailAndIsDeletedFalse(email).map(user -> {
+            return ResponseEntity.badRequest().body(
+                Map.of("error", "Account is already active.")
+            );
+        }).orElseGet(() -> {
+            return repo.findAll().stream()
+                .filter(u -> u.getEmail().equals(email) && u.isDeleted())
+                .findFirst()
+                .map(user -> {
+                    service.sendNewVerificationCode(
+                        user.getUserId(), 
+                        email, 
+                        true
+                    );
+                    return ResponseEntity.ok(Map.of(
+                        "message", "New 60-second verification code sent."
+                    ));
+                }).orElse(ResponseEntity.status(404).body(
+                    Map.of("error", "User not found.")
+                ));
+        });
     }
 
     @PostMapping("/login-user")
