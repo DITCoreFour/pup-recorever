@@ -14,6 +14,7 @@ import com.recorever.recorever_backend.dto.UserResponseDTO;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -134,6 +135,18 @@ public class UserController {
                     Map.of("error", "User not found.")
                 ));
         });
+    }
+
+    @DeleteMapping("/cancel-registration")
+    public ResponseEntity<Map<String, String>> cancelRegistration(@RequestParam String email) {
+        try {
+            service.cancelRegistration(email);
+            return ResponseEntity.ok(Map.of("message", "You can now enter your correct email address."));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                            .body(Map.of("error", "We encountered a problem" + 
+                            "updating your email request. Please try again in a moment."));
+        }
     }
 
     @PostMapping("/login-user")
