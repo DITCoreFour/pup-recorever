@@ -1,9 +1,11 @@
 package com.recorever.recorever_backend.service;
 
 import com.recorever.recorever_backend.config.JwtUtil;
+import com.recorever.recorever_backend.model.SecurityCode;
 import com.recorever.recorever_backend.model.User;
 import com.recorever.recorever_backend.repository.UserRepository;
 import com.recorever.recorever_backend.repository.ReportRepository;
+import com.recorever.recorever_backend.repository.SecurityCodeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Service;
@@ -24,6 +26,12 @@ public class UserService {
 
     @Autowired
     private ReportRepository reportRepo;
+
+    @Autowired
+    private SecurityCodeRepository securityCodeRepo;
+
+    @Autowired
+    private EmailService emailService;
 
     private static final int ADMIN_USER_ID = 1;
 
@@ -58,11 +66,68 @@ public class UserService {
         user.setProgramId(programId);
         user.setYear(year);
         user.setRole("user");
-        user.setDeleted(false);
+        user.setDeleted(true); // Account is inactive until verified
         user.setCreatedAt(LocalDateTime.now().toString());
 
         User savedUser = repo.save(user);
+
+        // Generate and send the 5-digit code
+        sendNewVerificationCode(savedUser.getUserId(), email, false);
+
         return savedUser.getUserId();
+    }
+
+    @Transactional
+    public void sendNewVerificationCode(
+        int userId, 
+        String email, 
+        boolean isResend
+    ) {
+        // Generate a random 5-digit code
+        String code = String.valueOf((int) (Math.random() * 90000) + 10000);
+
+        SecurityCode sc = new SecurityCode();
+        sc.setUserId(userId);
+        sc.setVerificationToken(code);
+        sc.setType("EMAIL_VERIFICATION");
+        sc.setVerified(false);
+        sc.setCreatedAt(LocalDateTime.now());
+
+        LocalDateTime expiryTime = isResend
+                ? LocalDateTime.now().plusSeconds(60)
+                : LocalDateTime.now().plusMinutes(5);
+
+        sc.setExpiresAt(expiryTime);
+        securityCodeRepo.save(sc);
+
+        emailService.sendVerificationCode(email, code, isResend);
+    }
+
+    @Transactional
+    public boolean verifyUserEmail(String token) {
+        SecurityCode code = securityCodeRepo.findByVerificationToken(token)
+                .orElseThrow(() -> new IllegalArgumentException(
+                    "Invalid verification code."));
+
+        if (code.isVerified()) {
+            throw new IllegalArgumentException(
+                "This code has already been used.");
+        }
+
+        if (code.getExpiresAt().isBefore(LocalDateTime.now())) {
+            throw new IllegalArgumentException(
+                "Verification code has expired. Please request a new one.");
+        }
+
+        // Activate User
+        repo.findById(code.getUserId()).ifPresent(user -> {
+            user.setDeleted(false);
+            repo.save(user);
+        });
+
+        code.setVerified(true);
+        securityCodeRepo.save(code);
+        return true;
     }
 
     public Map<String, Object> login(String email, String password) {
