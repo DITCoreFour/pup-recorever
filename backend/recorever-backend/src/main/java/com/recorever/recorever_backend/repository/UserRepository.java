@@ -54,4 +54,11 @@ public interface UserRepository extends JpaRepository<User, Integer> {
     int softDeleteUser(
         @Param("id") int id
     );
+
+    @Modifying
+    @Transactional
+    @Query("DELETE FROM User u WHERE u.email = :email AND u.isDeleted = true")
+    void deleteInactiveUserByEmail(@Param("email") String email);
+
+    Optional<User> findByEmail(String email);
 }
