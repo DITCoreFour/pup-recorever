@@ -9,11 +9,11 @@
         <label>First name<span class="asterisk">*</span></label>
         <input type="text" formControlName="firstName" />
         
-        @if (getControl('firstName')?.touched) {
-          @if (getControl('firstName')?.hasError('required')) {
+        @if (getControl('register', 'firstName')?.touched) {
+          @if (getControl('register', 'firstName')?.hasError('required')) {
             <span class="error-msg">This is a required question</span>
           }
-          @if (getControl('firstName')?.hasError('whitespace')) {
+          @if (getControl('register', 'firstName')?.hasError('whitespace')) {
             <span class="error-msg">Cannot contain only spaces</span>
           }
         }
@@ -23,11 +23,11 @@
         <label>Last name<span class="asterisk">*</span></label>
         <input type="text" formControlName="lastName" />
 
-        @if (getControl('lastName')?.touched) {
-          @if (getControl('lastName')?.hasError('required')) {
+        @if (getControl('register', 'lastName')?.touched) {
+          @if (getControl('register', 'lastName')?.hasError('required')) {
             <span class="error-msg">This is a required question</span>
           }
-          @if (getControl('lastName')?.hasError('whitespace')) {
+          @if (getControl('register', 'lastName')?.hasError('whitespace')) {
             <span class="error-msg">Cannot contain only spaces</span>
           }
         }
@@ -59,7 +59,7 @@
     </div>
 
     @if (registerForm.hasError('dependencyError') && 
-        (getControl('programId')?.touched || getControl('year')?.touched)) {
+        (getControl('register', 'programId')?.touched || getControl('register', 'year')?.touched)) {
       <span class="error-msg" style="margin-top: -10px; margin-bottom: 10px;">
         Program and Year must be selected together, or both left blank.
       </span>
@@ -72,18 +72,18 @@
         formControlName="email"
         placeholder="example@gmail.com" />
       
-      @if (getControl('email')?.touched) {
-        @if (getControl('email')?.hasError('required')) {
+      @if (getControl('register', 'email')?.touched) {
+        @if (getControl('register', 'email')?.hasError('required')) {
           <span class="error-msg">This is a required question</span>
         }
-        @if (getControl('email')?.hasError('email')) {
+        @if (getControl('register', 'email')?.hasError('email')) {
           <span class="error-msg">Please enter a valid email format</span>
         }
-        @if (getControl('email')?.hasError('notUnique')) {
+        @if (getControl('register', 'email')?.hasError('notUnique')) {
           <span class="error-msg">This email is already registered</span>
         }
       }
-      }
+
     </div>
 
     <div class="input-group">
@@ -125,13 +125,13 @@
       </div>
       }
 
-      @if (getControl('password')?.value &&
-           getControl('password')?.errors?.['passwordStrength']) {
+      @if (getControl('register', 'password')?.value &&
+           getControl('register', 'password')?.errors?.['passwordStrength']) {
         <div class="custom-error-text error-msg">
-          @if (getControl('password')?.errors?.['passwordStrength']?.hasNumber){
+          @if (getControl('register', 'password')?.errors?.['passwordStrength']?.hasNumber){
             <span>• Must contain at least one number.</span>
           }
-          @if (getControl('password')?.errors?.
+          @if (getControl('register', 'password')?.errors?.
                 ['passwordStrength']?.hasSpecialChar) {
             <span>• Must contain at least one special character.</span>
           }
@@ -157,9 +157,9 @@
       <span class="error-msg">This is a required question</span>
       }
 
-      @if (getControl('confirmPassword')?.hasError('mismatch') && 
-          (getControl('confirmPassword')?.dirty || 
-           getControl('confirmPassword')?.touched)) {
+      @if (getControl('register', 'confirmPassword')?.hasError('mismatch') && 
+          (getControl('register', 'confirmPassword')?.dirty || 
+           getControl('register', 'confirmPassword')?.touched)) {
         <span class="error-msg">Passwords do not match</span>
       }
       }
