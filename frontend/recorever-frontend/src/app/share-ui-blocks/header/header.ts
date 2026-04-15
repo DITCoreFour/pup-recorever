@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, HostListener } from '@angular/core';
 import { CommonModule, ViewportScroller } from '@angular/common';
 import { RouterModule, Router, RouteReuseStrategy, NavigationEnd, Event as RouterEvent } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
@@ -30,6 +30,8 @@ export class Header implements OnInit {
   public isHomepage$: Observable<boolean>;
   public isLoggedIn = false;
 
+  public isScrolled: boolean = false;
+
   constructor(
     private authService: AuthService,
     private router: Router,
@@ -46,6 +48,12 @@ export class Header implements OnInit {
 
   ngOnInit(): void {
     this.isLoggedIn = this.authService.isLoggedIn();
+  }
+
+  @HostListener('window:scroll', [])
+  public onWindowScroll(): void {
+    const scrollPosition: [number, number] = this.scroller.getScrollPosition();
+    this.isScrolled = scrollPosition[1] > 50; 
   }
 
   public toggleMenu(): void {
