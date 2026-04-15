@@ -1,19 +1,25 @@
-<div class="homepage-content">
-
-  <div class="main-message">
-    <h1>Lost and found,<br>simplified.</h1>
-    <p class="tagline">
-      Connecting people to their missing belongings with ease.
-      Secure, reliable, and always accessible.
-    </p>
+<div class="hero">
+  <div class="bg">
+    <div class="bg2"></div>
+    <div class="bg3"></div>
+    <img class="dots" src="assets/dots0.svg" />
+    <div class="oval"></div>
+    <div class="oval-copy"></div>
+    <div class="oval-copy-2"></div>
   </div>
+  <img class="wave" src="assets/wave0.svg" />
+  <div class="content">
+    <div class="top">
+      <div class="manage-your-remote-t">PUP Recover</div>
+      <div class="with-lots-of-unique">
+        Welcome here, the centralized, real-time web platform designed to help
+        our campus community securely report, track, and recover misplaced
+        belongings.
+        <br />
+      </div>
+     
+      <div class="browse-items-here">Browse Items here</div>
 
-  <div class="action-card">
-    <div class="card-header">
-      <h2>I want to report...</h2>
-    </div>
-
-    <div class="buttons-wrapper">
       <app-report-button
         theme="lost"
         label="Lost Item"
@@ -24,12 +30,5 @@
         label="Found Item"
         (buttonClicked)="navigateToFound()" />
     </div>
-
-    <div class="image-box-placeholder">
-      <img src="assets/homepage.jpg"
-           alt="Illustration of community helping each other"
-           class="placeholder-image">
-    </div>
   </div>
-
 </div>
