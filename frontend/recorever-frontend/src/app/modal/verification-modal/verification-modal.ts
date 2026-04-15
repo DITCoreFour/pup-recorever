@@ -125,7 +125,8 @@ export class VerificationModalComponent implements OnInit, OnDestroy {
       },
       error: (err: { error: ErrorResponse }) => {
         this.isLoading.set(false);
-        this.toastService.showError(err.error.error || 'Invalid verification code.');
+        const message = err.error?.error || 'Verification failed. Please try again.';
+        this.toastService.showError(message);
       }
     });
   }

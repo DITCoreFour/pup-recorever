@@ -96,16 +96,23 @@ public class UserController {
     // Email Verification Endpoint
     @GetMapping("/verify-email")
     public ResponseEntity<?> verifyEmail(@RequestParam String token) {
-        if (service.verifyUserEmail(token)) {
+        try {
+            service.verifyUserEmail(token);
             return ResponseEntity.ok(Map.of(
                 "success", true, 
                 "message", "Email verified successfully. You can now login."
             ));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                "success", false, 
+                "error", e.getMessage()
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
+                "success", false,
+                "error", "An unexpected error occurred. Please try again."
+            ));
         }
-        return ResponseEntity.badRequest().body(Map.of(
-            "success", false, 
-            "error", "Invalid or expired verification token."
-        ));
     }
 
     @PostMapping("/resend-verification")
