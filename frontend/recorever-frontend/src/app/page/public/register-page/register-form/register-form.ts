@@ -23,7 +23,7 @@ import {
   ProgramService, 
   ProgramResponse 
 } from '../../../../core/services/program-service';
-
+import { UserService } from '../../../../core/services/user-service';
 import { 
   RegisterFormPayload, 
   YearLevel 
@@ -50,6 +50,35 @@ function strongPasswordValidator(): ValidatorFn {
   };
 }
 
+function noWhitespaceValidator(): ValidatorFn {
+  return (control: AbstractControl): ValidationErrors | null => {
+    const val = control.value;
+    if (!val || val.length === 0) {
+      return null;
+    }
+    const isWhitespace = val.trim().length === 0;
+    return !isWhitespace 
+      ? null 
+      : { whitespace: 'Cannot contain only spaces' };
+  };
+}
+
+function programYearDependencyValidator(): ValidatorFn {
+  return (control: AbstractControl): ValidationErrors | null => {
+    const progId = control.get('programId')?.value;
+    const year = control.get('year')?.value;
+
+    const hasProg = progId !== null && progId !== '';
+    const hasYear = year !== null && year !== '';
+
+    if ((hasProg && !hasYear) || (!hasProg && hasYear)) {
+      return { dependencyError: 'Program and Year must be selected together' };
+    }
+    
+    return null;
+  };
+}
+
 @Component({
   selector: 'app-register-form',
   standalone: true,
@@ -64,6 +93,7 @@ function strongPasswordValidator(): ValidatorFn {
 export class RegisterForm implements OnInit {
   private fb: FormBuilder = inject(FormBuilder);
   private programService: ProgramService = inject(ProgramService);
+  private userService: UserService = inject(UserService);
 
   @Input() public isSubmitting: boolean = false;
   @Input() public errorMessage: string | null = null;
@@ -80,9 +110,8 @@ export class RegisterForm implements OnInit {
   protected hideConfirmPassword = signal(true);
   protected isPasswordFocused = signal(false);
   protected passwordStrength = signal<PasswordStrength>('none');
-
+  
   protected programs = signal<ProgramResponse[]>([]);
-
   public readonly years: YearLevel[] = [
     YearLevel.FIRST_YEAR,
     YearLevel.SECOND_YEAR,
@@ -115,21 +144,38 @@ export class RegisterForm implements OnInit {
 
   private initForms(): void {
     this.registerForm = this.fb.group({
-      firstName: ['', [Validators.required]],
-      lastName: ['', [Validators.required]],
+      firstName: ['', {
+        validators: [Validators.required, noWhitespaceValidator()],
+        updateOn: 'change'
+      }],
+      lastName: ['', {
+        validators: [Validators.required, noWhitespaceValidator()],
+        updateOn: 'change'
+      }],
       programId: [null], 
       year: [null],    
-      email: ['', [Validators.required, Validators.email]],
-      password: ['', [
-        Validators.required, 
-        Validators.minLength(8),
-        strongPasswordValidator()
-      ]],
-      confirmPassword: ['', [Validators.required]]
-    }, { validators: this.passwordMatchValidator() });
-
-    this.verificationForm = this.fb.group({
-      code: ['', [Validators.required, Validators.pattern('^[0-9]{5}$')]]
+      email: ['', {
+        validators: [Validators.required, Validators.email],
+        asyncValidators: [this.userService.uniqueValidator('email', '')],
+        updateOn: 'change'
+      }],
+      password: ['', {
+        validators: [
+          Validators.required, 
+          Validators.minLength(8),
+          strongPasswordValidator()
+        ],
+        updateOn: 'change'
+      }],
+      confirmPassword: ['', {
+        validators: [Validators.required],
+        updateOn: 'change'
+      }]
+    }, { 
+      validators: [
+        this.passwordMatchValidator(),
+        programYearDependencyValidator() 
+      ] 
     });
   }
 
@@ -141,15 +187,22 @@ export class RegisterForm implements OnInit {
       if (!password || !confirmPass) return null;
       
       if (password.value !== confirmPass.value) {
-        confirmPass.setErrors({ mismatch: true });
+        if (!confirmPass.hasError('mismatch')) {
+          confirmPass.setErrors(
+            { ...confirmPass.errors, mismatch: true }, 
+            { emitEvent: false }
+          );
+        }
         return { mismatch: true };
       }
       
       if (confirmPass.hasError('mismatch')) {
         const errors = { ...confirmPass.errors };
         delete errors['mismatch'];
+
         confirmPass.setErrors(
-          Object.keys(errors).length ? errors : null
+          Object.keys(errors).length ? errors : null,
+          { emitEvent: false }
         );
       }
       return null;

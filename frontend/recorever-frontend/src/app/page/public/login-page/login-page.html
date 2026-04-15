@@ -30,7 +30,7 @@
 
     <div class="form-panel">
       <app-login-form
-          [loginError]="hasLoginError"
+          [loginErrorMessage]="loginErrorMessage"
           [isSubmitting]="isLoading"
           (loginSubmit)="onLogin($event)"
           (clearError)="onClearError()">

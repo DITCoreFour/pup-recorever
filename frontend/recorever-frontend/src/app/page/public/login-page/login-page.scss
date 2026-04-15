@@ -1,9 +1,13 @@
+:host {
+  display: block;
+}
+
 .login-background {
   width: 100%;
-  height: calc(100vh - 61px);
+  min-height: calc(100vh - 61px);
   background-image: linear-gradient(
-      rgba(128, 0, 0, 0),
-      rgba(128, 0, 0, 0.7)
+      rgba(128, 0, 0, 0.2),
+      rgba(128, 0, 0, 0.5)
     ),
     url('../../../../assets/log-in-bg.jpg');
   background-size: cover;
@@ -11,18 +15,24 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  overflow: hidden;
+  padding: 1rem;
   box-sizing: border-box;
 }
 
 .login-card {
   display: flex;
-  flex-direction: row;
-  width: 900px;
-  height: 600px;
+  width: 100%;
+  max-width: 1000px;
+  height: auto;
+  max-height: 90vh;
   border-radius: 1.5rem;
   overflow: hidden;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 25px 50px -12px rgba(24, 23, 23, 0.5);
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    max-height: 95vh;
+  }
 }
 
 .branding-panel {
@@ -31,9 +41,15 @@
   color: #ffffff;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: center;
+  gap: 2rem;
   padding: 3rem;
   text-align: center;
+  box-sizing: border-box;
+
+  @media (max-width: 768px) {
+    display: none; 
+  }
 }
 
 .branding-content {
@@ -47,45 +63,67 @@
   }
 
   .branding-title {
-    font-size: 2rem;
-    margin-bottom: .1rem;
+    font-size: 1.75rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
   }
 
   .branding-subtitle {
-    font-size: 2.1rem;
+    font-size: 1.5rem;
     font-weight: 300;
-    margin-bottom: 1rem;
-    margin-top: 1rem;
+    margin-bottom: 0.1rem;
   }
-}
 
-.branding-desc {
-  font-size: 1rem;
-  opacity: 0.9;
+  .branding-desc {
+    font-size: 0.9rem;
+    opacity: 0.9;
+  }
 }
 
 .branding-footer {
   display: flex;
   flex-direction: column;
   align-items: center;
+  gap: 0.5rem;
+
+  p {
+    margin: 0;
+    font-size: 0.9rem;
+  }
 
   .register-btn {
     background-color: #ffffff;
     color: #333333;
     border: none;
-    padding: 0.75rem 2rem;
+    padding: 0.6rem 2rem;
     border-radius: 9999px;
     font-weight: bold;
     cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     
     &:hover {
-      background-color: #f3f4f6;
+      background-color: #fca5a5; 
+      color: #800000;
+      transform: translateY(-3px); 
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+    }
+    
+    &:active {
+      transform: translateY(0);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
   }
 }
 
 .form-panel {
-  width: 60%;
+  width: 55%;
   background-color: #ffffff;
   display: flex;
+  box-sizing: border-box;
+  overflow-y: auto; 
+
+  @media (max-width: 768px) {
+    width: 100%;
+  }
 }

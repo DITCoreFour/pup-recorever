@@ -8,17 +8,28 @@
       <div class="input-group">
         <label>First name<span class="asterisk">*</span></label>
         <input type="text" formControlName="firstName" />
-        @if (getControl('register', 'firstName')?.touched &&
-        getControl('register', 'firstName')?.hasError('required')) {
-        <span class="error-msg">This is a required question</span>
+        
+        @if (getControl('firstName')?.touched) {
+          @if (getControl('firstName')?.hasError('required')) {
+            <span class="error-msg">This is a required question</span>
+          }
+          @if (getControl('firstName')?.hasError('whitespace')) {
+            <span class="error-msg">Cannot contain only spaces</span>
+          }
         }
       </div>
+
       <div class="input-group">
         <label>Last name<span class="asterisk">*</span></label>
         <input type="text" formControlName="lastName" />
-        @if (getControl('register', 'lastName')?.touched &&
-        getControl('register', 'lastName')?.hasError('required')) {
-        <span class="error-msg">This is a required question</span>
+
+        @if (getControl('lastName')?.touched) {
+          @if (getControl('lastName')?.hasError('required')) {
+            <span class="error-msg">This is a required question</span>
+          }
+          @if (getControl('lastName')?.hasError('whitespace')) {
+            <span class="error-msg">Cannot contain only spaces</span>
+          }
         }
       </div>
     </div>
@@ -27,34 +38,50 @@
       <div class="input-group">
         <label>Program <span class="optional-text">(student only)</span></label>
         <select formControlName="programId">
-          <option [value]="null" disabled selected hidden>Select Program</option>
+          <option [ngValue]="null">Select Program...</option>
           @for (prog of programs(); track prog.programId) {
-            <option [value]="prog.programId">
+            <option [ngValue]="prog.programId">
               {{ prog.programCode }} ({{ prog.programName }})
             </option>
           }
         </select>
       </div>
+
       <div class="input-group">
         <label>Year <span class="optional-text">(student only)</span></label>
         <select formControlName="year">
-          <option [value]="null" disabled selected hidden>Select Year</option>
+          <option [ngValue]="null">Select Year...</option>
           @for (yr of years; track yr) {
-            <option [value]="yr">{{ yr }}</option>
+            <option [ngValue]="yr">{{ yr }}</option>
           }
         </select>
       </div>
     </div>
 
+    @if (registerForm.hasError('dependencyError') && 
+        (getControl('programId')?.touched || getControl('year')?.touched)) {
+      <span class="error-msg" style="margin-top: -10px; margin-bottom: 10px;">
+        Program and Year must be selected together, or both left blank.
+      </span>
+    }
+
     <div class="input-group">
       <label>Email<span class="asterisk">*</span></label>
-      <input type="email" formControlName="email" />
-      @if (getControl('register', 'email')?.touched) {
-      @if (getControl('register', 'email')?.hasError('required')) {
-      <span class="error-msg">This is a required question</span>
-      }
-      @if (getControl('register', 'email')?.hasError('email')) {
-      <span class="error-msg">Please enter a valid email format</span>
+      <input 
+        type="email"
+        formControlName="email"
+        placeholder="example@gmail.com" />
+      
+      @if (getControl('email')?.touched) {
+        @if (getControl('email')?.hasError('required')) {
+          <span class="error-msg">This is a required question</span>
+        }
+        @if (getControl('email')?.hasError('email')) {
+          <span class="error-msg">Please enter a valid email format</span>
+        }
+        @if (getControl('email')?.hasError('notUnique')) {
+          <span class="error-msg">This email is already registered</span>
+        }
       }
       }
     </div>
@@ -63,12 +90,12 @@
       <label>Password<span class="asterisk">*</span></label>
       <div class="password-wrapper">
         <input 
-          [type]="hidePassword() ? 'password' : 'text'" 
+          [type]="hidePassword() ? 'password' : 'text'"
           formControlName="password"
           (focus)="onPasswordFocus()"
           (blur)="onPasswordBlur()" />
         <button 
-          type="button" 
+          type="button"
           class="toggle-btn" 
           (click)="togglePasswordVisibility('password')">
           <img [src]="getIconSrc(hidePassword())" class="toggle-icon" />
@@ -98,29 +125,27 @@
       </div>
       }
 
-      @if (isPasswordFocused() &&
-      getControl('register', 'password')?.value &&
-      getControl('register', 'password')?.errors?.['passwordStrength']) {
-      <div class="custom-error-text error-msg">
-        @if (getControl('register', 'password')?.errors?.
-        ['passwordStrength']?.hasNumber) {
-        <span>• Must contain at least one number.</span>
-        }
-        @if (getControl('register', 'password')?.errors?.
-        ['passwordStrength']?.hasSpecialChar) {
-        <span>• Must contain at least one special character.</span>
-        }
-      </div>
+      @if (getControl('password')?.value &&
+           getControl('password')?.errors?.['passwordStrength']) {
+        <div class="custom-error-text error-msg">
+          @if (getControl('password')?.errors?.['passwordStrength']?.hasNumber){
+            <span>• Must contain at least one number.</span>
+          }
+          @if (getControl('password')?.errors?.
+                ['passwordStrength']?.hasSpecialChar) {
+            <span>• Must contain at least one special character.</span>
+          }
+        </div>
       }
     </div>
 
     <div class="input-group">
       <label>Confirm Password<span class="asterisk">*</span></label>
       <div class="password-wrapper">
-        <input 
+        <input
           [type]="hideConfirmPassword() ? 'password' : 'text'" 
           formControlName="confirmPassword" />
-        <button 
+        <button
           type="button" 
           class="toggle-btn" 
           (click)="togglePasswordVisibility('confirm')">
@@ -131,8 +156,11 @@
       @if (getControl('register', 'confirmPassword')?.hasError('required')) {
       <span class="error-msg">This is a required question</span>
       }
-      @if (getControl('register', 'confirmPassword')?.hasError('mismatch')) {
-      <span class="error-msg">Passwords do not match</span>
+
+      @if (getControl('confirmPassword')?.hasError('mismatch') && 
+          (getControl('confirmPassword')?.dirty || 
+           getControl('confirmPassword')?.touched)) {
+        <span class="error-msg">Passwords do not match</span>
       }
       }
     </div>
@@ -165,11 +193,24 @@
       }
     </div>
 
-    <button 
+    <button
       type="submit" 
       class="submit-btn" 
-      [disabled]="verificationForm.invalid || isSubmitting">
-      {{ isSubmitting ? 'VERIFYING...' : 'VERIFY' }}
+      [disabled]="registerForm.invalid || isSubmitting || registerForm.pending">
+      
+      @if (isSubmitting) {
+        <div class="btn-content">
+          <span class="spinner"></span> REGISTERING...
+        </div>
+      } 
+      @else if (registerForm.pending) {
+        <div class="btn-content">
+          <span class="spinner"></span> CHECKING DATA...
+        </div>
+      } 
+      @else {
+        REGISTER
+      }
     </button>
 
     <div class="resend-container">
