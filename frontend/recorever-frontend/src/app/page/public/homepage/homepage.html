@@ -53,3 +53,48 @@
     </div>
   </div>
 </section>
+
+<section id="how-it-works" class="how-it-works-section">
+  <div class="faq-header">
+    <h2>How it Works</h2>
+    <p>Frequently asked questions and system manual for using the platform.</p>
+  </div>
+
+  <div class="faq-container">
+    @for (faq of faqs; track $index) {
+      <div class="faq-item"
+          [class.open]="faq.isOpen"
+          (click)="toggleFaq($index)"
+          role="button"
+          tabindex="0"
+          (keydown.enter)="toggleFaq($index)">
+        
+        <div class="faq-question">
+          <h3>{{ faq.question }}</h3>
+          <mat-icon class="toggle-icon">
+            {{ faq.isOpen ? 'expand_less' : 'expand_more' }}
+          </mat-icon>
+        </div>
+
+        @if (faq.isOpen) {
+          <div class="faq-answer">
+            @if (faq.answer) {
+              <p>{{ faq.answer }}</p>
+            }
+            
+            @if (faq.steps) {
+              <ol class="faq-steps">
+                @for (step of faq.steps; track $index) {
+                  <li>
+                    <span class="step-number">{{ $index + 1 }}</span>
+                    <span class="step-text">{{ step }}</span>
+                  </li>
+                }
+              </ol>
+            }
+          </div>
+        }
+      </div>
+    }
+  </div>
+</section>
