@@ -21,14 +21,35 @@
       <div class="browse-items-here">Browse Items here</div>
 
       <app-report-button
-        theme="lost"
-        label="Lost Item"
-        (buttonClicked)="navigateToLost()" />
+          theme="lost"
+          label="Lost Item"
+          (buttonClicked)="navigateToLost()">
+      </app-report-button>
 
       <app-report-button
-        theme="found"
-        label="Found Item"
-        (buttonClicked)="navigateToFound()" />
+          theme="found"
+          label="Found Item"
+          (buttonClicked)="navigateToFound()">
+      </app-report-button>
     </div>
   </div>
 </div>
+
+<section id="features" class="features-section">
+  <div class="features-header">
+    <h2>The Features</h2>
+    <p>Designed for Quick and Secure Recovery</p>
+  </div>
+  
+  <div class="carousel-container">
+    <div class="carousel-track">
+      @for (feature of carouselItems; track $index) {
+        <div class="feature-card">
+          <mat-icon class="feature-icon">{{ feature.icon }}</mat-icon>
+          <h3 class="feature-title">{{ feature.title }}</h3>
+          <p class="feature-details">{{ feature.details }}</p>
+        </div>
+      }
+    </div>
+  </div>
+</section>

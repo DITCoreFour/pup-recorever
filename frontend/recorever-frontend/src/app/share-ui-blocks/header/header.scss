@@ -30,7 +30,7 @@ $header-height: 64px;
   }
 
   &.scrolled {
-    background-color: rgba(255, 255, 255, 0.7); 
+    background-color: rgba(184, 63, 63, 0.7); 
     backdrop-filter: blur(12px); 
     -webkit-backdrop-filter: blur(12px); 
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05); 
@@ -54,8 +54,12 @@ $header-height: 64px;
 
     .app-name {
       font-size: 18px;
-      color: $brand-color;
+      color: white;
       margin-left: 5px;
+
+      &:hover {
+        color: rgb(190, 187, 187);
+      }
     }
   }
 }
@@ -71,7 +75,7 @@ $header-height: 64px;
   }
 
   .nav-item {
-    color: $text-muted;
+    color: white;
     text-decoration: none;
     font-weight: 500;
     font-size: 14px;
@@ -82,7 +86,7 @@ $header-height: 64px;
     white-space: nowrap;
 
     &:hover {
-      color: $text-main;
+      color: rgb(190, 187, 187);
     }
 
     &.active, &:active {
@@ -100,7 +104,7 @@ $header-height: 64px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-left: auto;
+  margin-right: 6rem;
   gap: 20px;
 
   .btn {
@@ -115,8 +119,11 @@ $header-height: 64px;
   }
 
   .login-btn, .register-btn {
-    color: #141313;
+    color: white;
 
+      &:hover {
+        color: rgb(190, 187, 187);
+      }
 
   }
 }

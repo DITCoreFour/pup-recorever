@@ -159,3 +159,110 @@ app-report-button[theme="found"] {
   left: calc(50% - 0.35px);
   top: calc(50% - -138.45px);
 }
+
+.features-section {
+  padding: 6rem 2rem;
+  background-color: #fcfcfc;
+  overflow: hidden;
+
+  .features-header {
+    text-align: center;
+    margin-bottom: 4rem;
+
+    h2 {
+      color: #f64b4b;
+      text-align: center;
+      font-family: "SourceSansPro-Bold", sans-serif;
+      font-size: 13px;
+      letter-spacing: 1.63px;
+      font-weight: 700;
+      text-transform: uppercase;
+      position: relative;
+    }
+
+    p {
+      color: #161c2d;
+      text-align: center;
+      font-size: 36px;
+      line-height: 48px;
+      letter-spacing: -1.2px;
+      font-weight: 700;
+      position: relative;
+    }
+  }
+}
+
+.carousel-container {
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+  mask-image: linear-gradient(to right, transparent,
+      black 5%, black 95%, transparent);
+  -webkit-mask-image: linear-gradient(to right, 
+      transparent, black 5%, black 95%, transparent);
+}
+
+.carousel-track {
+  display: flex;
+  gap: 2rem;
+  width: max-content;
+  animation: scroll 35s linear infinite;
+
+  &:hover {
+    animation-play-state: paused; 
+  }
+}
+
+.feature-card {
+  width: 340px;
+  min-height: 280px;
+  background: linear-gradient(135deg, rgba(219, 19, 42, 1)
+      0%, rgba(173, 17, 17, 1) 100%);
+  border-radius: 20px;
+  padding: 2.5rem 2rem;
+  color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  box-shadow: 0 12px 24px rgba(117, 12, 12, 0.15);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+
+  &:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 16px 32px rgba(117, 12, 12, 0.25);
+  }
+
+  .feature-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+    margin-bottom: 1.5rem;
+    color: #ffffff;
+  }
+
+  .feature-title {
+    font-family: "SourceSansPro-Regular", sans-serif;
+    font-size: 22px;
+    font-weight: 600;
+    margin: 0 0 1rem 0;
+    line-height: 1.3;
+  }
+
+  .feature-details {
+    font-family: "SourceSansPro-Regular", sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+    opacity: 0.85;
+    margin: 0;
+  }
+}
+
+@keyframes scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%); 
+  }
+}
