@@ -1,315 +1,169 @@
-import { 
-  Component, 
-  OnInit, 
-  inject, 
-  signal, 
-  computed, 
-  ViewChild, 
-  ElementRef, 
-  AfterViewInit, 
-  OnDestroy 
-} from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Observable, BehaviorSubject, combineLatest, of, Subject } from 'rxjs';
 import { 
-  map,
-  switchMap, 
-  catchError, 
-  shareReplay,
-  tap, 
-  takeUntil, 
-  startWith
-} from 'rxjs/operators';
-import { HttpErrorResponse } from '@angular/common/http';
-import { environment } from '../../../../environments/environment';
+  FormBuilder, 
+  FormGroup, 
+  ReactiveFormsModule, 
+  Validators 
+} from '@angular/forms';
+import { take, catchError, finalize } from 'rxjs/operators';
+import { of } from 'rxjs';
+import { toSignal } from '@angular/core/rxjs-interop';
 
-import {
-  ReportItemGrid
-} from '../../../share-ui-blocks/report-item-grid/report-item-grid';
-import {
-  EditProfileModal
-} from '../../../modal/edit-profile-modal/edit-profile-modal';
-import {
-  DeleteReportModal
-} from '../../../modal/delete-report-modal/delete-report-modal';
-import {
-  CodesModal
-  } from '../../../modal/codes-modal/codes-modal';
-import {
- ItemDetailModal
-} from '../../../modal/item-detail-modal/item-detail-modal';
-
-import { ItemService } from '../../../core/services/item-service';
-import { UserService } from '../../../core/services/user-service';
-
-import { PaginatedResponse, Report, ReportFilters } from '../../../models/item-model';
-import { User } from '../../../models/user-model';
-import { ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth-service';
-
-type TabType = 'all' | 'found' | 'lost';
+import { UserService } from '../../../core/services/user-service';
+import { 
+  ProgramService, 
+  ProgramResponse 
+} from '../../../core/services/program-service';
+import { User } from '../../../models/user-model';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-profile-page',
   standalone: true,
   imports: [
     CommonModule,
-    ReportItemGrid,
-    EditProfileModal,
-    DeleteReportModal,
-    CodesModal,
-    ItemDetailModal
+    ReactiveFormsModule
   ],
   templateUrl: './profile-page.html',
-  styleUrl: './profile-page.scss'
+  styleUrls: ['./profile-page.scss']
 })
-export class ProfilePage implements OnInit, AfterViewInit, OnDestroy {
-  private itemService = inject(ItemService);
-  private userService = inject(UserService);
-  private destroy$ = new Subject<void>();
-  private route = inject(ActivatedRoute);
+export class ProfilePage implements OnInit {
+  private fb: FormBuilder = inject(FormBuilder);
+  private authService: AuthService = inject(AuthService);
+  private userService: UserService = inject(UserService);
+  private programService: ProgramService = inject(ProgramService);
 
-  loggedInUser$ = this.userService.currentUser$;
+  public currentUser = toSignal<User | null>(
+    this.authService.currentUser$.pipe(
+      catchError(() => of(null))
+    ),
+    { initialValue: null }
+  );
 
-  @ViewChild('scrollAnchor') scrollAnchor!: ElementRef;
-  private observer!: IntersectionObserver;
-  
-  currentPage = signal(1);
-  totalPages = signal(1);
-  pageSize = signal(10);
+  public programs = signal<ProgramResponse[]>([]);
+  public profileForm!: FormGroup;
+  public isSubmitting: boolean = false;
+  public updateMessage: string | null = null; 
 
-  activeTab$ = new BehaviorSubject<TabType>('all');
-  activeStatus$ = new BehaviorSubject<string>('');
-  private refreshTrigger$ = new Subject<void>();
-  private refreshUser$ = new BehaviorSubject<void>(undefined);
-  currentUser$: Observable<User | null>;
-  isOwnProfile$: Observable<boolean>;
+  public selectedAvatarFile: File | null = null;
+  public avatarPreviewUrl: string | null = null;
 
-  displayedItems = signal<Report[]>([]);
-  isItemsLoading = signal(false);
-
-  showEditModal = false;
-  showDeleteModal = false;
-  updateError: string | null = null;
-  itemToDelete: Report | null = null;
-
-  viewCodeItem = signal<Report | null>(null);
-  selectedItem = signal<Report | null>(null);
-
-  codeModalTitle = computed(() => {
-    const item = this.viewCodeItem();
-    if (!item) return '';
-
-    return 'Reference Code';
-  });
-
-  codeModalValue = computed(() => {
-    const item = this.viewCodeItem();
-    if (!item) return '';
-
-    if (item.type === 'lost') {
-      return 'Pending';
-    }
-
-    return item.surrender_code || 'N/A';
-  });
-
-  constructor() {
-    const authService = inject(AuthService);
-
-    this.currentUser$ = combineLatest([
-      this.route.paramMap,
-      this.refreshUser$.pipe(startWith(undefined))
-    ]).pipe(
-      switchMap(([params]) => {
-        const userId = params.get('id');
-        if (userId) {
-          return this.userService.getUserById(+userId); 
-        }
-        return authService.initAuth();
-      }),
-      catchError(() => of(null)),
-      shareReplay(1)
-    );
-
-    this.isOwnProfile$ = combineLatest([
-      this.currentUser$, 
-      this.userService.currentUser$.pipe(startWith(null))
-    ]).pipe(
-      map(([profileUser, loggedInUser]: [User | null, User | null]): boolean => {
-        if (!profileUser || !loggedInUser) return false;
-        return profileUser.user_id === loggedInUser.user_id;
-      }),
-      shareReplay(1)
-    );
+  public ngOnInit(): void {
+    this.initForm();
+    this.fetchPrograms();
+    this.patchUserData();
   }
 
-  ngOnInit(): void {
-    combineLatest([
-      this.currentUser$,
-      this.activeTab$,
-      this.activeStatus$,
-      this.isOwnProfile$
-    ]).pipe(
-      switchMap(([user, tab, status, isOwn]) => 
-        this.refreshTrigger$.pipe(
-          startWith(undefined),
-          tap(() => this.isItemsLoading.set(true)),
-          switchMap(() => {
-            if (!user) return of({ items: [], totalPages: 0, totalItems: 0, currentPage: 1 });
-            
-            const filter: ReportFilters = {
-              user_id: user.user_id,
-              page: this.currentPage(),
-              size: this.pageSize(),
-              status: (!isOwn && !status) ? 'approved' : (status as any),
-              ...(tab !== 'all' && { type: tab as any }),
-            };
-            return this.itemService.getReports(filter);
-          }),
-          catchError(() => of({ items: [], totalPages: 0, totalItems: 0, currentPage: 1 }))
+  private initForm(): void {
+    this.profileForm = this.fb.group({
+      firstName: ['', [Validators.required]],
+      lastName: ['', [Validators.required]],
+      email: ['', [Validators.required, Validators.email]]
+    });
+  }
+
+  private fetchPrograms(): void {
+    this.programService.getPrograms()
+      .pipe(take(1))
+      .subscribe({
+        next: (data: ProgramResponse[]): void => {
+          this.programs.set(data);
+        },
+        error: (err: unknown): void => {
+          console.error('Failed to load programs', err);
+        }
+      });
+  }
+
+  private patchUserData(): void {
+    const user: User | null = this.currentUser();
+    if (user) {
+      this.profileForm.patchValue({
+        firstName: user.first_name,
+        lastName: user.last_name,
+        email: user.email
+      });
+    }
+  }
+
+  public getProgramCode(programId: number | null | undefined): string {
+    if (!programId) return 'N/A';
+    const match = this.programs().find(p => p.programId === programId);
+    return match ? match.programCode : 'Unknown Program';
+  }
+
+  public getProfileImageUrl(path: string | null | undefined): string {
+    if (this.avatarPreviewUrl) {
+      return this.avatarPreviewUrl;
+    }
+    if (!path) {
+      return 'assets/profile-avatar.png';
+    }
+    if (path.startsWith('http')) {
+      return path.replace('http://', 'https://');
+    }
+    const secureBaseUrl = environment.apiUrl.replace('http://', 'https://');
+    return `${secureBaseUrl}/image/download/${path}`;
+  }
+
+  public onFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      this.selectedAvatarFile = input.files[0];
+      this.avatarPreviewUrl = URL.createObjectURL(this.selectedAvatarFile);
+    }
+  }
+
+  public onSaveChanges(): void {
+    if (this.profileForm.valid && !this.isSubmitting) {
+      this.isSubmitting = true;
+      this.updateMessage = null;
+
+      const currentUserData: User | null = this.currentUser();
+      
+      if (!currentUserData) {
+        this.isSubmitting = false;
+        this.updateMessage = 'Error: User data not found.';
+        return;
+      }
+
+      const first = this.profileForm.get('firstName')?.value.trim();
+      const last = this.profileForm.get('lastName')?.value.trim();
+      const email = this.profileForm.get('email')?.value.trim();
+
+      const updatedUser: User = {
+        ...currentUserData,
+        first_name: first,
+        last_name: last,
+        email: email
+      };
+
+      this.userService.updateProfile(updatedUser, this.selectedAvatarFile)
+        .pipe(
+          finalize((): void => {
+            this.isSubmitting = false;
+          })
         )
-      ),
-      takeUntil(this.destroy$)
-    ).subscribe(res => {
-      this.displayedItems.update(existing => 
-        this.currentPage() === 1 ? res.items : [...existing, ...res.items]
-      );
-      this.totalPages.set(res.totalPages);
-      this.isItemsLoading.set(false);
-    });
-  }
-
-  ngAfterViewInit(): void {
-    this.observer = new IntersectionObserver(([entry]) => {
-      if (entry.isIntersecting && !this.isItemsLoading() && this.currentPage() < this.totalPages()) {
-        this.currentPage.update(p => p + 1);
-        this.refreshTrigger$.next();
-      }
-    }, { rootMargin: '150px' });
-    this.observer.observe(this.scrollAnchor.nativeElement);
-  }
-
-  ngOnDestroy(): void {
-    this.observer?.disconnect();
-    this.destroy$.next();
-    this.destroy$.complete();
-  }
-
-  private resetPagination(): void {
-    this.currentPage.set(1);
-    this.displayedItems.set([]);
-  }
-
-  setActiveTab(tab: TabType): void {
-    this.activeTab$.next(tab);
-    this.resetPagination();
-  }
-
-  setActiveStatus(status: string): void {
-    this.activeStatus$.next(status);
-    this.resetPagination();
-  }
-
-  clearStatusFilter(): void {
-    this.activeStatus$.next('');
-    this.resetPagination();
-  }
-
-  handleSaveProfile(event: { user: User, file: File | null }): void {
-    const { user, file } = event;
-    this.updateError = null;
-
-    this.userService.updateProfile(user, file).subscribe({
-      next: () => {
-        this.showEditModal = false;
-        this.refreshUser$.next();
-      },
-      error: (err: HttpErrorResponse) => {
-        console.error('Update failed', err);
-        if (err.error && err.error.error) {
-          this.updateError = err.error.error;
-        } else {
-          this.updateError = 'Failed to update. Please try again.';
-        }
-      }
-    });
-  }
-
-  onCardClick(item: Report): void {
-    this.selectedItem.set(item);
-  }
-
-  onDeleteItem(item: Report): void {
-    this.itemToDelete = item;
-    this.showDeleteModal = true;
-  }
-
-  confirmDelete(): void {
-    if (!this.itemToDelete) return;
-
-    const idToDelete = this.itemToDelete.report_id;
-
-    this.itemService.deleteReport(idToDelete).subscribe({
-      next: () => {
-        console.log('Item deleted successfully');
-
-        this.displayedItems.update((items: Report[]) =>
-          items.filter((item: Report) => item.report_id !== idToDelete)
-        );
-
-        this.showDeleteModal = false;
-        this.itemToDelete = null;
-      },
-      error: (err: unknown) => {
-        console.error('Failed to delete', err);
-        this.showDeleteModal = false;
-      }
-    });
-  }
-
-  cancelDelete(): void {
-    this.showDeleteModal = false;
-    this.itemToDelete = null;
-  }
-
-  onEditItem(item: Report): void {
-    console.log('Edit item requested:', item);
-  }
-
-  onViewCode(item: Report): void {
-    this.viewCodeItem.set(item);
-  }
-
-  onModalEdit(): void {
-    const item = this.selectedItem();
-    if (item) {
-      this.selectedItem.set(null);
-      this.onEditItem(item);
+        .subscribe({
+          next: (savedUser: User): void => {
+            this.updateMessage = 'Profile updated successfully!';
+            this.profileForm.patchValue({
+              firstName: savedUser.first_name,
+              lastName: savedUser.last_name,
+              email: savedUser.email
+            });
+            this.selectedAvatarFile = null;
+            
+          },
+          error: (err: unknown): void => {
+            console.error('Update failed', err);
+            this.updateMessage = 'Failed to update. Email may be taken.';
+          }
+        });
+    } else {
+      this.profileForm.markAllAsTouched();
     }
-  }
-
-  onModalDelete(): void {
-    const item = this.selectedItem();
-    if (item) {
-      this.selectedItem.set(null);
-      this.onDeleteItem(item);
-    }
-  }
-
-  onModalViewCode(): void {
-    const item = this.selectedItem();
-    if (item) {
-      this.selectedItem.set(null);
-      this.onViewCode(item);
-    }
-  }
-
-  getUserProfilePicture(user: User | null): string {
-    if (user && user.profile_picture) {
-      return `${environment.apiUrl}/image/download/${user.profile_picture}`;
-    }
-
-    return 'assets/profile-avatar.png';
   }
 }
