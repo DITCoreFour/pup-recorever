@@ -79,9 +79,8 @@ export class UserHeader implements OnDestroy {
     },
     {
       label: 'My Reports',
-      route: AppRoutePaths.PROFILE,
-      iconPath: 'assets/my-reports.png',
-      fragment: 'my-reports-section'
+      route: '/app/my-reports', 
+      iconPath: 'assets/my-reports.png'
     }
   ];
 
