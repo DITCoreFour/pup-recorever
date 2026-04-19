@@ -25,6 +25,7 @@ import {
 } from '../../models/item-model';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatIcon } from "@angular/material/icon";
+import { MatSelectModule } from '@angular/material/select';
 import { ToastService } from '../../core/services/toast-service';
 import { ItemService } from '../../core/services/item-service';
 import { environment } from '../../../environments/environment';
@@ -43,6 +44,7 @@ import { ConfirmationModal } from '../../modal/confirmation-modal/confirmation-m
     MatNativeDateModule,
     MatProgressSpinnerModule,
     MatIcon,
+    MatSelectModule,
     ConfirmationModal
   ],
   templateUrl: './item-report-form.html',
@@ -75,6 +77,10 @@ export class ItemReportForm implements OnInit {
   private toastService = inject(ToastService);
   private itemService = inject(ItemService);
 
+  readonly placeholderText =
+      'Please include brand, color, or unique markings '
+      + '(e.g., "Black laptop with a PUP sticker on the back").';
+
   // Getters
   public get locationLabel(): string {
     return this.formType === 'lost' ? 'Location Lost:' : 'Location Found:';
@@ -99,7 +105,15 @@ export class ItemReportForm implements OnInit {
         validators: [Validators.required, Validators.maxLength(100)],
         updateOn: 'blur'
       }],
+      category: [
+        '',
+        { validators: [Validators.required] }
+      ],
       location: [
+        '',
+        { validators: [Validators.required] }
+      ],
+      surrendered_location: [
         '',
         { validators: [Validators.required] }
       ],
