@@ -66,7 +66,9 @@ export const StandardRelativeDateFilters: string[] = [
 
 export type ItemReportForm = FormGroup<{
   item_name: FormControl<string | null>;
+  category: FormControl<string | null>;
   location: FormControl<string | null>;
+  surrendered_location: FormControl<string | null>;
   date_lost_found: FormControl<string | null>;
   description: FormControl<string | null>;
   photoUrls: FormArray<FormControl<string | null>>;
