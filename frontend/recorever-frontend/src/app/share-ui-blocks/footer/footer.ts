@@ -2,11 +2,11 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 
-interface FooterLink {
+type FooterLink = {
   label: string;
   url: string;
   fragment?: string;
-}
+};
 
 @Component({
   selector: 'app-footer',
@@ -17,26 +17,17 @@ interface FooterLink {
 })
 export class Footer {
 
-  protected helpLinks: FooterLink[] = [
-    { 
-      label: 'Customer Support', 
-      url: '/help-page', 
-      fragment: 'support' 
-    },
-    { 
-      label: 'Terms & Conditions', 
-      url: '/help-page', 
-      fragment: 'terms' 
-    },
-    { 
-      label: 'Privacy Policy', 
-      url: '/help-page', 
-      fragment: 'privacy' 
-    },
+  protected mainLinks: FooterLink[] = [
+    { label: 'Browse', url: '/browse' },
+    { label: 'The Features', url: '/', fragment: 'features' },
+    { label: 'Who We Are', url: '/', fragment: 'about-us' },
+    { label: 'Help and Support', url: '/help-page', fragment: 'support' },
   ];
 
-  protected mainLinks: FooterLink[] = [
-    { label: 'Github', url: 'https://github.com/PUP-BSIT/project-corefour' },
-    { label: 'About Us', url: '/about-us' },
-  ];
+  protected contactInfo = {
+    tel: '+63 9654089663',
+    email: 'ditcorefour@gmail.com',
+    university: 'Polytechnic University of the Philippines',
+    github: 'https://github.com/PUP-BSIT/project-corefour'
+  };
 }

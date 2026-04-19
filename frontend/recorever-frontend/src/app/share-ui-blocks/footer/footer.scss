@@ -1,6 +1,8 @@
-$footer-bg: #fcfcfc;
+$footer-bg: #FDFDFF;
 $footer-text: #a1a1aa;
-$footer-title: #494646;
+$footer-title: #1a1a1a;
+$footer-border: #e5e5e5;
+$footer-heart: #c0392b;
 
 .app-footer {
   background-color: $footer-bg;
@@ -8,41 +10,60 @@ $footer-title: #494646;
   font-family: 'Inter', sans-serif;
   font-size: 0.9rem;
   width: 100%;
-  padding: 60px 20px 40px;
   box-sizing: border-box;
-  border-top: 1px solid #eaeaea;
+  border-top: 1px solid $footer-border;
 
   .footer-container {
-    max-width: 1200px;
-    margin: 0 auto;
+    max-width: 100%;
+    margin: 0rem 7rem;
+    padding: 60px 40px 40px;
     display: flex;
     justify-content: space-between;
+    align-items: flex-start;
     flex-wrap: wrap;
     gap: 40px;
   }
 
-  .footer-section {
+  .footer-spacer {
     flex: 1;
-    min-width: 160px;
+  }
+
+  .footer-section {
+    flex: 0 0 auto;
 
     &.logo-column {
-      flex: 1.5;
+      display: flex;
+      gap: 16px;
+      align-items: center;
 
       .logo-box {
-        height: 150px;
+        height: 200px;
         width: auto;
-        opacity: 0.9;
+      }
+
+      .tagline {
+        font-size: 0.78rem;
+        color: $footer-text;
+        line-height: 1.7;
+        margin-left: 5rem;
       }
     }
 
+    &.links-column {
+      min-width: 140px;
+    }
+
+    &.contact-column {
+      min-width: 240px;
+    }
+
     .section-title {
-      color: #1a1a1a;
-      font-size: 1rem;
-      font-weight: 700;
-      margin-bottom: 20px;
-      margin-top: 0;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
+      color: $footer-title;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin: 0 0 20px 0;
+      text-transform: none;
+      letter-spacing: 0;
     }
 
     .link-list {
@@ -51,16 +72,17 @@ $footer-title: #494646;
       margin: 0;
 
       .link-item {
-        margin-bottom: 12px;
+        margin-bottom: 14px;
 
         a {
           color: $footer-text;
           text-decoration: none;
+          font-size: 0.9rem;
           transition: color 0.2s ease;
+          cursor: pointer;
 
           &:hover {
             color: #000000;
-            text-decoration: underline;
           }
         }
       }
@@ -68,33 +90,76 @@ $footer-title: #494646;
 
     .contact-info {
       margin: 0 0 10px 0;
-      line-height: 1.5;
+      line-height: 1.6;
       font-size: 0.9rem;
+      color: $footer-text;
+    }
+
+    .github-link {
+      display: inline-flex;
+      margin-top: 10px;
+      color: $footer-text;
+      transition: color 0.2s ease;
+
+      &:hover {
+        color: #000000;
+      }
+      
+      .github-icon {
+        width: 24px;
+        height: 24px;
+      }
+    }
+  }
+
+  .footer-bottom {
+    border-top: 1px solid $footer-border;
+    padding: 16px 40px;
+    text-align: center;
+
+    .copyright {
+      margin: 0;
+      font-size: 0.82rem;
+      color: $footer-text;
+
+      .heart {
+        color: $footer-heart;
+        font-size: 0.9rem;
+      }
     }
   }
 
   @media (max-width: 768px) {
-    padding: 40px 20px;
-
     .footer-container {
       flex-direction: column;
       align-items: center;
-      gap: 35px;
+      padding: 40px 24px 32px;
+      gap: 32px;
       text-align: center;
+      margin: auto;
+    }
+
+    .footer-spacer {
+      display: none;
     }
 
     .footer-section {
       width: 100%;
-      min-width: unset;
 
       &.logo-column {
-        order: -1;
-        margin-bottom: 10px;
+        flex: unset;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
       }
 
-      .link-list .link-item {
-        margin-bottom: 15px;
+      .tagline {
+        margin-left: 0 !important; 
       }
+    }
+
+    .footer-bottom {
+      padding: 16px 24px;
     }
   }
 }
