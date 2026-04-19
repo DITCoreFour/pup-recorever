@@ -52,21 +52,23 @@
     </mat-form-field>
   </div>
 
-  <div class="form-field">
-    <mat-form-field appearance="outline" class="full-width">
-      <mat-label>Surrendered Location</mat-label>
+  @if (formType === 'found') {
+    <div class="form-field">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Surrendered Location</mat-label>
 
-      <mat-select formControlName="surrendered_location">
-        <mat-option value="dost_lab_office">DOST Lab office</mat-option>
-        <mat-option value="guard_house">Guard House</mat-option>
-      </mat-select>
-      
-      @if (reportForm.controls.surrendered_location.invalid
-           && reportForm.controls.surrendered_location.touched) {
-        <mat-error>Please select where the item was surrendered.</mat-error>
-      }
-    </mat-form-field>
-  </div>
+        <mat-select formControlName="surrendered_location">
+          <mat-option value="dost_lab_office">DOST Lab office</mat-option>
+          <mat-option value="guard_house">Guard House</mat-option>
+        </mat-select>
+        
+        @if (reportForm.controls.surrendered_location.invalid
+            && reportForm.controls.surrendered_location.touched) {
+          <mat-error>Please select where the item was surrendered.</mat-error>
+        }
+      </mat-form-field>
+    </div>
+  }
 
   <div class="form-field">
     <mat-form-field appearance="outline" class="full-width">
