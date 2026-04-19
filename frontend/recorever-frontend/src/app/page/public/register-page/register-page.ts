@@ -65,6 +65,11 @@ export class RegisterPage {
   }
 
   private extractErrorMessage(err: HttpErrorResponse): string {
+    if (err.status === 0) {
+      return 'Network error. Please check your internet connection ' +
+             'and try again.';
+    }
+
     if (err.error && typeof err.error.error === 'string') {
       return err.error.error;
     }
@@ -77,6 +82,10 @@ export class RegisterPage {
       if (messages.length > 0) {
         return messages.join(' • ');
       }
+    }
+
+    if (err.error && typeof err.error.message === 'string') {
+      return err.error.message;
     }
     
     return 'Registration failed. Please check your data.';

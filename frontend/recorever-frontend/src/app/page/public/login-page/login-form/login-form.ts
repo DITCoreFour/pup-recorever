@@ -8,6 +8,7 @@ import {
 } from '@angular/core';
 import {
   FormBuilder,
+  FormGroup,
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
@@ -25,31 +26,36 @@ import { LoginRequest } from '../../../../models/auth-model';
   styleUrls: ['./login-form.scss'],
 })
 export class LoginForm implements OnInit {
-  private fb = inject(FormBuilder);
+  private fb: FormBuilder = inject(FormBuilder);
 
-  @Input() public loginError = false;
-  @Input() public isSubmitting = false;
+  @Input() public loginErrorMessage: string | null = null;
+  @Input() public isSubmitting: boolean = false;
   @Output() public loginSubmit = new EventEmitter<LoginRequest>();
   @Output() public clearError = new EventEmitter<void>();
 
-  public isPasswordVisible = false;
-
-  public loginForm = this.fb.group({
-    email: ['', {
-      validators: [Validators.required, Validators.email],
-      updateOn: 'change'
-    }],
-    password: ['', {
-      validators: [Validators.required],
-      updateOn: 'change'
-    }],
-  });
+  public isPasswordVisible: boolean = false;
+  public loginForm!: FormGroup;
 
   public ngOnInit(): void {
-    this.loginForm.valueChanges.subscribe(() => {
-      if (this.loginError) {
+    this.initForm();
+    
+    this.loginForm.valueChanges.subscribe((): void => {
+      if (this.loginErrorMessage) {
         this.clearError.emit();
       }
+    });
+  }
+
+  private initForm(): void {
+    this.loginForm = this.fb.group({
+      email: ['', {
+        validators: [Validators.required, Validators.email],
+        updateOn: 'change'
+      }],
+      password: ['', {
+        validators: [Validators.required],
+        updateOn: 'change'
+      }],
     });
   }
 
@@ -62,7 +68,7 @@ export class LoginForm implements OnInit {
   }
 
   public submitForm(): void {
-    if (this.loginForm.valid) {
+    if (this.loginForm.valid && !this.isSubmitting) {
       this.loginSubmit.emit(
         this.loginForm.getRawValue() as LoginRequest
       );
@@ -76,10 +82,7 @@ export class LoginForm implements OnInit {
   }
 
   public getPasswordInputType(): string {
-    if (this.isPasswordVisible) {
-      return 'text';
-    }
-    return 'password';
+    return this.isPasswordVisible ? 'text' : 'password';
   }
 
   public getToggleIconSrc(): string {

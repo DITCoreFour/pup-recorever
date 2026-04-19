@@ -84,10 +84,8 @@
                   alt="Profile Avatar" 
                   class="dropdown-avatar-img">
               <div class="dropdown-name">
-                {{
-                  currentUser()?.first_name + ' ' +
-                  currentUser()?.last_name
-                }}
+                {{ currentUser()?.first_name || '' }}
+                {{ currentUser()?.last_name || '' }}
               </div>
               <div class="dropdown-email">{{ currentUser()?.email }}</div>
             </div>
