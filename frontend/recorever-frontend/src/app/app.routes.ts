@@ -97,7 +97,8 @@ export const routes: Routes = [
       },
       {
         path: 'my-reports',
-        loadComponent: () => import('./page/user/my-reports-page/my-reports-page')
+        loadComponent: () => 
+            import('./page/shared-page/my-reports-page/my-reports-page')
           .then(m => m.MyReportsPage)
       },
       { path: 'profile/:id',
