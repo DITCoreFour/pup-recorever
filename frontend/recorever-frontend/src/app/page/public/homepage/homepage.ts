@@ -1,8 +1,10 @@
-import { Component, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, inject, OnInit } from '@angular/core';
+import { CommonModule, ViewportScroller } from '@angular/common';
 import { Router } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { ReportButton } from '../../user/user-item-list-page/report-button/report-button';
+import { timer, Observable } from 'rxjs';
+import { map, take } from 'rxjs/operators';
 
 type Feature = {
   icon: string;
@@ -24,9 +26,16 @@ type FaqItem = {
   templateUrl: './homepage.html',
   styleUrl: './homepage.scss',
 })
-export class Homepage {
+export class Homepage implements OnInit {
 
   private router = inject(Router);
+  private viewportScroller = inject(ViewportScroller);
+
+  public displayedText$!: Observable<string>;
+
+  public fullText = 'The centralized, real-time web platform designed to' + 
+      ' help our campus community securely report, track, and recover' + 
+      ' misplaced belongings.';
 
   public features: Feature[] = [
     {
@@ -69,12 +78,13 @@ export class Homepage {
       question: 'What should I do if I lost an item?',
       steps: [
         'Browse Found Items to see if someone has already turned it in.',
-            'Claim Your Item: If you spot your item, click the ' +
+        'Claim Your Item: If you spot your item, click the ' +
             '"Claim Item" button of the item.',
         'Save Your Reference Code.',
         'Visit the Administrator: Once you have your Reference Code, ' +
             'take it to the designated administrator\'s office.',
-        'If Not Found In Browsing: Report Lost Item. The system will instantly alert you when if ' +
+        'If Not Found In Browsing: Report Lost Item. The system will ' +
+            'instantly alert you when if ' +
             'someone reports a found item that matches your description'
       ],
       isOpen: false
@@ -112,8 +122,19 @@ export class Homepage {
     return [...this.features, ...this.features];
   }
 
+  ngOnInit(): void {
+    this.displayedText$ = timer(800, 30).pipe(
+      take(this.fullText.length + 1),
+      map((index: number) => this.fullText.substring(0, index))
+    );
+  }
+
   public toggleFaq(index: number): void {
     this.faqs[index].isOpen = !this.faqs[index].isOpen;
+  }
+
+  scrollToFeatures(): void {
+    this.viewportScroller.scrollToAnchor('features');
   }
 
   navigateToLost(): void {

@@ -10,28 +10,39 @@
   <img class="wave" src="assets/wave0.svg" />
   <div class="content">
     <div class="top">
-      <div class="manage-your-remote-t">PUP Recover</div>
-      <div class="with-lots-of-unique">
-        Welcome here, the centralized, real-time web platform designed to help
-        our campus community securely report, track, and recover misplaced
-        belongings.
-        <br />
+      <div class="hero-badge">
+        PUP Taguig Community &bull; Lost &amp; Found
       </div>
-     
-      <div class="browse-items-here">Browse Items here</div>
 
-      <app-report-button
-          theme="lost"
-          label="Lost Item"
-          (buttonClicked)="navigateToLost()">
-      </app-report-button>
+      <div class="manage-your-remote-t">
+        PUP <span class="title-bold">Recover</span>
+      </div>
+      <div class="with-lots-of-unique">
+        {{ displayedText$ | async }}<span class="cursor">|</span>
+      </div>
+    <div class="text-heading">
+      <div class="browse-items-here">Browse Items</div>
 
-      <app-report-button
-          theme="found"
-          label="Found Item"
-          (buttonClicked)="navigateToFound()">
-      </app-report-button>
+      <div class="button-row">
+        <app-report-button
+            theme="lost"
+            label="Lost Item"
+            (buttonClicked)="navigateToLost()">
+        </app-report-button>
+
+        <app-report-button
+            theme="found"
+            label="Found Item"
+            (buttonClicked)="navigateToFound()">
+        </app-report-button>
+      </div>
     </div>
+  </div>
+  </div>
+
+  <div class="scroll-cue" (click)="scrollToFeatures()">
+    <span class="scroll-cue__label">scroll</span>
+    <span class="scroll-cue__chevron"></span>
   </div>
 </div>
 
