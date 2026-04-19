@@ -138,10 +138,10 @@ export class Homepage implements OnInit {
   }
 
   navigateToLost(): void {
-    this.router.navigate(['/app/lost-items']);
+    this.router.navigate(['/app/browse'], { queryParams: { type: 'lost' } });
   }
 
   navigateToFound(): void {
-    this.router.navigate(['/app/found-items']);
+    this.router.navigate(['/app/browse'], { queryParams: { type: 'found' } });
   }
 }
