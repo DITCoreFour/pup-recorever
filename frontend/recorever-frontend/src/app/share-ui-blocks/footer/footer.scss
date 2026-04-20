@@ -3,6 +3,7 @@ $footer-text: #a1a1aa;
 $footer-title: #1a1a1a;
 $footer-border: #e5e5e5;
 $footer-heart: #c0392b;
+$footer-accent: #8b1a1a;
 
 .app-footer {
   background-color: $footer-bg;
@@ -112,23 +113,71 @@ $footer-heart: #c0392b;
     }
   }
 
-  .footer-bottom {
+    .footer-bottom {
     border-top: 1px solid $footer-border;
-    padding: 16px 40px;
-    text-align: center;
-
+    padding: 14px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+ 
     .copyright {
       margin: 0;
       font-size: 0.82rem;
       color: $footer-text;
-
+ 
       .heart {
         color: $footer-heart;
         font-size: 0.9rem;
       }
     }
+ 
+    .back-to-top-btn {
+      position: absolute;
+      right: 40px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: none;
+      border: 1.5px solid $footer-border;
+      border-radius: 8px;
+      padding: 6px 14px 6px 10px;
+      color: $footer-text;
+      font-size: 0.8rem;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      transition: color 0.2s ease, 
+          border-color 0.2s ease, background-color 0.2s ease;
+ 
+      mat-icon {
+        font-size: 18px;
+        height: 18px;
+        width: 18px;
+        line-height: 18px;
+        transition: transform 0.2s ease;
+      }
+ 
+      .back-to-top-label {
+        font-size: 0.8rem;
+        line-height: 1;
+      }
+ 
+      &:hover {
+        color: $footer-accent;
+        border-color: $footer-accent;
+        background-color: rgba($footer-accent, 0.05);
+ 
+        mat-icon {
+          transform: translateY(-2px);
+        }
+      }
+ 
+      &:focus-visible {
+        outline: 2px solid $footer-accent;
+        outline-offset: 2px;
+      }
+    }
   }
-
   @media (max-width: 768px) {
     .footer-container {
       flex-direction: column;
@@ -159,7 +208,13 @@ $footer-heart: #c0392b;
     }
 
     .footer-bottom {
+      flex-direction: column;
+      gap: 12px;
       padding: 16px 24px;
+ 
+      .back-to-top-btn {
+        position: static;
+      }
     }
   }
 }

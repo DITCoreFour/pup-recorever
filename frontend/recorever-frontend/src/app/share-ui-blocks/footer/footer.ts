@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, ViewportScroller } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { MatIconModule } from '@angular/material/icon';
 
 type FooterLink = {
   label: string;
@@ -11,7 +12,7 @@ type FooterLink = {
 @Component({
   selector: 'app-footer',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, MatIconModule],
   templateUrl: './footer.html',
   styleUrl: './footer.scss',
 })
@@ -30,4 +31,10 @@ export class Footer {
     university: 'Polytechnic University of the Philippines',
     github: 'https://github.com/PUP-BSIT/project-corefour'
   };
+
+  constructor(private scroller: ViewportScroller) {}
+ 
+  public scrollToTop(): void {
+    this.scroller.scrollToPosition([0, 0]);
+  }
 }
