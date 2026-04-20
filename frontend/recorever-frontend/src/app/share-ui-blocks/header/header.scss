@@ -40,6 +40,14 @@ $mobile-breakpoint: 768px;
     -webkit-backdrop-filter: blur(12px);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
   }
+
+  &.is-homepage {
+    @media (max-width: $mobile-breakpoint) {
+      .logo-container .app-name {
+        display: none;
+      }
+    }
+  }
 }
 
 .logo-container {

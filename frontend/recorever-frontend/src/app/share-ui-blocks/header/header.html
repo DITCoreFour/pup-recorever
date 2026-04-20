@@ -1,6 +1,7 @@
 <header class="app-header"
         [class.mobile-auth-header]="showMenuButton"
-        [class.scrolled]="isScrolled">
+        [class.scrolled]="isScrolled"
+        [class.is-homepage]="isHomepage$ | async">
 
   <div class="logo-container">
     @if (showButtons) {
