@@ -2,6 +2,8 @@ import { Component, inject, OnDestroy, ElementRef, HostListener, ViewChild } fro
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
 import { Subject, switchMap, takeUntil, catchError, of } from 'rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';
 
@@ -35,7 +37,9 @@ type HeaderProfileNavItem = ProfileNavItem & {
     RouterModule,
     Notification,
     ConfirmationModal,
-    MatDialogModule
+    MatDialogModule,
+    MatIconModule,
+    MatButtonModule
   ],
   templateUrl: './user-header.html',
   styleUrl: './user-header.scss',
@@ -60,6 +64,7 @@ export class UserHeader implements OnDestroy {
   protected isLogoutModalOpen = false;
   protected isProfileDropdownOpen = false;
   protected showLoginModal = false;
+  protected isSidebarOpen = false;
 
   protected navItems: HeaderNavItem[] = [
     {
@@ -123,6 +128,19 @@ export class UserHeader implements OnDestroy {
     ) {
       this.isProfileDropdownOpen = false;
     }
+  }
+
+  @HostListener('document:keydown.escape', [])
+  public onEscapeKey(): void {
+    this.closeSidebar();
+  }
+
+  public toggleSidebar(): void {
+    this.isSidebarOpen = !this.isSidebarOpen;
+  }
+
+  public closeSidebar(): void {
+    this.isSidebarOpen = false;
   }
 
   protected getProfileImageUrl(path: string | null | undefined): string {
