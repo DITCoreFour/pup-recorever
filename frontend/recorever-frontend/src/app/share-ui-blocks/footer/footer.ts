@@ -18,7 +18,7 @@ type FooterLink = {
 export class Footer {
 
   protected mainLinks: FooterLink[] = [
-    { label: 'Browse', url: '/browse' },
+    { label: 'Browse', url: 'app/browse' },
     { label: 'The Features', url: '/', fragment: 'features' },
     { label: 'Who We Are', url: '/', fragment: 'about-us' },
     { label: 'Help and Support', url: '/help-page', fragment: 'support' },

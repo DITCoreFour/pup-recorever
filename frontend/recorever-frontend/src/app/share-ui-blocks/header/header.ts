@@ -15,34 +15,34 @@ import { AuthService } from '../../core/auth/auth-service';
     CommonModule,
     RouterModule,
     MatIconModule,
-    MatButtonModule
+    MatButtonModule,
   ],
   templateUrl: './header.html',
   styleUrl: './header.scss',
 })
 export class Header implements OnInit {
-  
-  @Input() showButtons = false; 
-  @Input() showMenuButton = false; 
+
+  @Input() showButtons = false;
+  @Input() showMenuButton = false;
 
   @Output() menuToggled = new EventEmitter<void>();
 
   public isHomepage$: Observable<boolean>;
   public isLoggedIn = false;
-
-  public isScrolled: boolean = false;
+  public isScrolled = false;
+  public isSidebarOpen = false;
 
   constructor(
     private authService: AuthService,
     private router: Router,
     private routeReuseStrategy: RouteReuseStrategy,
-    private scroller: ViewportScroller
+    private scroller: ViewportScroller,
   ) {
     this.isHomepage$ = this.router.events.pipe(
       filter((event: RouterEvent):
           event is NavigationEnd => event instanceof NavigationEnd),
       map((event: NavigationEnd) => event.urlAfterRedirects === '/'),
-      startWith(this.router.url === '/')
+      startWith(this.router.url === '/'),
     );
   }
 
@@ -53,11 +53,21 @@ export class Header implements OnInit {
   @HostListener('window:scroll', [])
   public onWindowScroll(): void {
     const scrollPosition: [number, number] = this.scroller.getScrollPosition();
-    this.isScrolled = scrollPosition[1] > 50; 
+    this.isScrolled = scrollPosition[1] > 50;
   }
 
-  public toggleMenu(): void {
+  @HostListener('document:keydown.escape', [])
+  public onEscapeKey(): void {
+    this.closeSidebar();
+  }
+
+  public toggleSidebar(): void {
+    this.isSidebarOpen = !this.isSidebarOpen;
     this.menuToggled.emit();
+  }
+
+  public closeSidebar(): void {
+    this.isSidebarOpen = false;
   }
 
   public onLogoClick(): void {
@@ -71,7 +81,7 @@ export class Header implements OnInit {
       this.routeReuseStrategy.shouldReuseRoute = () => false;
 
       this.router.navigate([currentUrl], {
-        onSameUrlNavigation: 'reload'
+        onSameUrlNavigation: 'reload',
       });
     }
   }
@@ -86,7 +96,12 @@ export class Header implements OnInit {
     }
   }
 
+  public onSidebarNavClick(sectionId: string): void {
+    this.closeSidebar();
+    this.onNavClick(sectionId);
+  }
+
   private scrollTo(id: string): void {
-    this.scroller.scrollToAnchor(id); 
+    this.scroller.scrollToAnchor(id);
   }
 }

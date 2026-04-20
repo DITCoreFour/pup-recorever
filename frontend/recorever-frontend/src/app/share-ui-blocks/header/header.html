@@ -1,13 +1,13 @@
-<header class="app-header" 
-        [class.mobile-auth-header]="showMenuButton" 
+<header class="app-header"
+        [class.mobile-auth-header]="showMenuButton"
         [class.scrolled]="isScrolled">
-  
+
   <div class="logo-container">
-    @if (showMenuButton) {
+    @if (showButtons) {
       <button
           mat-icon-button
           class="menu-btn"
-          (click)="toggleMenu()"
+          (click)="toggleSidebar()"
           aria-label="Toggle navigation">
         <mat-icon>menu</mat-icon>
       </button>
@@ -20,14 +20,16 @@
         tabindex="0"
         (keydown.enter)="onLogoClick()">
       <img src="assets/temp_logo.png" class="app-logo" alt="Logo">
-      <span class="app-name">PUP•RECOVER</span> 
+      <div class="app-name">
+        PUP<span class="title-bold">Recover</span>
+      </div> 
     </div>
   </div>
 
   @if (showButtons) {
     <nav class="public-nav-links">
       <a (click)="onNavClick('features')" class="nav-item">The Features</a>
-            <a (click)="onNavClick('how-it-works')" class="nav-item">How it Works</a>
+      <a (click)="onNavClick('how-it-works')" class="nav-item">How it Works</a>
       <a (click)="onNavClick('about-us')" class="nav-item">Who We Are</a>
     </nav>
 
@@ -38,3 +40,50 @@
   }
 
 </header>
+
+@if (showButtons) {
+  <div
+      class="sidebar-backdrop"
+      [class.open]="isSidebarOpen"
+      (click)="closeSidebar()"
+      aria-hidden="true">
+  </div>
+
+  <nav
+      class="mobile-sidebar"
+      [class.open]="isSidebarOpen"
+      aria-label="Mobile navigation">
+
+    <div class="sidebar-header">
+      <div class="sidebar-branding">
+        <img src="assets/temp_logo.png" class="app-logo" alt="Logo">
+        <div class="app-name">
+        PUP<span class="title-bold">Recover</span>
+      </div>
+      </div>
+      <button
+          mat-icon-button
+          class="close-btn"
+          (click)="closeSidebar()"
+          aria-label="Close navigation">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+
+    <div class="sidebar-links">
+      <a (click)="onSidebarNavClick('features')" class="sidebar-nav-item">
+        <mat-icon>star</mat-icon>
+        <span>The Features</span>
+      </a>
+      <a (click)="onSidebarNavClick('how-it-works')" class="sidebar-nav-item">
+        <mat-icon>help_outline</mat-icon>
+        <span>How it Works</span>
+      </a>
+      <a (click)="onSidebarNavClick('about-us')" class="sidebar-nav-item">
+        <mat-icon>groups</mat-icon>
+        <span>Who We Are</span>
+      </a>
+    </div>
+
+  </nav>
+}
