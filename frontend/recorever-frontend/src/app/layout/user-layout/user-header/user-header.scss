@@ -34,11 +34,13 @@ $header-height: 64px;
 
   .app-name {
     font-size: 18px;
-    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande',
-    'Lucida Sans', Arial, sans-serif;
     color: #ad1111;
     margin-left: 5px;
-}
+
+    .title-bold {
+        font-weight: 600;
+    }
+  }
 }
 
 .nav-links {
