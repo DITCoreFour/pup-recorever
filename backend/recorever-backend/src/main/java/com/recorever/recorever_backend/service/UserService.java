@@ -105,7 +105,8 @@ public class UserService {
 
     @Transactional
     public Map<String, Object> updateUserProfile(
-        User user, String name, String email, String profilePicture
+        User user, String name, String email, 
+        Integer programId, Integer year, String profilePicture
     ) {
         int userId = user.getUserId();
 
