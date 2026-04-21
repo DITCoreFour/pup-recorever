@@ -1,5 +1,6 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import { 
   AbstractControl,
   FormBuilder, 
@@ -152,6 +153,11 @@ export class ProfilePage implements OnInit {
   }
 
   public onSaveChanges(): void {
+    if (!navigator.onLine) {
+      this.errorMessage = 'No internet connection. Please check your network.';
+      return;
+    }
+
     if (this.profileForm.valid && !this.isSubmitting) {
       this.isSubmitting = true;
       this.errorMessage = null;
@@ -186,8 +192,12 @@ export class ProfilePage implements OnInit {
             });
             this.selectedAvatarFile = null;
           },
-          error: (): void => {
-            this.errorMessage = 'Failed to update profile data.';
+          error: (err: HttpErrorResponse | unknown): void => {
+            if (err instanceof HttpErrorResponse && err.status === 0) {
+              this.errorMessage = 'Server unreachable. Please try again later.';
+            } else {
+              this.errorMessage = 'Failed to update. Email may be taken.';
+            }
           }
         });
     } else {
