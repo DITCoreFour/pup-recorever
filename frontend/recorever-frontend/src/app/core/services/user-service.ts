@@ -32,7 +32,7 @@ export class UserService {
     return this.http
       .get<User>(`${this.API_BASE_URL}/get-user-data`)
       .pipe(
-        tap((user) => {
+        tap((user: User) => {
           this.authService.updateCurrentUser(user);
         })
       );
@@ -69,7 +69,7 @@ export class UserService {
         params,
       })
       .pipe(
-        map((response) => response.isUnique),
+        map((response: UniqueCheckResponse) => response.isUnique),
         catchError(() => of(true)),
         shareReplay(1)
       );
@@ -90,7 +90,8 @@ export class UserService {
 
       return timer(500).pipe(
         switchMap(() => this.checkUniqueness(field, control.value)),
-        map((isUnique) => (isUnique ? null : { notUnique: true }))
+        map((isUnique: boolean) => (isUnique ? null : 
+              { not_unique: 'Value is already taken' }))
       );
     };
   }
@@ -102,6 +103,18 @@ export class UserService {
     }
     formData.append('email', user.email);
 
+    if (user.program_id !== undefined && user.program_id !== null) {
+      formData.append('programId', user.program_id.toString());
+    } else {
+      formData.append('programId', '');
+    }
+
+    if (user.year_level !== undefined && user.year_level !== null) {
+      formData.append('year', user.year_level.toString());
+    } else {
+      formData.append('year', '');
+    }
+
     if (file) {
       formData.append('profile_picture_file', file);
     }
@@ -109,7 +122,7 @@ export class UserService {
     return this.http
       .put<User>(`${this.API_BASE_URL}/update-user-data`, formData)
       .pipe(
-        tap((updatedUser) => {
+        tap((updatedUser: User) => {
           this.authService.updateCurrentUser(updatedUser);
         })
       );
