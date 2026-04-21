@@ -29,6 +29,7 @@
       <div class="step-container" [class.active]="currentStep === 'verify'">
         <app-verification-modal
           [email]="registeredEmail"
+          [password]="registeredPassword"
           (close)="currentStep = 'register'">
         </app-verification-modal>
       </div>

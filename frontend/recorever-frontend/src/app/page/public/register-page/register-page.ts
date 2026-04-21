@@ -34,6 +34,7 @@ export class RegisterPage {
   // State management for the form panels
   public currentStep: 'register' | 'verify' = 'register';
   public registeredEmail: string = '';
+  public registeredPassword: string = '';
 
   public onRegister(payload: RegisterFormPayload): void {
     this.isLoading = true;
@@ -59,6 +60,7 @@ export class RegisterPage {
         next: (): void => {
           this.toastService.showSuccess('Registration successful!');
           this.registeredEmail = payload.email;
+          this.registeredPassword = payload.password;
           this.currentStep = 'verify'; // Switch to verification panel
           this.cdr.detectChanges();
         },

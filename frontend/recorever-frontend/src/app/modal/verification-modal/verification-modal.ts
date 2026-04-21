@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { UserService } from '../../core/services/user-service';
 import { ToastService } from '../../core/services/toast-service';
+import { AuthService } from '../../core/auth/auth-service';
+import { switchMap } from 'rxjs/operators';
 import { 
   MessageResponse, 
   VerificationResponse, 
@@ -18,9 +20,11 @@ import {
 })
 export class VerificationModalComponent implements OnInit, OnDestroy {
   @Input() email: string = '';
+  @Input() password: string = '';
   @Output() close = new EventEmitter<void>();
 
   private userService = inject(UserService);
+  private authService = inject(AuthService);
   private toastService = inject(ToastService);
   private router = inject(Router);
 
@@ -116,12 +120,20 @@ export class VerificationModalComponent implements OnInit, OnDestroy {
     if (code.length !== 5) return;
 
     this.isLoading.set(true);
-    this.userService.verifyUserEmail(code).subscribe({
-      next: (res: VerificationResponse) => {
+    
+    this.userService.verifyUserEmail(code).pipe(
+      switchMap(() => {
+        return this.authService.login({
+          email: this.email,
+          password: this.password
+        });
+      })
+    ).subscribe({
+      next: (res) => {
         this.isLoading.set(false);
-        this.toastService.showSuccess(res.message || 'Account activated!');
+        this.toastService.showSuccess('Account activated!');
         this.close.emit();
-        this.router.navigate(['/login']);
+        this.router.navigate(['/app/browse']);
       },
       error: (err: { error: ErrorResponse }) => {
         this.isLoading.set(false);
