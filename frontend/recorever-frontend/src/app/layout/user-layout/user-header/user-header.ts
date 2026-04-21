@@ -75,12 +75,12 @@ export class UserHeader implements OnDestroy {
     {
       label: 'Report Lost Item',
       route: AppRoutePaths.REPORT_LOST,
-      iconPath: 'assets/report-lost.png'
+      iconPath: 'assets/reported-lost-items.png'
     },
     {
       label: 'Report Found Item',
       route: AppRoutePaths.REPORT_FOUND,
-      iconPath: 'assets/report-found.png'
+      iconPath: 'assets/reported-found-item.png'
     },
     {
       label: 'My Reports',
