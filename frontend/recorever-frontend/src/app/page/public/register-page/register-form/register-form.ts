@@ -226,6 +226,11 @@ export class RegisterForm implements OnInit {
   }
 
   public submitForm(): void {
+    if (!navigator.onLine) {
+      this.errorMessage = 'No internet connection. Please check your network.';
+      return;
+    }
+
     if (this.registerForm.valid && !this.isSubmitting) {
       this.registerSubmit.emit(
         this.registerForm.getRawValue() as RegisterFormPayload
