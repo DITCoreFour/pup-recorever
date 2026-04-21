@@ -39,11 +39,12 @@
     <div class="row-group">
       <div class="input-group">
         <label>Program <span class="optional-text">(student only)</span></label>
-        <select formControlName="programId">
+        <select formControlName="programId" title="Select your Program">
           <option [ngValue]="null">Select Program...</option>
           @for (prog of programs(); track prog.programId) {
-            <option [ngValue]="prog.programId">
-              {{ prog.programCode }} ({{ prog.programName }})
+            <option 
+                [ngValue]="prog.programId">
+              {{ prog.programCode }}
             </option>
           }
         </select>
@@ -51,7 +52,7 @@
 
       <div class="input-group">
         <label>Year <span class="optional-text">(student only)</span></label>
-        <select formControlName="year">
+        <select formControlName="year" title="Select your Year">
           <option [ngValue]="null">Select Year...</option>
           @for (yr of years; track yr) {
             <option [ngValue]="yr">{{ yr }}</option>
