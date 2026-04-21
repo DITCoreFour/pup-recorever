@@ -1,9 +1,12 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { 
+  AbstractControl,
   FormBuilder, 
   FormGroup, 
   ReactiveFormsModule, 
+  ValidationErrors,
+  ValidatorFn,
   Validators 
 } from '@angular/forms';
 import { take, catchError, finalize } from 'rxjs/operators';
@@ -16,15 +19,35 @@ import {
   ProgramService, 
   ProgramResponse 
 } from '../../../core/services/program-service';
-import { User } from '../../../models/user-model';
+import { User, YearLevel } from '../../../models/user-model';
 import { environment } from '../../../../environments/environment';
+
+import { 
+  ConfirmationModal 
+} from '../../../modal/confirmation-modal/confirmation-modal';
+
+function programYearDependencyValidator(): ValidatorFn {
+  return (control: AbstractControl): ValidationErrors | null => {
+    const progId = control.get('programId')?.value;
+    const year = control.get('year')?.value;
+
+    const hasProg = progId !== null && progId !== '';
+    const hasYear = year !== null && year !== '';
+
+    if ((hasProg && !hasYear) || (!hasProg && hasYear)) {
+      return { dependencyError: 'Program and Year must be selected together' };
+    }
+    return null;
+  };
+}
 
 @Component({
   selector: 'app-profile-page',
   standalone: true,
   imports: [
     CommonModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    ConfirmationModal
   ],
   templateUrl: './profile-page.html',
   styleUrls: ['./profile-page.scss']
@@ -45,10 +68,19 @@ export class ProfilePage implements OnInit {
   public programs = signal<ProgramResponse[]>([]);
   public profileForm!: FormGroup;
   public isSubmitting: boolean = false;
-  public updateMessage: string | null = null; 
+  
+  public readonly years: YearLevel[] = [
+    YearLevel.FIRST_YEAR,
+    YearLevel.SECOND_YEAR,
+    YearLevel.THIRD_YEAR,
+    YearLevel.FOURTH_YEAR
+  ];
 
   public selectedAvatarFile: File | null = null;
   public avatarPreviewUrl: string | null = null;
+
+  public showSuccessModal = signal<boolean>(false);
+  public errorMessage: string | null = null; 
 
   public ngOnInit(): void {
     this.initForm();
@@ -60,7 +92,15 @@ export class ProfilePage implements OnInit {
     this.profileForm = this.fb.group({
       firstName: ['', [Validators.required]],
       lastName: ['', [Validators.required]],
-      email: ['', [Validators.required, Validators.email]]
+      email: ['', {
+        validators: [Validators.required, Validators.email],
+        asyncValidators: [this.userService.uniqueValidator('email', '')],
+        updateOn: 'change'
+      }],
+      programId: [null],
+      year: [null]
+    }, { 
+      validators: [programYearDependencyValidator()] 
     });
   }
 
@@ -70,9 +110,6 @@ export class ProfilePage implements OnInit {
       .subscribe({
         next: (data: ProgramResponse[]): void => {
           this.programs.set(data);
-        },
-        error: (err: unknown): void => {
-          console.error('Failed to load programs', err);
         }
       });
   }
@@ -83,27 +120,21 @@ export class ProfilePage implements OnInit {
       this.profileForm.patchValue({
         firstName: user.first_name,
         lastName: user.last_name,
-        email: user.email
+        email: user.email,
+        programId: user.program_id || null,
+        year: user.year_level || null
       });
     }
   }
 
-  public getProgramCode(programId: number | null | undefined): string {
-    if (!programId) return 'N/A';
-    const match = this.programs().find(p => p.programId === programId);
-    return match ? match.programCode : 'Unknown Program';
+  public getControl(controlName: string): AbstractControl | null {
+    return this.profileForm.get(controlName);
   }
 
   public getProfileImageUrl(path: string | null | undefined): string {
-    if (this.avatarPreviewUrl) {
-      return this.avatarPreviewUrl;
-    }
-    if (!path) {
-      return 'assets/profile-avatar.png';
-    }
-    if (path.startsWith('http')) {
-      return path.replace('http://', 'https://');
-    }
+    if (this.avatarPreviewUrl) return this.avatarPreviewUrl;
+    if (!path) return 'assets/profile-avatar.png';
+    if (path.startsWith('http')) return path.replace('http://', 'https://');
     const secureBaseUrl = environment.apiUrl.replace('http://', 'https://');
     return `${secureBaseUrl}/image/download/${path}`;
   }
@@ -116,50 +147,47 @@ export class ProfilePage implements OnInit {
     }
   }
 
+  public closeSuccessModal(): void {
+    this.showSuccessModal.set(false);
+  }
+
   public onSaveChanges(): void {
     if (this.profileForm.valid && !this.isSubmitting) {
       this.isSubmitting = true;
-      this.updateMessage = null;
+      this.errorMessage = null;
 
       const currentUserData: User | null = this.currentUser();
-      
       if (!currentUserData) {
         this.isSubmitting = false;
-        this.updateMessage = 'Error: User data not found.';
+        this.errorMessage = 'Error: User data not found.';
         return;
       }
 
-      const first = this.profileForm.get('firstName')?.value.trim();
-      const last = this.profileForm.get('lastName')?.value.trim();
-      const email = this.profileForm.get('email')?.value.trim();
-
       const updatedUser: User = {
         ...currentUserData,
-        first_name: first,
-        last_name: last,
-        email: email
+        first_name: this.profileForm.get('firstName')?.value.trim(),
+        last_name: this.profileForm.get('lastName')?.value.trim(),
+        email: this.profileForm.get('email')?.value.trim(),
+        program_id: this.profileForm.get('programId')?.value,
+        year_level: this.profileForm.get('year')?.value
       };
 
       this.userService.updateProfile(updatedUser, this.selectedAvatarFile)
-        .pipe(
-          finalize((): void => {
-            this.isSubmitting = false;
-          })
-        )
+        .pipe(finalize((): void => { this.isSubmitting = false; }))
         .subscribe({
           next: (savedUser: User): void => {
-            this.updateMessage = 'Profile updated successfully!';
+            this.showSuccessModal.set(true);
             this.profileForm.patchValue({
               firstName: savedUser.first_name,
               lastName: savedUser.last_name,
-              email: savedUser.email
+              email: savedUser.email,
+              programId: savedUser.program_id || null,
+              year: savedUser.year_level || null
             });
             this.selectedAvatarFile = null;
-            
           },
-          error: (err: unknown): void => {
-            console.error('Update failed', err);
-            this.updateMessage = 'Failed to update. Email may be taken.';
+          error: (): void => {
+            this.errorMessage = 'Failed to update profile data.';
           }
         });
     } else {
