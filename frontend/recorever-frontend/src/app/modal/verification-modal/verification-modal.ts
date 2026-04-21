@@ -63,13 +63,10 @@ export class VerificationModalComponent implements OnInit, OnDestroy {
 
   onInput(event: Event, index: number): void {
     const input = event.target as HTMLInputElement;
-    let val = input.value;
-    
-    if (!/^\d*$/.test(val)) {
-      val = '';
-    }
+    let val = input.value.replace(/\D/g, '');
 
     this.digits[index] = val;
+    input.value = val;
 
     if (val && index < 4) {
       const nextInput = document.getElementById(`otp-${index + 1}`) as HTMLInputElement;
