@@ -120,21 +120,33 @@
   .input-group {
     display: flex;
     flex-direction: column;
+    align-items: flex-start;
     width: 100%;
+    gap: 0.3rem;
     margin-bottom: 1.25rem;
 
     label {
       font-size: 0.85rem;
-      font-weight: 500;
       color: #374151;
-      margin-bottom: 0.4rem;
+      font-weight: 500;
+      width: 100%;
+      text-align: left;
+      display: flex;
+      align-items: center;
 
       .asterisk {
-        color: #ef4444;
+        color: #ef4444; 
+      }
+
+      .optional-text {
+        font-size: 0.65rem;
+        color: #6b7280;
+        font-style: italic;
+        margin-left: 0.35rem;
       }
     }
 
-    input, .custom-select {
+    input, select {
       width: 100%;
       box-sizing: border-box;
       padding: 0.65rem 1rem;
@@ -142,15 +154,17 @@
       border-radius: 0.5rem;
       font-size: 0.95rem;
       outline: none;
+      color: #333333;
       background-color: #ffffff;
-      
+      font-family: inherit;
+
       &:focus {
         border-color: #800000;
       }
     }
-
-    :host ::ng-deep .custom-select .mat-mdc-select-trigger {
-      padding: 0;
+    
+    select {
+      cursor: pointer;
     }
   }
 
@@ -182,48 +196,25 @@
   }
 } 
 
-.disabled-group {
-  opacity: 0.85;
-  
-  .lock-icon {
-    font-size: 0.75rem;
-    margin-left: 0.35rem;
-    cursor: help;
-  }
-
-  input {
-    background-color: #f3f4f6;
-    color: #6b7280;
-    cursor: not-allowed;
-    border-color: #d1d5db;
-
-    &:focus {
-      border-color: #d1d5db; 
-    }
-  }
+.error-msg {
+  display: block;
+  color: #f44336 !important; 
+  font-size: 0.75rem; 
+  margin-top: 0.15rem;
+  font-style: italic; 
 }
 
-.helper-text {
-  font-size: 0.8rem;
-  color: #6b7280;
-  background-color: #f9fafb;
-  padding: 0.75rem;
+.error-banner {
+  background-color: #fee2e2; 
+  color: #ef4444; 
+  padding: 0.75rem 1rem;
   border-radius: 0.5rem;
-  border-left: 3px solid #9ca3af;
-  margin-bottom: 1rem;
-  font-style: italic;
-}
-
-.status-message {
-  font-size: 0.85rem;
-  color: #065f46;
-  background-color: #d1fae5;
-  padding: 0.75rem;
-  border-radius: 0.5rem;
-  margin-bottom: 1rem;
+  border: 1px solid #fca5a5; 
   text-align: center;
-  font-weight: 500;
-  border: 1px solid #a7f3d0;
+  font-size: 0.85rem;
+  margin-bottom: 1rem;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .hidden-file-input {

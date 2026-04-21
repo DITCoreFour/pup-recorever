@@ -12,14 +12,12 @@
             [src]="getProfileImageUrl(currentUser()?.profile_picture)" 
             alt="User Avatar" 
             class="avatar-img"/>
-        
         <input 
             type="file" 
             #fileInput 
             accept="image/*" 
             class="hidden-file-input"
             (change)="onFileSelected($event)" />
-            
         <button 
             type="button" 
             class="edit-avatar-btn" 
@@ -51,37 +49,57 @@
         <div class="input-group">
           <label>Email<span class="asterisk">*</span></label>
           <input type="email" formControlName="email" />
+          
+          @if (getControl('email')?.touched || getControl('email')?.dirty) {
+            @if (getControl('email')?.hasError('required')) {
+              <span class="error-msg">This is a required question</span>
+            }
+            @if (getControl('email')?.hasError('email')) {
+              <span class="error-msg">Please enter a valid email format</span>
+            }
+            @if (getControl('email')?.hasError('notUnique')) {
+              <span class="error-msg">This email is already registered</span>
+            }
+          }
         </div>
 
         <div class="form-row">
-          <div class="input-group disabled-group">
+          <div class="input-group">
             <label>
-              Program
+              Program <span class="optional-text">(student only)</span>
             </label>
-            <input 
-                type="text" 
-                [value]="getProgramCode(currentUser()?.program_id)" 
-                disabled />
+            <select formControlName="programId">
+              <option [ngValue]="null">Select Program...</option>
+              @for (prog of programs(); track prog.programId) {
+                <option [ngValue]="prog.programId">
+                  {{ prog.programCode }}
+                </option>
+              }
+            </select>
           </div>
-          <div class="input-group disabled-group">
+          <div class="input-group">
             <label>
-              Year
+              Year <span class="optional-text">(student only)</span>
             </label>
-            <input 
-                type="text" 
-                [value]="currentUser()?.year_level || 'N/A'" 
-                disabled />
+            <select formControlName="year">
+              <option [ngValue]="null">Select Year...</option>
+              @for (yr of years; track yr) {
+                <option [ngValue]="yr">{{ yr }}</option>
+              }
+            </select>
           </div>
         </div>
 
-        <p class="helper-text">
-          If you need to update your 
-          program or year, please contact the admin.
-        </p>
+        @if (profileForm.hasError('dependencyError') && 
+            (getControl('programId')?.touched || getControl('year')?.touched)) {
+          <span class="error-msg" style="margin-bottom: 1rem; display: block;">
+            Program and Year must be selected together, or both left blank.
+          </span>
+        }
 
-        @if (updateMessage) {
-          <div class="status-message">
-            {{ updateMessage }}
+        @if (errorMessage) {
+          <div class="error-banner">
+            {{ errorMessage }}
           </div>
         }
 
@@ -89,9 +107,12 @@
           <button 
               type="submit" 
               class="save-btn" 
-              [disabled]="profileForm.invalid || isSubmitting">
+              [disabled]="profileForm.invalid || isSubmitting || 
+                          profileForm.pending">
             @if (isSubmitting) {
               SAVING...
+            } @else if (profileForm.pending) {
+              CHECKING EMAIL...
             } @else {
               SAVE CHANGES
             }
@@ -103,3 +124,14 @@
 
   </div>
 </div>
+
+@if (showSuccessModal()) {
+  <app-confirmation-modal
+      title="Success"
+      message="Your profile has been updated successfully!"
+      confirmLabel="OK"
+      [showCancelButton]="false"
+      (confirm)="closeSuccessModal()"
+      (cancel)="closeSuccessModal()">
+  </app-confirmation-modal>
+}
