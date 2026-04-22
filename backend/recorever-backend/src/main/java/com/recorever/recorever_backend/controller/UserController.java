@@ -14,6 +14,7 @@ import com.recorever.recorever_backend.dto.UserResponseDTO;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -74,7 +75,7 @@ public class UserController {
                 registrationDto.getYear()
         );
 
-        User newUser = repo.findByIdAndIsDeletedFalse(userId)
+        User newUser = repo.findById(userId)
             .orElseThrow(() -> new RuntimeException(
                 "User not found after registration"
             ));
@@ -89,6 +90,69 @@ public class UserController {
         return ResponseEntity.status(500).body(Map.of(
             "error", "An unexpected error occurred."
         ));
+        }
+    }
+
+    // Email Verification Endpoint
+    @GetMapping("/verify-email")
+    public ResponseEntity<?> verifyEmail(@RequestParam String token) {
+        try {
+            service.verifyUserEmail(token);
+            return ResponseEntity.ok(Map.of(
+                "success", true, 
+                "message", "Email verified successfully. You can now login."
+            ));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                "success", false, 
+                "error", e.getMessage()
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
+                "success", false,
+                "error", "An unexpected error occurred. Please try again."
+            ));
+        }
+    }
+
+    @PostMapping("/resend-verification")
+    public ResponseEntity<?> resendCode(
+        @RequestBody Map<String, String> request
+    ) {
+        String email = request.get("email");
+        // Verify user exists and is still inactive/deleted=true
+        return repo.findByEmailAndIsDeletedFalse(email).map(user -> {
+            return ResponseEntity.badRequest().body(
+                Map.of("error", "Account is already active.")
+            );
+        }).orElseGet(() -> {
+            return repo.findAll().stream()
+                .filter(u -> u.getEmail().equals(email) && u.isDeleted())
+                .findFirst()
+                .map(user -> {
+                    service.sendNewVerificationCode(
+                        user.getUserId(), 
+                        email, 
+                        true
+                    );
+                    return ResponseEntity.ok(Map.of(
+                        "message", "New 60-second verification code sent."
+                    ));
+                }).orElse(ResponseEntity.status(404).body(
+                    Map.of("error", "User not found.")
+                ));
+        });
+    }
+
+    @DeleteMapping("/cancel-registration")
+    public ResponseEntity<Map<String, String>> cancelRegistration(@RequestParam String email) {
+        try {
+            service.cancelRegistration(email);
+            return ResponseEntity.ok(Map.of("message", "You can now enter your correct email address."));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                            .body(Map.of("error", "We encountered a problem" + 
+                            "updating your email request. Please try again in a moment."));
         }
     }
 

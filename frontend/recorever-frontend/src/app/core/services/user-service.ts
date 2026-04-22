@@ -15,6 +15,7 @@ import type {
   ChangePasswordRequest, 
   UniqueCheckResponse 
 } from '../../models/user-model';
+import { MessageResponse, VerificationResponse } from '../../models/auth-model';
 
 @Injectable({
   providedIn: 'root',
@@ -27,6 +28,20 @@ export class UserService {
   private uniquenessCache = new Map<string, Observable<boolean>>();
 
   currentUser$ = this.authService.currentUser$;
+
+  sendNewVerificationCode(
+    userId: number,
+    email: string
+  ): Observable<MessageResponse> {
+    const url = `${this.API_BASE_URL}/resend-verification`;
+    return this.http.post<MessageResponse>(url, { email });
+  }
+
+  verifyUserEmail(token: string): Observable<VerificationResponse> {
+    const url = `${this.API_BASE_URL}/verify-email`;
+    const params = new HttpParams().set('token', token);
+    return this.http.get<VerificationResponse>(url, { params });
+  }
 
   getProfile(): Observable<User> {
     return this.http
@@ -137,5 +152,11 @@ export class UserService {
 
   deleteAccount(): Observable<void> {
     return this.http.delete<void>(`${this.API_BASE_URL}/delete-account`);
+  }
+
+  cancelRegistration(email: string): Observable<MessageResponse> {
+    const url = `${this.API_BASE_URL}/cancel-registration`;
+    const params = new HttpParams().set('email', email);
+    return this.http.delete<MessageResponse>(url, { params });
   }
 }
