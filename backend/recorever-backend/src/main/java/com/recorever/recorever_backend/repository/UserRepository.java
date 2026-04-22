@@ -35,7 +35,8 @@ public interface UserRepository extends JpaRepository<User, Integer> {
     );
 
     @Query("SELECT COUNT(u) > 0 FROM User u WHERE u.email = :email " +
-           "AND u.userId != :userId")
+           "AND u.userId != :userId " +
+           "AND u.isDeleted = false")
     boolean isEmailTaken(
         @Param("email") String email, 
         @Param("userId") int userId

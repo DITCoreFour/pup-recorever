@@ -58,6 +58,8 @@ public class UserService {
         throw new IllegalArgumentException("Email is already in use.");
         }
 
+        repo.deleteInactiveUserByEmail(email);
+
         User user = new User();
         user.setFirstName(firstName);
         user.setLastName(lastName);
