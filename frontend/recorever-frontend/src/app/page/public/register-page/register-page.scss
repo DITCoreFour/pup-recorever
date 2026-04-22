@@ -4,7 +4,7 @@
 
 .register-background {
   width: 100%;
-  min-height: calc(100vh - 61px);
+  min-height: 100vh;
   background-image: linear-gradient(
       rgba(128, 0, 0, 0.6), 
       rgba(128, 0, 0, 0.7)
@@ -15,7 +15,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 1rem;
+  padding: calc(64px + 1.5rem) 1rem 1.5rem;
   box-sizing: border-box;
 }
 
@@ -25,14 +25,14 @@
   width: 100%;
   max-width: 1000px;
   height: auto;
-  max-height: 90vh;
+  max-height: calc(100vh - 64px - 3rem);
   border-radius: 1.5rem;
   overflow: hidden;
   box-shadow: 0 25px 50px -12px rgba(24, 23, 23, 0.5);
 
   @media (max-width: 768px) {
     flex-direction: column;
-    max-height: 95vh;
+    max-height: calc(100vh - 64px - 3rem);
   }
 }
 
