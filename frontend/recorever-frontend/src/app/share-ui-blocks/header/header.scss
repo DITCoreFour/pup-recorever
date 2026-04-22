@@ -27,7 +27,7 @@ $mobile-breakpoint: 768px;
     box-shadow 0.3s ease;
 
   @media (max-width: 1200px) {
-    padding: 0 4rem;
+     padding: 0 4rem;
   }
 
   @media (max-width: $mobile-breakpoint) {
@@ -93,11 +93,15 @@ $mobile-breakpoint: 768px;
 
 .public-nav-links {
   @media (min-width: #{$mobile-breakpoint + 1px}) {
-    flex: 1;
+    flex: 2;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 40px;
+  }
+
+  @media (max-width: 1024px) and (min-width: #{$mobile-breakpoint + 1px}) {
+    gap: 20px;
   }
 
   @media (max-width: $mobile-breakpoint) {
@@ -115,6 +119,11 @@ $mobile-breakpoint: 768px;
     transition: all 0.2s ease;
     white-space: nowrap;
 
+    @media (max-width: 1024px) {
+      font-size: 13px;
+      padding: 8px 6px;
+    }
+
     &:hover {
       color: rgb(190, 187, 187);
     }
@@ -131,10 +140,8 @@ $mobile-breakpoint: 768px;
 
 .auth-buttons {
   flex: 1;
-  display: flex;
   align-items: center;
-  justify-content: center;
-  margin-right: 6rem;
+  justify-content: flex-end;
   gap: 20px;
 
   .btn {
@@ -157,7 +164,16 @@ $mobile-breakpoint: 768px;
   }
 
   @media (max-width: $mobile-breakpoint) {
-    margin-left: 5rem;
+    flex: 0;
+    margin-left: auto;
+    margin-right: 5rem;
+    gap: 8px;
+    justify-content: flex-end;
+
+    .btn {
+      padding: 6px 12px;
+      font-size: 12px;
+    }
   }
 }
 

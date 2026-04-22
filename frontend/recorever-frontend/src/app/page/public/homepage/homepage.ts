@@ -41,34 +41,34 @@ export class Homepage implements OnInit {
     {
       icon: 'dynamic_feed',
       title: 'Real-Time Discovery Feed',
-      details: 'Scroll through a campus-wide, real-time bulletin of' +
+      details: 'Scroll through a campus-wide, real-time bulletin of ' +
         'discovered items from your phone or laptop, without having the hassle.'
     },
     {
       icon: 'sell',
       title: 'Smart Metadata Tagging',
-      details: 'Digital tags connect items to specific, indexed physical' + 
+      details: 'Digital tags connect items to specific, indexed physical ' + 
           'storage locations, reducing retrieval time to under 30 seconds.'
     },
     {
       icon: 'manage_search',
       title: 'Automated Smart Matching',
-      details: "Don't just wait and hope. Our intelligent engine matches" + 
-          "lost reports with found items using keywords and proximity," + 
+      details: "Don't just wait and hope. Our intelligent engine matches " + 
+          "lost reports with found items using keywords and proximity, " + 
           "sending you instant email alerts when a potential match is found."
     },
     {
       icon: 'update',
       title: 'Inventory-Aging Notifications',
-      details: 'Automated alerts that notify the administration when an' + 
-        'unclaimed item has reached its 30-day retention limit, preventing' +
+      details: 'Automated alerts that notify the administration when an ' + 
+        'unclaimed item has reached its 30-day retention limit, preventing ' +
         'overcrowded storage.'
     },
     {
       icon: 'verified_user',
       title: 'Secure Claim Verification',
-      details: 'Your belongings are safe. Claiming an item requires' + 
-          'verifiable evidence of ownership, ensuring items are only returned' +
+      details: 'Your belongings are safe. Claiming an item requires ' + 
+          'verifiable evidence of ownership, ensuring items are only returned ' +
           'to their rightful owners while keeping your personal data private.'
     }
   ];
