@@ -21,11 +21,13 @@
         {{ confirmLabel }}
       </button>
 
-      <button type="button"
+      @if (showCancelButton) {
+        <button type="button"
               class="btn btn-outline"
               (click)="onCancel()">
-        {{ cancelLabel }}
-      </button>
+          {{ cancelLabel }}
+        </button>
+      }
     </div>
 
   </div>

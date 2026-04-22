@@ -24,8 +24,12 @@
 
         @if (isReportDropdownOpen) {
           <div class="nav-dropdown-menu">
-            <a class="dropdown-item" routerLink="/null"
-                (click)="closeReportDropdown()">My Reports</a>
+            <a class="dropdown-item" 
+               [class.active-dropdown-item]="isRouteActive('/admin/my-reports')"
+               routerLink="/admin/my-reports"
+               (click)="closeReportDropdown()">
+               My Reports
+            </a>
             <a class="dropdown-item" routerLink="/null"
                 (click)="closeReportDropdown()">Report found item</a>
             <a class="dropdown-item" routerLink="/null"

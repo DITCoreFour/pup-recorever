@@ -264,6 +264,8 @@ public class UserController {
             Authentication authentication,
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String email,
+            @RequestParam(required = false) Integer programId,
+            @RequestParam(required = false) Integer year,
             @RequestParam(required = false) MultipartFile profile_picture_file) {
 
         User user = (User) authentication.getPrincipal();
@@ -278,7 +280,7 @@ public class UserController {
         }
 
         Map<String, Object> result = service.updateUserProfile(
-                user, name, email, profilePictureFilename
+                user, name, email, programId, year, profilePictureFilename
         );
 
         if (result.containsKey("error")) {

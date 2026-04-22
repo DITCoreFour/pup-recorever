@@ -40,8 +40,9 @@
         <select formControlName="programId">
           <option [ngValue]="null">Select Program...</option>
           @for (prog of programs(); track prog.programId) {
-            <option [ngValue]="prog.programId">
-              {{ prog.programCode }} ({{ prog.programName }})
+            <option 
+                [ngValue]="prog.programId">
+              {{ prog.programCode }}
             </option>
           }
         </select>
