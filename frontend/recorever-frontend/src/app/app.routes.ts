@@ -19,6 +19,7 @@ export const AppRoutePaths = {
   USER_PROFILE: (id: number | string) => `/app/profile/${id}`,
   ABOUT_US: '/app/about-us',
   REPORT_STATUS_MANAGEMENT: '/admin/report-status',
+  ADMIN_MY_REPORTS: '/admin/my-reports',
   HELP_PAGE: '/help-page',
 };
 
@@ -95,6 +96,12 @@ export const routes: Routes = [
         loadComponent: () => import('./page/user/profile-page/profile-page')
           .then(m => m.ProfilePage)
       },
+      {
+        path: 'my-reports',
+        loadComponent: () => 
+            import('./page/shared-page/my-reports-page/my-reports-page')
+          .then(m => m.MyReportsPage)
+      },
       { path: 'profile/:id',
         canActivate: [authGuard],
         loadComponent: () => import('./page/user/profile-page/profile-page')
@@ -162,6 +169,12 @@ export const routes: Routes = [
           import('./page/admin/found-status-page/claim-status-page')
             .then(m => m.ClaimStatusPage)
       },
+      { path: 'my-reports',
+        loadComponent: () => 
+            import('./page/shared-page/my-reports-page/my-reports-page')
+          .then(m => m.MyReportsPage)
+      },
+
       { path: 'notifications',
         loadComponent: () => import(
           './page/shared-page/notification-page/notification-page'
