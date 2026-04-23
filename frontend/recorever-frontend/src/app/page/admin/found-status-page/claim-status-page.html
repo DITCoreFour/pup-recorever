@@ -1,14 +1,18 @@
-<div class="claim-management-container">
-  <header class="page-header">
-    <h1 class="page-title">Found Status Management</h1>
+<div class="page-container">
+  <header class="breadcrumb-header">
+    <img src="assets/claim-status.png" alt="Found Items" class="header-icon" />
+    <h2 class="breadcrumb-text">
+      <span class="main-path">Found Status Management</span>
+    </h2>
+  </header>
 
+  <div class="action-bar">
     <div class="search-wrapper">
       <app-search-bar (search)="onSearch($event)"></app-search-bar>
     </div>
+  </div>
 
-  </header>
-
-  <div class="filter-section" style="margin-bottom: 1rem;">
+  <div class="filter-wrapper">
     <app-filter
       [locations]="locations()"
       [itemType]="'found'"
@@ -19,7 +23,7 @@
     </app-filter>
   </div>
 
-  <div class="claims-list">
+  <div class="reports-content">
     @if (reports().length > 0) {
       <app-report-item-grid
             [items]="filteredReports()"
@@ -31,14 +35,14 @@
 
     <div #scrollAnchor class="scroll-anchor">
       @if (isLoading()) {
-        <div class="status-message">
+        <div class="content-message">
           <div class="spinner"></div>
           <span>Loading more reports...</span>
         </div>
       } @else if (reports().length === 0) {
-        <div class="status-message empty-state">No reports found.</div>
+        <div class="content-message">No reports found.</div>
       } @else if (currentPage() >= totalPages()) {
-        <div class="status-message end-state">No more reports to display.</div>
+        <div class="end-of-list">No more reports to display.</div>
       }
     </div>
   </div>
