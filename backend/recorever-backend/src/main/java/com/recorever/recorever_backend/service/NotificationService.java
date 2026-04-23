@@ -93,7 +93,7 @@ public class NotificationService {
   private void sendEmailNotification(int userId, String message) {
     userRepository.findById(userId).ifPresent(user -> {
         emailService.sendGeneralNotification(
-          user.getEmail(), "PUP Recover Notification", message);
+          user.getEmail(), "PUPT Recover Notification", message);
     });
   }
 

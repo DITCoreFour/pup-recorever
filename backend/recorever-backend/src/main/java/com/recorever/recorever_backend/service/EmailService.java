@@ -17,7 +17,7 @@ public class EmailService {
     private static final String VERIFY_EMAIL = "noreply_test@recorever.site";
     private static final String UPDATE_EMAIL = "noreply_test@recorever.site";
     private static final String FOOTER = 
-        "&copy; 2026 PUP Recover | Polytechnic University of the Philippines";
+        "&copy; 2026 PUPT Recover | Polytechnic University of the Philippines Taguig";
 
     public void sendVerificationCode(
         String toEmail, 
@@ -32,10 +32,10 @@ public class EmailService {
             "overflow: hidden; display: block;'>" +
             "<div style='background-color: #800000; padding: 20px; " +
             "text-align: center;'><h1 style='color: white; margin: 0; " +
-            "font-size: 24px;'>PUP Recover</h1></div>" +
+            "font-size: 24px;'>PUPT Recover</h1></div>" +
             "<div style='padding: 30px; text-align: center; color: #333;'>" +
             "<h2 style='color: #800000;'>Email Verification</h2>" +
-            "<p>Your PUP Recover verification code is ready. Enter this " +
+            "<p>Your PUPT Recover verification code is ready. Enter this " +
             "code to complete your registration.</p>" +
             "<div style='margin: 30px 0; background-color: #f9f9f9; " +
             "border: 2px dashed #800000; padding: 20px; border-radius: 8px;'>" +
@@ -49,7 +49,7 @@ public class EmailService {
             "<div style='display:none; visibility:hidden; font-size:1px;'>" +
             uniqueId + "</div></div></div>";
 
-        sendEmail(toEmail, VERIFY_EMAIL, "Verify your PUP Recover Account", html);
+        sendEmail(toEmail, VERIFY_EMAIL, "Verify your PUPT Recover Account", html);
         } catch (Exception e) {
             throw new RuntimeException("Failed to send verification email", e);
         }
@@ -76,7 +76,7 @@ public class EmailService {
                 "10px; overflow: hidden; display: block;'>" +
                 "<div style='background-color: #800000; padding: 20px; " +
                 "text-align: center;'><h1 style='color: white; margin: 0; " +
-                "font-size: 24px;'>PUP Recover</h1></div>" +
+                "font-size: 24px;'>PUPT Recover</h1></div>" +
                 "<div style='padding: 30px; color: #333;'>" +
                 "<h3>Notification Update:</h3>" +
                 "<p style='font-size: 16px; line-height: 1.5;'>" + 
