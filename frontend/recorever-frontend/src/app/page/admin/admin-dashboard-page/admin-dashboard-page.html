@@ -1,48 +1,56 @@
-<div class="dashboard-page">
-  <header class="page-header">
-    <div class="header-content">
-      <h1 class="page-title">Dashboard Overview</h1>
-      
-      <form [formGroup]="filterForm" class="filter-container">
-        <label for="dateRange" class="filter-label">Report Last:</label>
+<div class="page-container">
+  
+  <header class="breadcrumb-header">
+    <img 
+        [src]="dashboardIcon()" 
+        alt="Dashboard" 
+        class="header-icon"
+        (error)="onIconError()" />
+    <h2 class="breadcrumb-text">
+      <span class="main-path">Dashboard Overview</span>
+    </h2>
+  </header>
 
-        <select 
+  <div class="action-bar">
+    <div class="spacer"></div>
+    <form [formGroup]="filterForm" class="filter-container">
+      <label for="dateRange" class="filter-label">Report Last:</label>
+      <select 
           id="dateRange" 
           formControlName="range"
           class="range-select">
-          <option value="7">7 Days</option>
-          <option value="15">15 Days</option>
-          <option value="30">30 Days</option>
-        </select>
-      </form>
-    </div>
-  </header>
+        <option value="7">7 Days</option>
+        <option value="15">15 Days</option>
+        <option value="30">30 Days</option>
+      </select>
+    </form>
+  </div>
 
   @if (dashboardData) {
     <div class="content-area">
       <div class="stats-grid">
         <app-stats-card
-          title="Total Report"
-          [count]="dashboardData.stats.totalReports"
-          icon="assets/report-status.png">
+            title="Total Report"
+            [count]="dashboardData.stats.totalReports"
+            icon="assets/report-status.png">
         </app-stats-card>
 
         <app-stats-card
-          title="Successfully Claimed"
-          [count]="dashboardData.stats.successfullyClaimed"
-          icon="assets/claimed-item.png">
+            title="Successfully Claimed"
+            [count]="dashboardData.stats.successfullyClaimed"
+            icon="assets/claimed-item.png">
         </app-stats-card>
 
         <app-stats-card
-          title="Pending Action"
-          [count]="dashboardData.stats.pendingAction"
-          icon="assets/claim-status.png">
+            title="Pending Action"
+            [count]="dashboardData.stats.pendingAction"
+            icon="assets/claim-status.png">
         </app-stats-card>
 
         <app-stats-card
-          title="Lost/Found Ratio"
-          [count]="dashboardData.stats.lostFoundRatio"
-          icon="assets/found-items.png">
+            title="Lost/Found Ratio"
+            [count]="dashboardData.stats.lostFoundRatio"
+            icon="assets/found-items.png">
         </app-stats-card>
       </div>
 
@@ -50,11 +58,11 @@
         <app-chart-component [data]="dashboardData.reportsOverTime">
         </app-chart-component>
       </div>
-
     </div>
   } @else {
-    <div class="loading-state">
-      <p>Loading dashboard data...</p>
+    <div class="content-message">
+      <div class="spinner"></div>
+      <span>Loading dashboard data...</span>
     </div>
   }
 </div>

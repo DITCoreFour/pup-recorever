@@ -3,7 +3,8 @@ import {
   inject, 
   OnInit, 
   ChangeDetectorRef,
-  OnDestroy 
+  OnDestroy, 
+  signal
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { 
@@ -11,7 +12,8 @@ import {
   FormBuilder, 
   FormGroup 
 } from '@angular/forms';
-import { Subject, switchMap, takeUntil } from 'rxjs';
+import { Subject, switchMap, takeUntil, startWith } from 'rxjs';
+
 import { AdminService } from '../../../core/services/admin-service';
 import { DashboardData } from '../../../models/admin-stats-model';
 import { StatsCardComponent } from './stats-card/stats-card';
@@ -36,45 +38,37 @@ export class AdminDashboardPage implements OnInit, OnDestroy {
   
   private destroy$ = new Subject<void>();
 
-  dashboardData: DashboardData | null = null;
+  public dashboardData: DashboardData | null = null;
+  public dashboardIcon = signal('assets/dashboard.png');
 
-  filterForm: FormGroup = this.fb.group({
+  public filterForm: FormGroup = this.fb.group({
     range: ['15'] 
   });
 
-  ngOnInit(): void {
-    this.loadData(this.filterForm.get('range')?.value);
-
+  public ngOnInit(): void {
     this.filterForm.get('range')?.valueChanges.pipe(
+      startWith(this.filterForm.get('range')?.value),
       takeUntil(this.destroy$),
-      switchMap((range) => {
+      switchMap((range: string) => {
         return this.adminService.getDashboardData(range);
       })
     ).subscribe({
-      next: (data: DashboardData) => {
+      next: (data: DashboardData): void => {
         this.dashboardData = data;
         this.cdr.markForCheck();
       },
-      error: (err: unknown) => {
+      error: (err: unknown): void => {
         console.error('Failed to load dashboard', err);
       }
     });
   }
 
-  private loadData(range: string): void {
-    this.adminService.getDashboardData(range)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (data) => {
-          this.dashboardData = data;
-          this.cdr.markForCheck();
-        },
-        error: (err) => console.error(err)
-      });
-  }
-
-  ngOnDestroy(): void {
+  public ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  public onIconError(): void {
+    this.dashboardIcon.set('assets/found-items.png');
   }
 }
