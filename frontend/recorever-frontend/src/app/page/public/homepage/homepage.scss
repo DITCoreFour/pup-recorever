@@ -133,6 +133,7 @@
   font-size: 12px;
   letter-spacing: 0.4px;
   margin-bottom: 1.4rem;
+  text-align: center;
 
   opacity: 0;
   animation: fadeSlideUp 0.6s ease-out 0.1s forwards;
@@ -143,6 +144,17 @@
     min-width: 6px;
     border-radius: 50%;
     background: #ff8a80;
+  }
+
+  @media (max-width: 480px) {
+    flex-direction: column;
+    gap: 2px;
+    padding: 8px 16px;
+    border-radius: 12px;
+
+    .badge-bullet {
+      display: none;
+    }
   }
 }
 
