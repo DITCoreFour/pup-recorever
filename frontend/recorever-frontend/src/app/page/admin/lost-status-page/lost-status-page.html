@@ -1,14 +1,18 @@
-<div class="report-status-page">
-  <header class="report-status-page__header">
-    <h1 class="report-status-page__title">Manage Lost Item</h1>
-
-    <div class="report-status-page__search-wrapper">
-      <app-search-bar (search)="onSearchSubmit($event)"></app-search-bar>
-    </div>
-
+<div class="page-container">
+  <header class="breadcrumb-header">
+    <img src="assets/report-status.png" alt="Lost Items" class="header-icon" />
+    <h2 class="breadcrumb-text">
+      <span class="main-path">Manage Lost Items</span>
+    </h2>
   </header>
 
-  <div class="filter-section">
+  <div class="action-bar">
+    <div class="search-wrapper">
+      <app-search-bar (search)="onSearchSubmit($event)"></app-search-bar>
+    </div>
+  </div>
+
+  <div class="filter-wrapper">
     <app-filter
       [itemType]="'lost'"
       [locations]="locations()"
@@ -19,7 +23,7 @@
     </app-filter>
   </div>
 
-  <div class="report-status-page__content">
+  <div class="reports-content">
     @if (reports().length > 0) {
       <app-report-item-grid
           [items]="sortedReports()"
@@ -30,20 +34,18 @@
 
     <div #scrollAnchor class="scroll-anchor">
       @if (isLoading()) {
-        <div class="status-message">
+        <div class="content-message">
            <div class="spinner"></div>
            <span>Loading more reports...</span>
         </div>
       } @else if (isError()) {
-        <div class="status-message error">
+        <div class="content-message content-message--error">
           Error fetching reports. Please try again.
         </div>
       } @else if (reports().length === 0) {
-        <div class="status-message">No reports found.</div>
+        <div class="content-message">No reports found.</div>
       } @else if (currentPage() >= totalPages()) {
-        <div class="status-message end-message">
-          No more reports to display.
-        </div>
+        <div class="end-of-list">No more reports to display.</div>
       }
     </div>
   </div>
