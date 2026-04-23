@@ -1,0 +1,128 @@
+<div class="page-container">
+  <div class="page-header">
+    <img src="assets/my_reports.png" class="header-icon"/>
+    <h1 class="page-title">My Reports</h1>
+  </div>
+
+  <div class="search-wrapper">
+    <app-search-bar
+        [suggestions]="searchSuggestions()"
+        (queryChange)="onQueryChange($event)"
+        (search)="onSearchSubmit($event)">
+    </app-search-bar>
+  </div>
+
+  <div class="controls-row">
+    <div class="left-controls">
+      
+      <div class="custom-dropdown">
+        <button 
+            type="button" 
+            class="status-btn" 
+            (click)="toggleStatusDropdown($event)">
+          {{ displayStatus() }} ▾
+        </button>
+        
+        @if (isStatusOpen()) {
+          <div class="dropdown-menu">
+            <div class="dropdown-item" (click)="setStatus('all')">
+              All Status
+            </div>
+            <div class="dropdown-item" (click)="setStatus('unresolved')">
+              Unresolved
+            </div>
+            <div class="dropdown-item" (click)="setStatus('resolved')">
+              Resolved
+            </div>
+          </div>
+        }
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="type-toggles">
+        <button 
+            type="button" 
+            class="type-btn" 
+            [class.active]="itemType() === 'all'" 
+            (click)="toggleType('all')">
+          All
+        </button>
+        <button 
+            type="button" 
+            class="type-btn" 
+            [class.active]="itemType() === 'found'" 
+            (click)="toggleType('found')">
+          Found
+        </button>
+        <button 
+            type="button" 
+            class="type-btn" 
+            [class.active]="itemType() === 'lost'" 
+            (click)="toggleType('lost')">
+          Lost
+        </button>
+      </div>
+      
+    </div>
+  </div>
+
+  <div class="reports-content">
+    @if (visibleReports().length > 0) {
+      <app-report-item-grid
+          [items]="visibleReports()"
+          [currentUserId]="currentUserId()"
+          (cardClicked)="onCardClick($event)"
+          (cardTicketClicked)="onTicketClick($event)"
+          (cardEditClicked)="onEditClick($event)"
+          (cardDeleteClicked)="onDeleteClick($event)"
+          (cardViewCodeClicked)="onViewCodeClick($event)">
+      </app-report-item-grid>
+    }
+
+    <div #scrollAnchor class="scroll-anchor">
+      @if (isLoading()) {
+        <div class="content-message">
+           <div class="spinner"></div>
+           <span>Loading your reports...</span>
+        </div>
+      } @else if (error()) {
+        <div class="content-message error">{{ error() }}</div>
+      } @else if (visibleReports().length === 0) {
+        <div class="content-message">
+          No reports match your filters.
+        </div>
+      } @else if (currentPage() >= totalPages()) {
+        <div class="end-of-list">No more reports to display.</div>
+      }
+    </div>
+  </div>
+</div>
+
+@if (showDeleteModal()) {
+  <app-delete-report-modal
+      (confirm)="confirmDelete()"
+      (cancel)="cancelDelete()">
+  </app-delete-report-modal>
+}
+
+@if (viewCodeItem()) {
+  <app-codes-modal
+      [title]="codeModalTitle()"
+      [code]="codeModalValue()"
+      (close)="viewCodeItem.set(null)">
+  </app-codes-modal>
+}
+
+@if (selectedItem(); as item) {
+  <app-item-detail-modal
+      [item]="item"
+      [currentUserId]="currentUserId()"
+      [userProfilePicture]="getUserProfilePicture()"
+      (close)="selectedItem.set(null)"
+      (viewTicket)="onModalViewTicket()"
+      (editClicked)="onModalEdit()"
+      (deleteClicked)="onModalDelete()"
+      (viewCodeClicked)="onModalViewCode()">
+  </app-item-detail-modal>
+}

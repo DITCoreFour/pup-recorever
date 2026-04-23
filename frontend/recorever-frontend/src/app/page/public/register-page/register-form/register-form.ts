@@ -97,9 +97,15 @@ export class RegisterForm implements OnInit {
 
   @Input() public isSubmitting: boolean = false;
   @Input() public errorMessage: string | null = null;
+  @Input() public showVerification: boolean = false;
+  
   @Output() public registerSubmit = new EventEmitter<RegisterFormPayload>();
+  @Output() public verifySubmit = new EventEmitter<string>();
+  @Output() public resendCode = new EventEmitter<void>();
 
   public registerForm!: FormGroup;
+  public verificationForm!: FormGroup;
+  
   protected hidePassword = signal(true);
   protected hideConfirmPassword = signal(true);
   protected isPasswordFocused = signal(false);
@@ -114,7 +120,7 @@ export class RegisterForm implements OnInit {
   ];
 
   public ngOnInit(): void {
-    this.initForm();
+    this.initForms();
     this.fetchPrograms();
 
     this.registerForm.controls['password'].valueChanges
@@ -136,7 +142,7 @@ export class RegisterForm implements OnInit {
       });
   }
 
-  private initForm(): void {
+  private initForms(): void {
     this.registerForm = this.fb.group({
       firstName: ['', {
         validators: [Validators.required, noWhitespaceValidator()],
@@ -221,17 +227,32 @@ export class RegisterForm implements OnInit {
     else this.passwordStrength.set('strong');
   }
 
-  public getControl(controlName: string): AbstractControl | null {
-    return this.registerForm.get(controlName);
+  public getControl(form: 'register' | 'verify', name: string): AbstractControl | null {
+    return form === 'register'
+        ? this.registerForm.get(name)
+        : this.verificationForm.get(name);
   }
 
-  public submitForm(): void {
+  public submitRegister(): void {
+    if (!navigator.onLine) {
+      this.errorMessage = 'No internet connection. Please check your network.';
+      return;
+    }
+
     if (this.registerForm.valid && !this.isSubmitting) {
       this.registerSubmit.emit(
         this.registerForm.getRawValue() as RegisterFormPayload
       );
     } else {
       this.registerForm.markAllAsTouched();
+    }
+  }
+
+  public submitVerification(): void {
+    if (this.verificationForm.valid && !this.isSubmitting) {
+      this.verifySubmit.emit(this.verificationForm.get('code')?.value);
+    } else {
+      this.verificationForm.markAllAsTouched();
     }
   }
 
@@ -249,9 +270,8 @@ export class RegisterForm implements OnInit {
   }
 
   public getIconSrc(isHidden: boolean): string {
-    if (isHidden) {
-      return '../../../../../assets/eye-close.png';
-    }
-    return '../../../../../assets/eye-open.png';
+    return isHidden
+      ? '../../../../../assets/eye-close.png'
+      : '../../../../../assets/eye-open.png';
   }
 }

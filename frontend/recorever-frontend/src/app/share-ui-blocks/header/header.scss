@@ -1,150 +1,294 @@
-.app-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 20px;
-  background-color: #fff;
-  border-bottom: 1px solid #ccc;
-  height: 40px;
-  box-sizing: content-box;
-  flex-shrink: 0;
+@use "sass:color";
 
-  .logo-container {
+$primary-color: #2c3e50;
+$text-main: #333;
+$text-muted: #888;
+$brand-color: #ad1111;
+$header-height: 64px;
+$sidebar-width: 280px;
+$mobile-breakpoint: 768px;
+
+.app-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: $header-height;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 10rem;
+  background-color: transparent;
+  z-index: 1000;
+
+  transition:
+    background-color 0.3s ease,
+    backdrop-filter 0.3s ease,
+    box-shadow 0.3s ease;
+
+  @media (max-width: 1200px) {
+     padding: 0 4rem;
+  }
+
+  @media (max-width: $mobile-breakpoint) {
+    padding: 0 1rem;
+  }
+
+  &.scrolled {
+    background-color: rgba(184, 63, 63, 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  }
+
+  &.is-homepage {
+    @media (max-width: $mobile-breakpoint) {
+      .logo-container .app-name {
+        display: none;
+      }
+    }
+  }
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+
+  .branding {
     display: flex;
     align-items: center;
+    cursor: pointer;
 
-    .menu-btn {
-      display: none;
-      margin-right: 8px;
-      color: #333;
+    .app-logo {
+      height: 60px;
+      object-fit: contain;
     }
 
-    .branding {
-      display: flex;
-      align-items: center;
-      cursor: pointer;
-      outline: none;
-      transition: opacity 0.2s ease;
+    .app-name {
+      font-size: 18px;
+      color: white;
+      margin-left: 5px;
 
       &:hover {
-        opacity: 0.8;
+        color: rgb(190, 187, 187);
       }
 
-      .app-logo {
-        height: 40px;
-        margin-right: 10px;
-      }
-
-      .text-stack {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-
-        .app-name {
-          font-weight: 700;
-          font-size: 1.1rem;
-          line-height: 1.1;
-          color: #333;
-
-          &.on-homepage {
-            @media (max-width: 600px) {
-              display: none;
-            }
-          }
-        }
-
-        .tagline {
-          font-size: 0.65rem;
-          color: #666;
-          letter-spacing: 0.5px;
-        }
+      .title-bold {
+        font-weight: 600;
       }
     }
   }
+}
 
-  .auth-buttons {
+.menu-btn {
+  display: none;
+  color: white;
+  margin-right: 0.25rem;
+
+  @media (max-width: $mobile-breakpoint) {
     display: flex;
-    gap: 10px;
-
-    .btn {
-      text-decoration: none;
-      padding: 8px 16px;
-      border-radius: 6px;
-      font-weight: 600;
-      font-size: 0.9rem;
-      transition: all 0.2s ease;
-      min-width: 80px;
-      text-align: center;
-
-      &.login-btn {
-        color: #333;
-        &:hover { background-color: #f5f5f5; }
-      }
-
-      &.register-btn {
-        background-color: #333;
-        color: white;
-        &:hover { background-color: #000; }
-      }
-    }
   }
+}
 
-  .user-info {
+.public-nav-links {
+  @media (min-width: #{$mobile-breakpoint + 1px}) {
+    flex: 2;
     display: flex;
     align-items: center;
+    justify-content: center;
+    gap: 40px;
+  }
 
-    .mobile-notification-wrapper {
-      display: none;
+  @media (max-width: 1024px) and (min-width: #{$mobile-breakpoint + 1px}) {
+    gap: 20px;
+  }
 
-      @media (max-width: 768px) {
-        display: block;
-        margin-right: 10px;
-      }
+  @media (max-width: $mobile-breakpoint) {
+    display: none;
+  }
+
+  .nav-item {
+    color: white;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 14px;
+    cursor: pointer;
+    padding: 8px 12px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+
+    @media (max-width: 1024px) {
+      font-size: 13px;
+      padding: 8px 6px;
+    }
+
+    &:hover {
+      color: rgb(190, 187, 187);
+    }
+
+    &.active, &:active {
+      background-color: transparent;
+      color: $brand-color;
+      font-weight: bold;
+      text-decoration: underline;
+      text-underline-offset: 25px;
     }
   }
 }
 
-@media (max-width: 900px) {
-  .app-header {
-    padding: 10px 15px;
+.auth-buttons {
+  flex: 1;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 20px;
 
-    .logo-container {
-      .menu-btn {
-        display: inline-flex !important;
-        align-items: center;
-        justify-content: center;
-      }
+  .btn {
+    padding: 8px 20px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 14px;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+  }
+
+  .login-btn, .register-btn {
+    color: white;
+
+    &:hover {
+      color: rgb(190, 187, 187);
+    }
+  }
+
+  @media (max-width: $mobile-breakpoint) {
+    flex: 0;
+    margin-left: auto;
+    margin-right: 5rem;
+    gap: 8px;
+    justify-content: flex-end;
+
+    .btn {
+      padding: 6px 12px;
+      font-size: 12px;
     }
   }
 }
 
-@media (max-width: 600px) {
-  .app-header {
-    height: auto;
-    min-height: 50px;
-    flex-wrap: wrap;
+.user-info {
+  flex: 1;
+  display: flex;
+  justify-content: flex-end;
+}
 
-    .logo-container {
-      .branding {
-        .tagline {
-          display: none;
-        }
+.sidebar-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0);
+  z-index: 1100;
+  transition: background-color 0.3s ease;
+
+  @media (max-width: $mobile-breakpoint) {
+    display: block;
+    pointer-events: none;
+  }
+
+  &.open {
+    background-color: rgba(0, 0, 0, 0.45);
+    pointer-events: auto;
+  }
+}
+
+.mobile-sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: $sidebar-width;
+  height: 100dvh;
+  background: #FDFDFF;
+  z-index: 1200;
+  display: flex;
+  flex-direction: column;
+  transform: translateX(-100%);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.25);
+
+  &.open {
+    transform: translateX(0);
+  }
+
+  .sidebar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem 0.75rem 1.25rem;
+    border-bottom: 1px solid #e5e5e5;
+    min-height: $header-height;
+
+    .sidebar-branding {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+
+      .app-logo {
+        height: 48px;
+        object-fit: contain;
+      }
+
+      .app-name {
+        font-size: 20px;
+        color: #ad1111;
+
+      .title-bold {
+        font-weight: 600;
+      }
       }
     }
 
-    &.mobile-auth-header {
-      position: relative;
+    .close-btn {
+      color: gray;
+    }
+  }
 
-      .logo-container {
-        .branding {
-          position: absolute;
-          left: 50%;
-          transform: translateX(-50%);
+  .sidebar-links {
+    display: flex;
+    flex-direction: column;
+    padding: 1.5rem 0;
+    gap: 0.25rem;
+  }
 
-          .app-logo {
-            display: none;
-          }
-        }
+  .sidebar-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.85rem 1.5rem;
+    color: #161c2d;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    text-decoration: none;
+    border-left: 3px solid transparent;
+    transition: background-color 0.2s ease,
+        border-color 0.2s ease, color 0.2s ease;
+
+    mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+      color: #161c2d;
+      transition: color 0.2s ease;
+    }
+
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+      border-left-color: rgba(255, 255, 255, 0.6);
+      color: gray;
+
+      mat-icon {
+        color: gray;
       }
     }
   }

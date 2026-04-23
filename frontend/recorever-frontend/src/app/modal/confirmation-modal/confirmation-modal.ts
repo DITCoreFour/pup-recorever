@@ -19,6 +19,8 @@ export class ConfirmationModal {
 
   @Input() variant: 'danger' | 'primary' = 'primary';
 
+  @Input() showCancelButton: boolean = true;
+
   @Output() confirm = new EventEmitter<void>();
   @Output() cancel = new EventEmitter<void>();
 

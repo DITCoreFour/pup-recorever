@@ -1,59 +1,67 @@
-.report-btn {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 18px 24px;
-  border: none;
-  border-radius: 16px;
-  cursor: pointer;
-
-  font-family: 'Inter', sans-serif;
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: white;
-
+:host {
+  display: block; 
   width: 100%;
-  min-height: 72px;
-  box-sizing: border-box;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  height: 100%;
 
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-    filter: brightness(1.05);
+  .report-btn,
+  .report-btn * {
+    box-sizing: border-box;
   }
 
-  &:active {
-    transform: translateY(0);
-  }
+  .report-btn {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    border: none;
+    border-radius: 8px;
+    overflow: hidden;
+    padding: 0;
+    cursor: pointer;
+    
+    transition: all 0.2s ease-in-out; 
 
-  .report-label {
-    flex-grow: 1;
-    text-align: left;
-  }
-
-  .report-icon-container {
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 12px;
-    padding: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    .button-icon {
-      height: 40px;
-      width: auto;
-      object-fit: contain;
+    .report-label {
+      font-family: "SourceSansPro-Bold", sans-serif;
+      font-size: 17px;
+      font-weight: 700;
+      line-height: 32px;
+      letter-spacing: -0.6px;
+      text-align: center;
+      position: absolute;
+      right: 0%;
+      left: 0%;
+      width: 100%;
+      top: 50%;
+      translate: 0 -50%;
     }
-  }
 
-  &.lost {
-    background: linear-gradient(90deg, rgba(153, 19, 19, 0.72) 0%,
-        rgba(255, 31, 31, 0.72) 74.5%);
-  }
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+    }
 
-  &.found {
-    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    &.lost {
+      background: var(--color-red, #f74d4d);
+
+      .report-label {
+        color: #ffffff;
+      }
+
+      &:hover {
+        background: #c33838;
+      }
+    }
+
+    &.found {
+      background: #ffffff;
+
+      .report-label {
+        color: #f74d4d;
+      }
+
+      &:hover {
+        background: #d5d5d5;
+      }
+    }
   }
 }
