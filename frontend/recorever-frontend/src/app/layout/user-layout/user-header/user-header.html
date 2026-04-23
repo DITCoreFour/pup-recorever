@@ -1,7 +1,16 @@
 <header class="user-top-nav">
-  <div class="logo-container" (click)="onLogoClick()">
-    <img src="assets/temp_logo.png" alt="Logo" class="app-logo">
-    <span class="app-name">PUP•RECOVER</span>
+  <div class="logo-container">
+    <button mat-icon-button class="menu-btn" 
+        (click)="toggleSidebar()" 
+        aria-label="Toggle navigation">
+      <mat-icon>menu</mat-icon>
+    </button>
+    <div class="branding" (click)="onLogoClick()">
+      <img src="assets/temp_logo.png" alt="Logo" class="app-logo">
+      <div class="app-name">
+          PUPT<span class="title-bold">Recover</span>
+      </div> 
+    </div>
   </div>
 
   <nav class="nav-links">
@@ -58,6 +67,35 @@
     }
   </div>
 </header>
+
+<div class="sidebar-backdrop" [class.open]="isSidebarOpen"
+    (click)="closeSidebar()" aria-hidden="true"></div>
+
+<nav class="mobile-sidebar" [class.open]="isSidebarOpen"
+    aria-label="Mobile navigation">
+  <div class="sidebar-header">
+    <div class="sidebar-branding">
+      <img src="assets/temp_logo.png" class="app-logo" alt="Logo">
+      <div class="app-name">
+        PUPT<span class="title-bold">Recover</span>
+      </div> 
+    </div>
+    <button mat-icon-button class="close-btn"
+        (click)="closeSidebar()" aria-label="Close navigation">
+      <mat-icon>menu</mat-icon>
+    </button>
+  </div>
+
+  <div class="sidebar-links">
+    @for (item of navItems; track item.label) {
+      <a class="sidebar-nav-item" (click)="closeSidebar()"
+          [routerLink]="item.route" [fragment]="item.fragment">
+        <img [src]="item.iconPath" class="sidebar-icon" alt="">
+        <span>{{ item.label }}</span>
+      </a>
+    }
+  </div>
+</nav>
 
 @if (isLogoutModalOpen) {
   <app-confirmation-modal

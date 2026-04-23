@@ -179,9 +179,9 @@ export class UserItemListPage implements OnInit, AfterViewInit, OnDestroy {
   });
 
   public ngOnInit(): void {
-    this.route.data
+    this.route.queryParams
       .pipe(
-        map((data) => data['itemType'] as ItemType),
+        map((params) => (params['type'] as ItemType) || 'lost'),
         takeUntil(this.destroy$)
       )
       .subscribe((type: ItemType) => {
@@ -189,7 +189,6 @@ export class UserItemListPage implements OnInit, AfterViewInit, OnDestroy {
         this.filters.set({ type, status: 'approved' });
         this.resetPagination();
       });
-
     this.refreshTrigger$.pipe(
       tap(() => this.isLoading.set(true)),
       switchMap(() => {

@@ -2,6 +2,8 @@ import { Component, inject, OnDestroy, ElementRef, HostListener, ViewChild } fro
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
 import { Subject, switchMap, takeUntil, catchError, of } from 'rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';
 
@@ -35,7 +37,9 @@ type HeaderProfileNavItem = ProfileNavItem & {
     RouterModule,
     Notification,
     ConfirmationModal,
-    MatDialogModule
+    MatDialogModule,
+    MatIconModule,
+    MatButtonModule
   ],
   templateUrl: './admin-header.html',
   styleUrl: './admin-header.scss',
@@ -63,12 +67,15 @@ export class AdminHeader implements OnDestroy {
   protected isProfileDropdownOpen = false;
   protected isReportDropdownOpen = false; 
   protected isArchiveDropdownOpen = false;
+  protected isSidebarOpen = false;
+  protected isSidebarReportOpen = false; 
+  protected isSidebarArchiveOpen = false; 
 
   protected navItems: HeaderNavItem[] = [
     {
       label: 'Dashboard',
       route: '/admin/dashboard',
-      iconPath: 'assets/dashboard.png'
+      iconPath: '/assets/dashboard.png'
     },
     {
       label: "Manage Lost Item",
@@ -121,6 +128,29 @@ export class AdminHeader implements OnDestroy {
     }
   }
 
+  @HostListener('document:keydown.escape', [])
+  public onEscapeKey(): void {
+    this.closeSidebar();
+  }
+
+  public toggleSidebar(): void {
+    this.isSidebarOpen = !this.isSidebarOpen;
+  }
+
+  public toggleSidebarReport(): void {
+    this.isSidebarReportOpen = !this.isSidebarReportOpen;
+  }
+
+  public toggleSidebarArchive(): void {
+    this.isSidebarArchiveOpen = !this.isSidebarArchiveOpen;
+  }
+
+  public closeSidebar(): void {
+    this.isSidebarOpen = false;
+    this.isSidebarReportOpen = false;
+    this.isSidebarArchiveOpen = false;
+  }
+
   public onLogoClick(): void {
     const targetRoute = '/admin/dashboard';
     if (this.router.url.includes(targetRoute)) {
@@ -149,7 +179,6 @@ export class AdminHeader implements OnDestroy {
     this.isArchiveDropdownOpen = false;
   }
 
-  // Toggle logic for Archive Dropdown
   public toggleArchiveDropdown(): void {
     this.isArchiveDropdownOpen = !this.isArchiveDropdownOpen;
     this.isProfileDropdownOpen = false;

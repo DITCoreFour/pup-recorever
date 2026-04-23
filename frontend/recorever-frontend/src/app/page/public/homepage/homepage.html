@@ -1,35 +1,145 @@
-<div class="homepage-content">
+<div class="hero">
+  <div class="bg">
+    <div class="bg2"></div>
+    <div class="bg3"></div>
+    <img class="dots" src="assets/dots0.svg" />
+    <div class="oval"></div>
+    <div class="oval-copy"></div>
+    <div class="oval-copy-2"></div>
+  </div>
+  <img class="wave" src="assets/wave0.svg" />
+  <div class="content">
+    <div class="top">
+      <div class="hero-badge">
+        <span class="badge-title">Polytechnic University of the Philippines - Taguig</span>
+        <span class="badge-bullet">&bull;</span>
+        <span class="badge-subtitle">Lost &amp; Found</span>
+      </div>
 
-  <div class="main-message">
-    <h1>Lost and found,<br>simplified.</h1>
-    <p class="tagline">
-      Connecting people to their missing belongings with ease.
-      Secure, reliable, and always accessible.
-    </p>
+      <div class="manage-your-remote-t">
+        PUPT <span class="title-bold">Recover</span>
+      </div>
+      <div class="with-lots-of-unique">
+        {{ displayedText$ | async }}<span class="cursor">|</span>
+      </div>
+    <div class="text-heading">
+      <div class="browse-items-here">Browse Items</div>
+
+      <div class="button-row">
+        <app-report-button
+            theme="lost"
+            label="Lost Item"
+            (buttonClicked)="navigateToLost()">
+        </app-report-button>
+
+        <app-report-button
+            theme="found"
+            label="Found Item"
+            (buttonClicked)="navigateToFound()">
+        </app-report-button>
+      </div>
+    </div>
+  </div>
   </div>
 
-  <div class="action-card">
-    <div class="card-header">
-      <h2>I want to report...</h2>
-    </div>
-
-    <div class="buttons-wrapper">
-      <app-report-button
-        theme="lost"
-        label="Lost Item"
-        (buttonClicked)="navigateToLost()" />
-
-      <app-report-button
-        theme="found"
-        label="Found Item"
-        (buttonClicked)="navigateToFound()" />
-    </div>
-
-    <div class="image-box-placeholder">
-      <img src="assets/homepage.jpg"
-           alt="Illustration of community helping each other"
-           class="placeholder-image">
-    </div>
+  <div class="scroll-cue" (click)="scrollToFeatures()">
+    <span class="scroll-cue__label">scroll</span>
+    <span class="scroll-cue__chevron"></span>
   </div>
-
 </div>
+
+<section id="features" class="features-section">
+  <div class="features-header">
+    <h2>The Features</h2>
+    <p>Designed for Quick and Secure Recovery</p>
+  </div>
+  
+  <div class="carousel-container">
+    <div class="carousel-track">
+      @for (feature of carouselItems; track $index) {
+        <div class="feature-card">
+          <mat-icon class="feature-icon">{{ feature.icon }}</mat-icon>
+          <h3 class="feature-title">{{ feature.title }}</h3>
+          <p class="feature-details">{{ feature.details }}</p>
+        </div>
+      }
+    </div>
+  </div>
+</section>
+
+<section id="how-it-works" class="how-it-works-section">
+  <div class="faq-header">
+    <h2>How it Works</h2>
+    <p>Frequently asked questions and system manual for using the platform.</p>
+  </div>
+
+  <div class="faq-container">
+    @for (faq of faqs; track $index) {
+      <div class="faq-item"
+          [class.open]="faq.isOpen"
+          (click)="toggleFaq($index)"
+          role="button"
+          tabindex="0"
+          (keydown.enter)="toggleFaq($index)">
+        
+        <div class="faq-question">
+          <h3>{{ faq.question }}</h3>
+          <mat-icon class="toggle-icon">
+            {{ faq.isOpen ? 'expand_less' : 'expand_more' }}
+          </mat-icon>
+        </div>
+
+        @if (faq.isOpen) {
+          <div class="faq-answer">
+            @if (faq.answer) {
+              <p>{{ faq.answer }}</p>
+            }
+            
+            @if (faq.steps) {
+              <ol class="faq-steps">
+                @for (step of faq.steps; track $index) {
+                  <li>
+                    <span class="step-number">{{ $index + 1 }}</span>
+                    <span class="step-text">{{ step }}</span>
+                  </li>
+                }
+              </ol>
+            }
+          </div>
+        }
+      </div>
+    }
+  </div>
+</section>
+
+<section id="about-us" class="about-us-section">
+  <div class="about-us-header">
+    <h2>Who We Are</h2>
+  </div>
+  <img class="top-wave" src="assets/wave1.svg" alt="Wave Transition" />
+  
+  <div class="content-wrapper">
+    <div class="mission-vision-container">
+      
+      <div class="mission-box">
+        <h2>Mission</h2>
+        <p>
+          To streamline the lost and found process within the PUP community 
+          through an accessible, efficient, and transparent digital platform.
+        </p>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="vision-box">
+        <h2>Vision</h2>
+        <p>
+          A campus where every lost item finds its way back to its owner, 
+          fostering a culture of honesty and community support.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <img class="bottom-wave" src="assets/wave1.svg" alt="Bottom Wave Transition" />
+</section>
