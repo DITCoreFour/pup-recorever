@@ -24,6 +24,7 @@ public class EmailService {
         String code, 
         boolean isResend
     ) {
+        try {
         String uniqueId = LocalDateTime.now().toString();
         String html = 
             "<div style='font-family: Arial, sans-serif; max-width: 600px; " +
@@ -49,6 +50,9 @@ public class EmailService {
             uniqueId + "</div></div></div>";
 
         sendEmail(toEmail, VERIFY_EMAIL, "Verify your PUP Recover Account", html);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to send verification email", e);
+        }
     }
 
     public void sendGeneralNotification(
@@ -86,7 +90,7 @@ public class EmailService {
             helper.setText(html, true);
             mailSender.send(message);
         } catch (MessagingException e) {
-            System.err.println("Email failed: " + e.getMessage());
+            throw new RuntimeException("Failed to send email", e);
         }
     }
 
@@ -105,8 +109,7 @@ public class EmailService {
             helper.setText(content, true);
             mailSender.send(message);
         } catch (MessagingException e) {
-            System.err.println("Failed to send email from " + fromEmail + ": " + 
-                e.getMessage());
+            throw new RuntimeException("Failed to send email", e);
         }
     }
 }
