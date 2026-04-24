@@ -106,6 +106,24 @@ public class ReportService {
             "surrender_code", surrenderCode != null ? surrenderCode : "N/A");
     }
 
+    @Transactional
+    public boolean keepReportActive(int reportId) {
+        return scheduleRepo.findByReportId(reportId).map(schedule -> {
+            LocalDateTime now = LocalDateTime.now();
+            // Reset to new 7-day lifecycle
+            schedule.setNotify1Time(now.plusDays(6));
+            schedule.setNotify2Time(now.plusDays(7));
+            schedule.setDeleteTime(now.plusDays(7).plusMinutes(15));
+            
+            // Reset flags so warnings trigger again next week
+            schedule.setNotify1Sent(false);
+            schedule.setNotify2Sent(false);
+            
+            scheduleRepo.save(schedule);
+            return true;
+        }).orElse(false);
+    }
+
     public Map<String, Object> listAll(int page, int size) {
         Pageable pageable = PageRequest.of(page - 1, size);
         List<Report> items = repo.findAllActive(pageable);
