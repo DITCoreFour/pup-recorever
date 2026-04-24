@@ -62,6 +62,8 @@ export class Notification implements OnInit, OnDestroy {
   isDropdownOpen = false;
 
   unreadCount: WritableSignal<number> = signal(0);
+  showExpirationModal = signal<boolean>(false);
+  modalMode = signal<'default' | 'expiration'>('default');
 
   isOnNotificationPage = false;
   currentFilter: 'all' | 'unread' = 'all';
@@ -251,9 +253,21 @@ export class Notification implements OnInit, OnDestroy {
         .subscribe();
     }
 
+    const isExpirationWarning = 
+      notification.message.includes('scheduled for deletion') || 
+      notification.message.includes('FINAL WARNING');
+
     this.itemService.getReportById(notification.report_id).pipe(
       tap((report) => {
         this.selectedReport.set(report);
+
+        if (isExpirationWarning) {
+          this.modalMode.set('expiration');
+        } else {
+          this.modalMode.set('default');
+        }
+
+        this.isViewingDetails = true; 
         this.cdr.markForCheck();
       }),
       catchError((err) => {
