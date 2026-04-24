@@ -159,4 +159,8 @@ export class ItemService {
       `${this.apiUrl}/reports/${reportId}/potential-matches/${claimantId}`
     );
   }
+
+  keepReportActive(reportId: number): Observable<any> {
+    return this.http.post(`${this.apiUrl}/reports/${reportId}/keep-active`, {});
+  }
 }
