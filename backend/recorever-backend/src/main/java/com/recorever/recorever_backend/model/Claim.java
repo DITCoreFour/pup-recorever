@@ -49,11 +49,11 @@ public class Claim {
     @JsonIgnore 
     private Integer userId; 
 
-    @Transient
-    @JsonIgnore
-    private String status;
+    // @Transient
+    // @JsonIgnore
+    // private String status;
 
-    @Transient
-    @JsonIgnore
-    private String claimCode;
+    // @Transient
+    // @JsonIgnore
+    // private String claimCode;
 }

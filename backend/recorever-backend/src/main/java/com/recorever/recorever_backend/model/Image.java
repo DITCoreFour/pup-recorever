@@ -29,9 +29,9 @@ public class Image {
 
     @Column(name = "report_id")
     private Integer reportId; 
-    
-    @Column(name = "claim_id")
-    private Integer claimId; 
+
+    // @Column(name = "claim_id")
+    // private Integer claimId; 
 
     @Column(name = "uploaded_at")
     private LocalDateTime uploadedAt = LocalDateTime.now();
@@ -45,19 +45,19 @@ public class Image {
         this.fileType = fileType;
         this.filePath = filePath;
         this.reportId = reportId;
-        this.claimId = null;
+        // this.claimId = null;
         this.uploadedAt = LocalDateTime.now();
         this.isDeleted = false;
     }
 
-    // Utility constructor for Claim uploads
-    public Image(String fileName, String fileType, String filePath, Integer claimId, boolean isClaim) {
-        this.fileName = fileName;
-        this.fileType = fileType;
-        this.filePath = filePath;
-        this.reportId = null;
-        this.claimId = claimId;
-        this.uploadedAt = LocalDateTime.now();
-        this.isDeleted = false;
-    }
+    // Utility constructor for Claim uploads (useless??)
+    // public Image(String fileName, String fileType, String filePath, Integer claimId, boolean isClaim) {
+    //     this.fileName = fileName;
+    //     this.fileType = fileType;
+    //     this.filePath = filePath;
+    //     this.reportId = null;
+    //     this.claimId = claimId;
+    //     this.uploadedAt = LocalDateTime.now();
+    //     this.isDeleted = false;
+    // }
 }
