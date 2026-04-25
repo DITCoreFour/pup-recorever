@@ -39,16 +39,17 @@ public class MatchController {
 
   @PutMapping("/match/{id}")
   public ResponseEntity<?> updateMatchStatus(@PathVariable int id,
-      @RequestBody Map<String, String> body) {
-    String status = body.get("status");
-    if (status == null || status.isEmpty()) {
+      @RequestBody Map<String, Integer> body) {
+    Integer statusId = body.get("statusId");
+    if (statusId == null) {
       return ResponseEntity.badRequest().body("Status field is required.");
     }
 
-    boolean updated = service.updateMatchStatus(id, status);
+    boolean updated = service.updateMatchStatus(id, statusId);
+
     if (!updated)
       return ResponseEntity.badRequest().body("Match update failed.");
 
-    return ResponseEntity.ok(Map.of("success", true, "message", "Match status updated to " + status));
+    return ResponseEntity.ok(Map.of("success", true, "message", "Match status updated to " + statusId));
   }
 }
