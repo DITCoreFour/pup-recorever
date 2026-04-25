@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface ReportScheduleRepository 
+public interface ReportScheduleRepository
         extends JpaRepository<ReportSchedule, Long> {
 
     Optional<ReportSchedule> findByReportId(int reportId);
@@ -24,7 +24,7 @@ public interface ReportScheduleRepository
            "AND rs.notify1Time <= :now " +
            "AND rs.reportId IN (SELECT r.reportId FROM Report r " +
            "WHERE r.isDeleted = false " +
-           "AND r.status NOT IN ('resolved', 'claimed'))")
+           "AND r.status.statusName NOT IN ('resolved', 'claimed'))")
     List<Integer> findReportsForNotify1(@Param("now") LocalDateTime now);
 
     @Query("SELECT rs.reportId FROM ReportSchedule rs " +
@@ -32,13 +32,13 @@ public interface ReportScheduleRepository
            "AND rs.notify2Time <= :now " +
            "AND rs.reportId IN (SELECT r.reportId FROM Report r " +
            "WHERE r.isDeleted = false " +
-           "AND r.status NOT IN ('resolved', 'claimed'))")
+           "AND r.status.statusName NOT IN ('resolved', 'claimed'))")
     List<Integer> findReportsForNotify2(@Param("now") LocalDateTime now);
 
     @Query("SELECT r FROM Report r JOIN ReportSchedule rs " +
            "ON r.reportId = rs.reportId " +
            "WHERE r.isDeleted = false " +
-           "AND r.status NOT IN ('resolved', 'claimed') " +
+           "AND r.status.statusName NOT IN ('resolved', 'claimed') " +
            "AND rs.deleteTime <= :now")
     List<Report> findReportsReadyForSoftDelete(@Param("now") LocalDateTime now);
 
