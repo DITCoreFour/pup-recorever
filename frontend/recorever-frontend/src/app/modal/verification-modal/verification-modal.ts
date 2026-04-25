@@ -30,13 +30,12 @@ import { MessageResponse, ErrorResponse } from '../../models/auth-model';
   styleUrls: ['./verification-modal.scss']
 })
 export class VerificationModalComponent implements OnInit, OnDestroy {
-  @Input() public email: string = '';
-  @Input() public password: string = '';
+  @Input() public email = '';
+  @Input() public password = '';
   @Input() public context: 'register' | 'forgot-password' = 'register';
   
   @Output() public close = new EventEmitter<void>();
 
-  // QA FIX: Angular way of querying DOM elements (No Vanilla JS)
   @ViewChildren('otpInput') 
   public otpInputs!: QueryList<ElementRef<HTMLInputElement>>;
 
@@ -46,8 +45,9 @@ export class VerificationModalComponent implements OnInit, OnDestroy {
   private router = inject(Router);
 
   public digits: string[] = ['', '', '', '', ''];
-  public timeLeft = signal<number>(60);
-  public isLoading = signal<boolean>(false);
+  
+  public timeLeft = signal(60);
+  public isLoading = signal(false);
   
   public serverErrorMessage = signal<string | null>(null);
   
@@ -131,11 +131,6 @@ export class VerificationModalComponent implements OnInit, OnDestroy {
       return;
     }
 
-    if (!navigator.onLine) {
-      this.serverErrorMessage.set('No internet connection.');
-      return;
-    }
-
     this.isLoading.set(true);
     this.userService.cancelRegistration(this.email).subscribe({
       next: (res: MessageResponse): void => {
@@ -150,11 +145,6 @@ export class VerificationModalComponent implements OnInit, OnDestroy {
   }
 
   public resendCode(): void {
-    if (!navigator.onLine) {
-      this.serverErrorMessage.set('No internet connection to resend code.');
-      return;
-    }
-
     this.serverErrorMessage.set(null);
     this.isLoading.set(true);
 
@@ -186,11 +176,6 @@ export class VerificationModalComponent implements OnInit, OnDestroy {
   }
 
   public confirm(): void {
-    if (!navigator.onLine) {
-      this.serverErrorMessage.set('No internet connection. Cannot verify.');
-      return;
-    }
-
     const code = this.digits.join('');
     if (code.length !== 5) return;
 
