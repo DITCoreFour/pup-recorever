@@ -7,11 +7,11 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 public class ImageResponseDTO {
-    private int imageId; 
+    private int imageId;
     private String fileName;
     private String fileType;
     private Integer reportId;
-    private Integer claimId;
+    // private Integer claimId;
     private LocalDateTime uploadedAt;
     private String imageUrl;
 }
