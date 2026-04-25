@@ -23,12 +23,12 @@ public class SecurityConfig {
   }
 
   @Bean
-  public SecurityFilterChain securityFilterChain(HttpSecurity http) 
+  public SecurityFilterChain securityFilterChain(HttpSecurity http)
       throws Exception {
     http
       .cors(cors -> {})
       .csrf(csrf -> csrf.disable())
-      .sessionManagement(session -> 
+      .sessionManagement(session ->
         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
       )
       .authorizeHttpRequests(auth -> auth
@@ -44,28 +44,30 @@ public class SecurityConfig {
           "/api/forgot-password",
           "/api/reset-password-public",
           "/api/programs",
+          "/api/surrender-locations",
+          "/api/categories",
           "/error"
         ).permitAll()
-        .requestMatchers("/api/admin/**").hasRole("ADMIN") 
-        
+        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+
         // Allow public access to view reports and locations
-        .requestMatchers(HttpMethod.GET, "/api/reports").permitAll() 
+        .requestMatchers(HttpMethod.GET, "/api/reports").permitAll()
         .requestMatchers(
-          HttpMethod.GET, 
+          HttpMethod.GET,
           "/api/reports/top-locations"
         ).permitAll()
-        .requestMatchers(HttpMethod.POST, 
-          "/api/report/*/upload-image", 
+        .requestMatchers(HttpMethod.POST,
+          "/api/report/*/upload-image",
           "/api/claim/*/upload-image"
         ).authenticated()
-        .requestMatchers("/api/image/**").authenticated() 
+        .requestMatchers("/api/image/**").authenticated()
         .requestMatchers("/api/images").authenticated()
         .anyRequest().authenticated()
       )
       .httpBasic(httpBasic -> httpBasic.disable())
       .formLogin(form -> form.disable())
       .addFilterBefore(
-        jwtFilter, 
+        jwtFilter,
         UsernamePasswordAuthenticationFilter.class
       );
 
