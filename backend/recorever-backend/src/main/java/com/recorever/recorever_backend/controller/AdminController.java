@@ -1,6 +1,7 @@
 package com.recorever.recorever_backend.controller;
 
 import com.recorever.recorever_backend.model.Report;
+import com.recorever.recorever_backend.model.ReportStatus;
 import com.recorever.recorever_backend.service.ClaimService;
 import com.recorever.recorever_backend.service.ReportService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,23 +19,23 @@ public class AdminController {
 
     @Autowired
     private ReportService reportService;
-    
+
     @Autowired
     private ClaimService claimService;
 
     // --- REPORT MANAGEMENT ENDPOINTS ---
     @GetMapping("/reports/pending")
     public ResponseEntity<List<Report>> getPendingReports() {
-        return ResponseEntity.ok(reportService.listByStatus("pending")); 
+        return ResponseEntity.ok(reportService.listByStatus(ReportStatus.PENDING));
     }
 
     @PutMapping("/report/{id}/status")
     public ResponseEntity<?> updateReportStatus(
-            @PathVariable int id, 
+            @PathVariable int id,
             @RequestBody Map<String, String> body) {
-        
+
         String status = body.get("status");
-        
+
         if (status == null || status.isEmpty()) {
             return ResponseEntity.badRequest()
                     .body("Status field is required.");
@@ -45,9 +46,9 @@ public class AdminController {
             return ResponseEntity.badRequest()
                     .body("Report not found or status update failed.");
         }
-        
+
         return ResponseEntity.ok(Map.of(
-                "success", true, 
+                "success", true,
                 "message", "Report status updated to " + status
         ));
     }
