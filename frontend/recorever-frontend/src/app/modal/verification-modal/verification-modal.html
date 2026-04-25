@@ -1,44 +1,61 @@
 <div class="verification-wrapper">
   <div class="header-section">
-    <h2 class="title">Security Verification</h2>
+    <h2 class="title">Enter Verification Code</h2>
     <p class="subtitle">
       We sent a 5-digit code to <br>
       <span class="user-email">{{ email }}</span>
     </p>
   </div>
 
+  @if (serverErrorMessage()) {
+    <div class="error-banner">
+      {{ serverErrorMessage() }}
+    </div>
+  }
+
   <div class="otp-container">
     @for (digit of digits; track $index) {
       <input 
-        [id]="'otp-' + $index"
-        type="text" 
-        class="otp-input" 
-        maxLength="1"
-        [value]="digits[$index]"
-        (input)="onInput($event, $index)"
-        (keydown)="onKeyDown($event, $index)"
-        inputmode="numeric"
-        placeholder="0">
+          #otpInput
+          type="text" 
+          class="otp-input" 
+          maxLength="1"
+          [value]="digits[$index]"
+          [class.has-error]="serverErrorMessage() !== null"
+          (input)="onInput($event, $index)"
+          (keydown)="onKeyDown($event, $index)"
+          inputmode="numeric"
+          placeholder="0" />
     }
   </div>
 
   <div class="action-section">
-    <div class="timer-box">
+    
+    <button 
+        type="button" 
+        class="resend-btn" 
+        [disabled]="timeLeft() > 0 || isLoading()"
+        (click)="resendCode()">
       @if (timeLeft() > 0) {
-        <p class="timer-text">Resend available in <span>{{ timeLeft() }}s</span></p>
+        Resend Code in {{ timeLeft() }}s
       } @else {
-        <button type="button" class="resend-btn" (click)="resendCode()">
-          Resend New Code
-        </button>
+        Resend Verification Code
       }
-    </div>
+    </button>
 
     <button 
-      type="button"
-      class="confirm-btn" 
-      [disabled]="digits.join('').length < 5"
-      (click)="confirm()">
-      Verify Account
+        type="button"
+        class="confirm-btn" 
+        [disabled]="isConfirmDisabled()"
+        (click)="confirm()">
+      
+      @if (isLoading()) {
+        <div class="btn-content">
+          <span class="spinner"></span> VERIFYING...
+        </div>
+      } @else {
+        Verify Account
+      }
     </button>
 
     <button type="button" class="back-btn" (click)="backToRegistration()">
