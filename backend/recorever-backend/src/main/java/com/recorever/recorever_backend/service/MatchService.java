@@ -3,8 +3,10 @@ package com.recorever.recorever_backend.service;
 import com.recorever.recorever_backend.dto.MatchResponseDTO;
 import com.recorever.recorever_backend.model.Match;
 import com.recorever.recorever_backend.model.Report;
+import com.recorever.recorever_backend.model.ReportStatus;
 import com.recorever.recorever_backend.repository.MatchRepository;
 import com.recorever.recorever_backend.repository.ReportRepository;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,6 +31,9 @@ public class MatchService {
   @Autowired
   private NotificationService notificationService;
 
+  @Autowired
+  private StatusService statusService;
+
   private MatchResponseDTO convertToDTO(Match match) {
     if (match == null)
       return null;
@@ -36,7 +41,7 @@ public class MatchService {
     dto.setMatch_id(match.getMatch_id());
     dto.setLost_report_id(match.getLost_report_id());
     dto.setFound_report_id(match.getFound_report_id());
-    dto.setStatus(match.getStatus());
+    dto.setStatus(match.getStatus().getStatusName());
     dto.setCreated_at(match.getCreated_at());
     return dto;
   }
@@ -55,8 +60,8 @@ public class MatchService {
         continue;
       }
 
-      if (!"approved".equalsIgnoreCase(existingReport.getStatus())) {
-        continue;
+      if (!ReportStatus.APPROVED.equalsIgnoreCase(existingReport.getStatus().getStatusName())) {
+          continue;
       }
 
       if (checkNameSimilarity(newReport, existingReport)) {
@@ -71,8 +76,8 @@ public class MatchService {
         .findByUserIdAndTypeAndIsDeletedFalse(claimantId, "lost");
 
     return userLostReports.stream()
-        .filter(lostReport -> "approved".equalsIgnoreCase(lostReport.getStatus()) ||
-            "matched".equalsIgnoreCase(lostReport.getStatus()))
+        .filter(lostReport -> ReportStatus.APPROVED.equalsIgnoreCase(lostReport.getStatus().getStatusName()) ||
+            ReportStatus.MATCHED.equalsIgnoreCase(lostReport.getStatus().getStatusName()))
         .filter(lostReport -> checkNameSimilarity(foundReport, lostReport))
         .collect(Collectors.toList());
   }
@@ -98,11 +103,11 @@ public class MatchService {
     Match match = new Match();
     match.setLostReportId(lostReport.getReportId());
     match.setFoundReportId(foundReport.getReportId());
-    match.setStatus("pending");
+    match.setStatus(statusService.getByName(ReportStatus.PENDING));
     matchRepo.save(match);
 
-    newR.setStatus("matched");
-    existR.setStatus("matched");
+    newR.setStatus(statusService.getByName(ReportStatus.MATCHED));
+    existR.setStatus(statusService.getByName(ReportStatus.MATCHED));
     reportRepo.save(newR);
     reportRepo.save(existR);
 
@@ -191,9 +196,9 @@ public class MatchService {
   }
 
   @Transactional
-  public boolean updateMatchStatus(int id, String status) {
+  public boolean updateMatchStatus(int id, int statusId) {
     return matchRepo.findById(id).map(match -> {
-      match.setStatus(status);
+      match.setStatus(statusService.getById(statusId));
       matchRepo.save(match);
       return true;
     }).orElse(false);
