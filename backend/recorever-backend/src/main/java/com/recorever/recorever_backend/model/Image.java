@@ -16,7 +16,7 @@ public class Image {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "image_id")
-    private int imageId; 
+    private int imageId;
 
     @Column(nullable = false)
     private String fileName;
@@ -25,19 +25,19 @@ public class Image {
     private String fileType;
 
     @Column(nullable = false, unique = true)
-    private String filePath; 
+    private String filePath;
 
     @Column(name = "report_id")
-    private Integer reportId; 
+    private Integer reportId;
 
     // @Column(name = "claim_id")
-    // private Integer claimId; 
+    // private Integer claimId;
 
     @Column(name = "uploaded_at")
     private LocalDateTime uploadedAt = LocalDateTime.now();
-    
+
     @Column(columnDefinition = "BOOLEAN DEFAULT FALSE", name = "is_deleted")
-    private boolean isDeleted; 
+    private boolean isDeleted;
 
     // Utility constructor for Report uploads
     public Image(String fileName, String fileType, String filePath, Integer reportId) {

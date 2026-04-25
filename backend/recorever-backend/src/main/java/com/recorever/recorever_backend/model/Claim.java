@@ -46,8 +46,8 @@ public class Claim {
 
     // Hides status from the JSON response
     @Transient
-    @JsonIgnore 
-    private Integer userId; 
+    @JsonIgnore
+    private Integer userId;
 
     // @Transient
     // @JsonIgnore
