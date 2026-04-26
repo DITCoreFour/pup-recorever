@@ -49,7 +49,10 @@ public class EmailService {
             "<div style='display:none; visibility:hidden; font-size:1px;'>" +
             uniqueId + "</div></div></div>";
 
-        sendEmail(toEmail, VERIFY_EMAIL, "Verify your PUPT Recover Account", html);
+        sendEmail(toEmail,
+            VERIFY_EMAIL, 
+            "Verify your PUPT Recover Account",
+            html);
         } catch (Exception e) {
             throw new RuntimeException("Failed to send verification email", e);
         }
@@ -91,6 +94,44 @@ public class EmailService {
             mailSender.send(message);
         } catch (MessagingException e) {
             throw new RuntimeException("Failed to send email", e);
+        }
+    }
+
+    public void sendPasswordResetCode(String toEmail, String code) {
+        try {
+            String html = 
+                "<div style='font-family: Arial, sans-serif; max-width: 600px; " +
+                "margin: 0 auto; border: 1px solid #e0e0e0; border-radius: " +
+                "10px; overflow: hidden;'>" +
+                "<div style='background-color: #800000; padding: 20px; " +
+                "text-align: center;'><h1 style='color: white; margin: 0; " +
+                "font-size: 24px;'>PUPT Recover</h1></div>" +
+                "<div style='padding: 30px; text-align: center; " +
+                "color: #333;'>" +
+                "<h2 style='color: #800000;'>Password Reset Request</h2>" +
+                "<p>We received a request to reset your password. Use the " +
+                "code below to proceed with the reset process.</p>" +
+                "<div style='margin: 30px 0; background-color: #f9f9f9; " +
+                "border: 2px dashed #800000; padding: 20px; " +
+                "border-radius: 8px;'>" +
+                "<span style='font-size: 32px; font-weight: bold; " +
+                "letter-spacing: 10px; color: #800000;'>" + code + 
+                "</span></div>" +
+                "<p style='font-size: 14px; color: #666;'>This code is " +
+                "valid for 5 minutes. If you did not request a password " +
+                "reset, please secure your account.</p></div>" +
+                "<div style='background-color: #f4f4f4; padding: 20px; " +
+                "text-align: center; font-size: 12px; color: #888; " +
+                "border-top: 1px solid #e0e0e0;'>" + FOOTER + "</div>" +
+                "</div>";
+
+            sendEmail(toEmail, 
+                VERIFY_EMAIL, 
+                "Reset your PUPT Recover Password", 
+                html
+            );
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to send reset email", e);
         }
     }
 
