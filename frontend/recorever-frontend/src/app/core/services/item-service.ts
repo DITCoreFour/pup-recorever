@@ -6,7 +6,9 @@ import {
   Report,
   ReportFilters,
   FinalReportSubmission,
-  PaginatedResponse
+  PaginatedResponse,
+  Category,
+  SurrenderLocation
 } from '../../models/item-model';
 import { MatchResponseDTO } from '../../models/match-model';
 
@@ -27,7 +29,16 @@ export class ItemService {
 
     formData.append('type', report.type);
     formData.append('item_name', report.item_name);
+    formData.append('category_id', report.category_id.toString());
     formData.append('location', report.location);
+
+    if (report.surrendered_location_id != null) {
+      formData.append(
+        'surrendered_location_id',
+        report.surrendered_location_id.toString()
+      );
+    }
+
     formData.append('description', report.description);
 
     if (report.date_lost_found) {
@@ -82,7 +93,9 @@ export class ItemService {
     if (filters.page) params = params.set('page', filters.page.toString());
     if (filters.size) params = params.set('size', filters.size.toString());
     if (filters.type) params = params.set('type', filters.type);
-    if (filters.status) params = params.set('status', filters.status);
+    if (filters.status_id) {
+      params = params.set('status', filters.status_id);
+    }
 
     if (filters.user_id) {
       params = params.set('user_id', filters.user_id.toString());
@@ -138,6 +151,16 @@ export class ItemService {
 
     return this.http.get<string[]>(`${this.apiUrl}/reports/top-locations`).pipe(
       tap(locations => this.cachedLocations = locations)
+    );
+  }
+
+  getCategories(): Observable<Category[]> {
+    return this.http.get<Category[]>(`${this.apiUrl}/categories`);
+  }
+
+  getSurrenderLocations(): Observable<SurrenderLocation[]> {
+    return this.http.get<SurrenderLocation[]>(
+      `${this.apiUrl}/surrender-locations`
     );
   }
 
