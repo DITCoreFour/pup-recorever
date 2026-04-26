@@ -7,21 +7,28 @@ export type PaginatedResponse<T> = {
   totalPages: number;
 };
 
-export type ReportStatus =
-  | 'pending'
-  | 'approved'
-  | 'matched'
-  | 'claimed'
-  | 'closed'
-  | 'rejected'
-  | 'resolved';
+export type ReportStatus = {
+  status_id: number;
+  status_name: string;
+}
+
+export enum ReportStatusEnum {
+  PENDING = 1,
+  MATCHED = 2,
+  REJECTED = 3,
+  APPROVED = 4,
+  CLAIMED = 5,
+  RESOLVED = 6
+}
 
 export type Report = {
   report_id: number;
   user_id: number;
   type: 'lost' | 'found';
   item_name: string;
+  category: Category;
   location: string;
+  surrendered_location?: SurrenderLocation | null;
   date_lost_found?: string;
   date_reported: string;
   date_posted?: string;
@@ -41,7 +48,7 @@ export type Report = {
 
 export type ReportFilters = {
   type?: 'lost' | 'found';
-  status?: ReportStatus;
+  status_id?: number;
   location?: string;
   query?: string;
   user_id?: number;
@@ -66,9 +73,9 @@ export const StandardRelativeDateFilters: string[] = [
 
 export type ItemReportForm = FormGroup<{
   item_name: FormControl<string | null>;
-  category: FormControl<string | null>;
+  category: FormControl<number | null>;
   location: FormControl<string | null>;
-  surrendered_location: FormControl<string | null>;
+  surrendered_location: FormControl<number | null>;
   date_lost_found: FormControl<string | null>;
   description: FormControl<string | null>;
   photoUrls: FormArray<FormControl<string | null>>;
@@ -77,7 +84,9 @@ export type ItemReportForm = FormGroup<{
 export type ReportSubmissionPayload = {
   type: 'lost' | 'found';
   item_name: string;
+  category_id: number;
   location: string;
+  surrendered_location_id?: number | null;
   description: string;
 };
 
@@ -86,7 +95,9 @@ export type FinalReportSubmission = {
   type: 'lost' | 'found';
   status: 'pending';
   item_name: string;
+  category_id: number;
   location: string;
+  surrendered_location_id?: number | null;
   date_lost_found: string;
   date_reported: string;
   description: string;
@@ -102,3 +113,13 @@ export type FilePreview = {
   url: string;
   name: string;
 };
+
+export interface Category {
+  category_id: number;
+  category_name: string;
+}
+
+export interface SurrenderLocation {
+  surrendered_location_id: number;
+  surrendered_location_name: string;
+}
