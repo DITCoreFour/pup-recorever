@@ -42,7 +42,8 @@ public class SecurityConfig {
           "/api/refresh-token",
           "/api/image/download/**",
           "/api/forgot-password",
-          "/api/reset-password-public",
+          "/api/verify-reset-code",
+          "/api/confirm-password-reset",
           "/api/programs",
           "/error"
         ).permitAll()
