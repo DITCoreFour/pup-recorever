@@ -1,5 +1,6 @@
 package com.recorever.recorever_backend.dto;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -22,7 +23,15 @@ public class ReportResponseDTO {
     private String date_reported;
     private String date_resolved;
     private String description;
-    private String status_name;
+
+    private StatusResponse status;
+
+    @Data
+    @AllArgsConstructor
+    public static class StatusResponse {
+        private int status_id;
+        private String status_name;
+    }
 
     private String expiry_date;
     private String surrender_code;
