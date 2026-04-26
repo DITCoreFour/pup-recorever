@@ -6,6 +6,7 @@ import com.recorever.recorever_backend.model.ReportStatus;
 import com.recorever.recorever_backend.model.User;
 import com.recorever.recorever_backend.repository.UserRepository;
 import com.recorever.recorever_backend.service.ReportService;
+import com.recorever.recorever_backend.service.StatusService;
 
 // Image Imports
 import com.recorever.recorever_backend.service.ImageService;
@@ -46,6 +47,9 @@ public class ReportController {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private StatusService statusService;
+
     private ImageResponseDTO convertToImageDto(Image image) {
         if (image == null || image.isDeleted()) return null;
 
@@ -77,9 +81,12 @@ public class ReportController {
         dto.setDate_resolved(report.getDateResolved());
         dto.setDescription(report.getDescription());
 
-        if (report.getStatus() != null) {
-            dto.setStatus_name(report.getStatus().getStatusName());
-        }
+        ReportResponseDTO.StatusResponse status = new ReportResponseDTO.StatusResponse(
+            report.getStatus().getStatusId(),
+            report.getStatus().getStatusName()
+        );
+
+        dto.setStatus(status);
 
         if (report.getCategory() != null) {
             dto.setCategory_name(report.getCategory().getCategoryName());
@@ -193,15 +200,20 @@ public class ReportController {
     @GetMapping("/reports")
     public ResponseEntity<Map<String, Object>> getReports(
             @RequestParam(required = false) String type,
-            @RequestParam(required = false) String status,
+            @RequestParam(required = false) Integer status,
             @RequestParam(required = false) String category,
             @RequestParam(required = false) Integer user_id,
             @RequestParam(required = false) String query,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size) {
 
+        String statusName = null;
+        if (status != null) {
+            statusName = statusService.getById(status).getStatusName();
+        }
+
         Map<String, Object> serviceResponse = service.searchReports(
-                user_id, type, status, category, query, page, size);
+                user_id, type, statusName, category, query, page, size);
 
         @SuppressWarnings("unchecked")
         List<Report> reports = (List<Report>) serviceResponse.get("items");
