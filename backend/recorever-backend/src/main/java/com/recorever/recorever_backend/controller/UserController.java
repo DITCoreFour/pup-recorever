@@ -337,30 +337,47 @@ public class UserController {
     public ResponseEntity<?> forgotPassword(
             @RequestBody Map<String, String> request) {
         String email = request.get("email");
-        if (service.emailExists(email)) {
+        try {
+            service.initiatePasswordReset(email);
             return ResponseEntity.ok(Map.of(
                     "success", true, 
-                    "message", "Email verified."
+                    "message", "A password reset code has been sent to your email."
             ));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(404).body(Map.of("error", e.getMessage()));
         }
-        return ResponseEntity.status(404)
-                .body(Map.of("error", "Email not found."));
     }
 
-    @PutMapping("/reset-password-public")
-    public ResponseEntity<?> resetPasswordPublic(
-            @RequestBody Map<String, String> request) {
+    @PostMapping("/verify-reset-code")
+    public ResponseEntity<?> verifyResetCode(
+            @RequestParam String token) {
+        try {
+            service.verifyResetCode(token);
+            return ResponseEntity.ok(Map.of(
+                "success", true, 
+                "message", "Code verified. You may now reset your password."
+            ));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(
+                Map.of("error", e.getMessage()));
+        }
+    }
+
+    @PutMapping("/confirm-password-reset")
+    public ResponseEntity<?> confirmPasswordReset(@RequestBody Map<String, String> request) {
         String email = request.get("email");
+        String token = request.get("token");
         String newPassword = request.get("newPassword");
 
-        if (service.resetUserPassword(email, newPassword)) {
+        try {
+            service.completePasswordReset(email, token, newPassword);
             return ResponseEntity.ok(Map.of(
-                    "success", true, 
-                    "message", "Password has been reset."
+                "success", true, 
+                "message", "Your password has been successfully reset."
             ));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
-        return ResponseEntity.status(400).body(
-                Map.of("error", "Failed to reset password."));
     }
 
     @DeleteMapping("/delete-account")

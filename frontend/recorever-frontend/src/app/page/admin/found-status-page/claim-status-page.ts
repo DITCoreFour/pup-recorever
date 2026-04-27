@@ -12,13 +12,8 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Params, ActivatedRoute } from '@angular/router';
-import {
-  catchError,
-  switchMap,
-  takeUntil,
-  tap
-} from 'rxjs/operators';
 import { Subject, BehaviorSubject, of } from 'rxjs';
+import { catchError, switchMap, takeUntil, tap } from 'rxjs/operators';
 
 import { ItemService } from '../../../core/services/item-service';
 import { AuthService } from '../../../core/auth/auth-service';
@@ -73,41 +68,42 @@ export class ClaimStatusPage implements OnInit, AfterViewInit, OnDestroy {
   private refreshTrigger$ = new BehaviorSubject<void>(undefined);
   private reportCache = new Map<string, PaginatedResponse<Report>>();
 
-  @ViewChild('scrollAnchor') scrollAnchor!: ElementRef;
+  @ViewChild('scrollAnchor') public scrollAnchor!: ElementRef;
   private observer!: IntersectionObserver;
 
-  protected currentPage = signal(1);
-  protected totalPages = signal(1);
-  protected pageSize = signal(10);
-  protected searchQuery = signal('');
-  protected isLoading = signal(true);
+  public currentPage = signal(1);
+  public totalPages = signal(1);
+  public pageSize = signal(10);
+  public searchQuery = signal('');
+  public isLoading = signal(true);
 
-  protected reports = signal<Report[]>([]);
-  protected selectedReport = signal<Report | null>(null);
+  public reports = signal<Report[]>([]);
+  public selectedReport = signal<Report | null>(null);
 
-  protected currentStatusFilter = signal<StatusFilter>('All Statuses');
-  protected highlightId = signal<number | null>(null);
-  protected currentSurrenderedLocationFilter = signal<string>('');
+  public currentStatusFilter = signal<StatusFilter>('All Statuses');
+  public highlightId = signal<number | null>(null);
+  public currentSurrenderedLocationFilter = signal('');
 
-  protected currentFilter = signal<FilterState>({
+  public currentFilter = signal<FilterState>({
     sort: 'newest',
     date: null,
     location: ''
   });
 
-  protected readonly statusFilters: StatusFilter[] = [
-      'All Statuses', 'pending', 'approved', 'rejected'];
+  public readonly statusFilters: StatusFilter[] = [
+    'All Statuses', 'pending', 'approved', 'rejected'
+  ];
 
-  protected isAdmin = computed(() => {
+  public isAdmin = computed((): boolean => {
     const user = this.authService.currentUserValue;
     return user?.role === 'admin';
   });
 
-  protected locations = computed(() => {
+  public locations = computed((): string[] => {
     const locs = this.reports()
-      .map(r => r.location)
-      .filter(l => !!l);
-    return [...new Set(locs)] as string[];
+      .map((r: Report) => r.location)
+      .filter((l: string) => !!l);
+    return [...new Set(locs)];
   });
 
   protected filteredReports = computed(() => {
@@ -120,27 +116,27 @@ export class ClaimStatusPage implements OnInit, AfterViewInit, OnDestroy {
 
     if (filter.location) {
       const locTerm = filter.location.toLowerCase();
-      data = data.filter(r =>
+      data = data.filter((r: Report) =>
         (r.location || '').toLowerCase().includes(locTerm)
       );
     }
 
     if (surrenderedFilter) {
       const surTerm = surrenderedFilter.toLowerCase();
-      data = data.filter(r =>
+      data = data.filter((r: Report) =>
         (r.location || '').toLowerCase().includes(surTerm)
       );
     }
 
     if (filter.date) {
       const filterDate = new Date(filter.date).setHours(0, 0, 0, 0);
-      data = data.filter(r => {
+      data = data.filter((r: Report) => {
         const reportDate = new Date(r.date_reported).setHours(0, 0, 0, 0);
         return reportDate === filterDate;
       });
     }
 
-    return [...data].sort((a, b) => {
+    return [...data].sort((a: Report, b: Report): number => {
       const hId = this.highlightId();
       if (hId) {
         if (a.report_id === hId) return -1;
@@ -149,12 +145,11 @@ export class ClaimStatusPage implements OnInit, AfterViewInit, OnDestroy {
 
       const dateA = new Date(a.date_reported).getTime();
       const dateB = new Date(b.date_reported).getTime();
-
       return filter.sort === 'newest' ? dateB - dateA : dateA - dateB;
     });
   });
 
-  ngOnInit(): void {
+  public ngOnInit(): void {
     this.route.queryParams
       .pipe(takeUntil(this.destroy$))
       .subscribe((params: Params) => {
@@ -163,7 +158,7 @@ export class ClaimStatusPage implements OnInit, AfterViewInit, OnDestroy {
       });
 
     this.refreshTrigger$.pipe(
-      tap(() => this.isLoading.set(true)),
+      tap((): void => this.isLoading.set(true)),
       switchMap(() => {
         const currentStatus = this.currentStatusFilter();
         let statusId: number | undefined = undefined;
@@ -186,13 +181,19 @@ export class ClaimStatusPage implements OnInit, AfterViewInit, OnDestroy {
         }
 
         return this.itemService.getReports(filters).pipe(
-          tap((response) => this.reportCache.set(cacheKey, response)),
-          catchError(() => of({ items: [], totalPages: 1, totalItems: 0 }))
+          tap((response: PaginatedResponse<Report>) => 
+              this.reportCache.set(cacheKey, response)),
+          catchError(() => of({ 
+            items: [], 
+            totalPages: 1, 
+            totalItems: 0, 
+            currentPage: 1 
+          }))
         );
       }),
       takeUntil(this.destroy$)
-    ).subscribe(response => {
-      this.reports.update(existing =>
+    ).subscribe((response: PaginatedResponse<Report>) => {
+      this.reports.update((existing: Report[]) =>
         this.currentPage() === 1 ? response.items :
             [...existing, ...response.items]
       );
@@ -201,35 +202,45 @@ export class ClaimStatusPage implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  ngAfterViewInit(): void {
-    this.observer = new IntersectionObserver(([entry]) => {
+  public ngAfterViewInit(): void {
+    this.observer = new IntersectionObserver(([entry]: 
+            IntersectionObserverEntry[]) => {
       if (entry.isIntersecting && !this.isLoading() &&
           this.currentPage() < this.totalPages()) {
-        this.currentPage.update(p => p + 1);
+        this.currentPage.update((p: number) => p + 1);
         this.refreshTrigger$.next();
       }
     }, { rootMargin: '100px' });
-    this.observer.observe(this.scrollAnchor.nativeElement);
+    
+    if (this.scrollAnchor) {
+      this.observer.observe(this.scrollAnchor.nativeElement);
+    }
   }
 
-  protected setStatusFilter(status: string): void {
+  public ngOnDestroy(): void {
+    if (this.observer) this.observer.disconnect();
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  public setStatusFilter(status: string): void {
     this.currentStatusFilter.set(status as StatusFilter);
     this.resetPagination();
   }
 
-  protected onSearch(query: string): void {
+  public onSearch(query: string): void {
     this.searchQuery.set(query.trim());
     this.resetPagination();
   }
 
-  protected onFilterChange(state: FilterState): void {
+  public onFilterChange(state: FilterState): void {
     this.currentFilter.set(state);
     this.currentSurrenderedLocationFilter.set(state.surrenderedLocation || '');
 
-    if (state.status !== undefined && state.status !==
-        this.currentStatusFilter()) {
-            this.currentStatusFilter.set(state.status as StatusFilter);
-            this.resetPagination();
+    if (state.status !== undefined && 
+        state.status !== this.currentStatusFilter()) {
+      this.currentStatusFilter.set(state.status as StatusFilter);
+      this.resetPagination();
     }
   }
 
@@ -239,20 +250,14 @@ export class ClaimStatusPage implements OnInit, AfterViewInit, OnDestroy {
     this.refreshTrigger$.next();
   }
 
-  ngOnDestroy(): void {
-    this.observer?.disconnect();
-    this.destroy$.next();
-    this.destroy$.complete();
-  }
-
-  protected onViewDetails(reportId: number): void {
-    const report = this.reports().find(r => r.report_id === reportId);
+  public onViewDetails(reportId: number): void {
+    const report = this.reports().find((r: Report) => r.report_id === reportId);
     if (report) {
       this.selectedReport.set(report);
     }
   }
 
-  protected onCloseModal(): void {
+  public onCloseModal(): void {
     this.selectedReport.set(null);
   }
 

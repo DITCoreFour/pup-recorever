@@ -37,6 +37,7 @@ export class ResetPassPage implements OnInit {
 
   resetPasswordForm!: FormGroup;
   email: string = '';
+  token: string = '';
   
   currentView = signal<'FORM' | 'SUCCESS'>('FORM');
   isLoading = signal<boolean>(false);
@@ -48,7 +49,11 @@ export class ResetPassPage implements OnInit {
 
   ngOnInit(): void {
     this.email = this.route.snapshot.queryParamMap.get('email') || '';
-    if (!this.email) { this.router.navigate(['/forgot-password']); return; }
+    this.token = this.route.snapshot.queryParamMap.get('token') || '';
+    if (!this.email || !this.token) { 
+      this.router.navigate(['/forgot-password']); 
+      return; 
+    }
 
     this.resetPasswordForm = this.fb.group({
       newPassword: ['', [
@@ -113,12 +118,13 @@ export class ResetPassPage implements OnInit {
 onSubmit(): void {
     if (this.resetPasswordForm.valid) {
       this.isLoading.set(true);
-      
-      const email = this.email;
-      const newPassword = this.resetPasswordForm.value.newPassword;
 
-      this.authService.resetPasswordPublic(email, newPassword).subscribe({
-        next: (res: { success: boolean; message: string }) => {
+      this.authService.confirmPasswordReset({
+        email: this.email,
+        token: this.token,
+        newPassword: this.resetPasswordForm.value.newPassword
+      }).subscribe({
+        next: (res) => {
           this.isLoading.set(false);
           
           if (res.success) {
@@ -129,8 +135,14 @@ onSubmit(): void {
         },
         error: (err: HttpErrorResponse) => {
           this.isLoading.set(false);
-          const errorMessage = err.error?.message || 'Connection error.';
-          this.toastService.showError(errorMessage);
+          
+          if (err.status === 0) {
+            this.toastService
+              .showError('No internet connection or server is unreachable.');
+          } else {
+            const errorMessage = err.error?.error || 'Failed to reset password.';
+            this.toastService.showError(errorMessage);
+          }
         }
       });
     } else {

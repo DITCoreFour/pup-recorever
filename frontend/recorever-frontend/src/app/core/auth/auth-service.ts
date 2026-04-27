@@ -13,7 +13,8 @@ import { BehaviorSubject,
 } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import type { LoginRequest,
-              RegisterRequest
+              RegisterRequest,
+              AuthActionResponse
 } from '../../models/auth-model';
 import type { User } from '../../models/user-model';
 import { UserService } from '../services/user-service';
@@ -189,14 +190,22 @@ export class AuthService {
     }
   }
 
-  forgotPassword(email: string): Observable<Object> {
-    return this.http.post(`${this.API_BASE_URL}/forgot-password`, { email });
+  forgotPassword(email: string): Observable<AuthActionResponse> {
+    return this.http.post<AuthActionResponse>(`${this.API_BASE_URL}/forgot-password`, { email });
   }
 
-  resetPasswordPublic(email: string, newPassword: string): Observable<{ success: boolean; message: string }> {
-    return this.http.put<{ success: boolean; message: string }>(
-      `${this.API_BASE_URL}/reset-password-public`, 
-      { email, newPassword }
+  verifyResetCode(token: string): Observable<AuthActionResponse> {
+    return this.http.post<AuthActionResponse>(`${this.API_BASE_URL}/verify-reset-code?token=${token}`, {});
+  }
+
+  confirmPasswordReset(data: { 
+    email: string; 
+    token: string; 
+    newPassword: string 
+  }): Observable<AuthActionResponse> {
+    return this.http.put<AuthActionResponse>(
+      `${this.API_BASE_URL}/confirm-password-reset`, 
+      data
     );
   }
 }
