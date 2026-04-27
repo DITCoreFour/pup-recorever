@@ -8,7 +8,7 @@
 
       <input matInput formControlName="item_name"/>
 
-      @if (reportForm.controls.item_name.invalid 
+      @if (reportForm.controls.item_name.invalid
            && reportForm.controls.item_name.touched) {
         <mat-error>Item name is required.</mat-error>
       }
@@ -18,11 +18,11 @@
       <mat-label>Category</mat-label>
 
       <mat-select formControlName="category">
-        <mat-option value="bags">Bags</mat-option>
-        <mat-option value="electronics">Electronics</mat-option>
-        <mat-option value="clothing">Clothing</mat-option>
-        <mat-option value="accessories">Accessories</mat-option>
-        <mat-option value="documents">Documents</mat-option>
+        @for (cat of categories; track cat.category_id) {
+          <mat-option [value]="cat.category_id">
+            {{ cat.category_name }}
+          </mat-option>
+        }
       </mat-select>
 
       @if (reportForm.controls.category.invalid
@@ -56,12 +56,14 @@
     <div class="form-field">
       <mat-form-field appearance="outline" class="full-width">
         <mat-label>Surrendered Location</mat-label>
-
         <mat-select formControlName="surrendered_location">
-          <mat-option value="dost_lab_office">DOST Lab office</mat-option>
-          <mat-option value="guard_house">Guard House</mat-option>
+          @for (opt of surrenderOptions; track opt.surrendered_location_id) {
+            <mat-option [value]="opt.surrendered_location_id">
+              {{ opt.surrendered_location_name }}
+            </mat-option>
+          }
         </mat-select>
-        
+
         @if (reportForm.controls.surrendered_location.invalid
             && reportForm.controls.surrendered_location.touched) {
           <mat-error>Please select where the item was surrendered.</mat-error>

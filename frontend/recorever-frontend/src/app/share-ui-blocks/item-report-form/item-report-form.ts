@@ -21,7 +21,9 @@ import {
     ReportSubmissionPayload,
     ReportSubmissionWithFiles,
     FilePreview,
-    StandardLocations
+    StandardLocations,
+    Category,
+    SurrenderLocation
 } from '../../models/item-model';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatIcon } from "@angular/material/icon";
@@ -64,6 +66,8 @@ export class ItemReportForm implements OnInit {
   protected selectedFilesPreview: FilePreview[] = [];
   protected reportForm: ItemFormType;
   protected locationOptions: string[] = [];
+  protected categories: Category[] = [];
+  protected surrenderOptions: SurrenderLocation[] = [];
   protected filteredLocations!: Observable<string[]>;
   protected allLocations: string[] = [];
   protected maxDate = new Date();
@@ -106,7 +110,7 @@ export class ItemReportForm implements OnInit {
         updateOn: 'blur'
       }],
       category: [
-        '',
+        null,
         { validators: [Validators.required] }
       ],
       location: [
@@ -114,7 +118,7 @@ export class ItemReportForm implements OnInit {
         { validators: [Validators.required] }
       ],
       surrendered_location: [
-        '',
+        null,
         { validators: [Validators.required] }
       ],
       date_lost_found: [new Date().toISOString(), {
@@ -147,6 +151,35 @@ export class ItemReportForm implements OnInit {
   }
 
   ngOnInit(): void {
+    this.itemService.getCategories().subscribe({
+      next: (data) => {
+        this.categories = data;
+      },
+      error: (err) => {
+        console.error('Failed to fetch categories:', err);
+        this.categories = [];
+      }
+    });
+
+    if (this.formType === 'found') {
+      this.itemService.getSurrenderLocations().subscribe({
+        next: (data) => {
+          this.surrenderOptions = data;
+          console.log('Fetched surrender locations:', data);
+        },
+        error: (err) => {
+          console.error('Failed to fetch surrender locations:', err);
+          this.surrenderOptions = [];
+        }
+      });
+    } else {
+      const control = this.reportForm.get('surrendered_location');
+      control?.clearValidators();
+      control?.updateValueAndValidity();
+
+      this.surrenderOptions = [];
+    }
+
     this.itemService.getTopLocations().subscribe({
       next: (locations: string[]) => {
         const standard = Object.values(StandardLocations);
@@ -167,14 +200,16 @@ export class ItemReportForm implements OnInit {
 
       this.reportForm.patchValue({
         item_name: this.initialData.item_name,
+        category: this.initialData.category?.category_id,
         location: this.initialData.location,
+        surrendered_location: this.initialData.surrendered_location?.surrendered_location_id,
         date_lost_found: formattedDate,
         description: this.initialData.description
       });
 
       if (this.initialData.photoUrls || this.initialData.images) {
         this.photoUrlsFormArray.clear();
-        
+
         const existingImages = this.initialData.images 
           ? this.initialData.images.map(img => img.imageUrl)
           : this.initialData.photoUrls || [];
@@ -316,7 +351,11 @@ export class ItemReportForm implements OnInit {
     const basePayload: ReportSubmissionPayload = {
       type: this.formType,
       item_name: this.reportForm.controls.item_name.value!,
+      category_id: this.reportForm.controls.category.value!,
       location: this.reportForm.controls.location.value!,
+      surrendered_location_id: this.formType === 'found'
+        ? this.reportForm.controls.surrendered_location.value
+        : null,
       description: this.reportForm.controls.description.value!,
     };
 
