@@ -102,10 +102,11 @@
               } @else {
                 <button
                   class="status-btn"
-                  [ngClass]="(report()?.status || 'pending').toLowerCase()"
+                  [ngClass]="report()?.status?.status_name?.toLowerCase() ||
+                            'pending'"
                   [style.cursor]="isReadOnly ? 'default' : 'pointer'"
                   (click)="toggleDropdown($event)">
-                  
+
                   {{ displayStatus() | titlecase }}
 
                   @if (!isReadOnly) {
@@ -117,7 +118,7 @@
               @if (isDropdownOpen() && !isReadOnly && !isArchive) {
                 <div class="dropdown-content" (click)="$event.stopPropagation()">
                   @for (option of STATUS_OPTIONS; track option.value) {
-                    @if (option.value !== (report()?.status || 'pending').toLowerCase() && 
+                    @if (option.value !== report()?.status?.status_id &&
                         !(option.label === 'Verified' && displayStatus() === 'Verified')) {
                       <div
                         [class.disabled-option]="isStatusDisabled(option.value)"
@@ -282,14 +283,15 @@
               </button>
 
               @if (!isReadOnly) {
-                <span [matTooltip]="(report()?.status === 'pending' ||
-                      report()?.status === 'rejected') ?
+                <span [matTooltip]="
+                      (report()?.status?.status_id === REPORT_STATUS.PENDING ||
+                      report()?.status?.status_id === REPORT_STATUS.REJECTED) ?
                       'Cannot submit claim for Pending/Rejected reports.' : ''"
                       matTooltipPosition="above">
                   <button mat-raised-button color="primary"
                     [disabled]="isSaving() || claimForm.invalid ||
-                    report()?.status === 'pending' ||
-                    report()?.status === 'rejected'"
+                    report()?.status?.status_id === REPORT_STATUS.PENDING ||
+                    report()?.status?.status_id === REPORT_STATUS.REJECTED"
                     (click)="saveItemDetails()">
                     @if (isSaving()) {
                       <mat-spinner diameter="20" class="btn-spinner">

@@ -13,9 +13,12 @@ import { ItemService } from '../../../core/services/item-service';
 import { AuthService } from '../../../core/auth/auth-service';
 import { ClaimService } from '../../../core/services/claim-service';
 
-import type { 
-  Report, PaginatedResponse, ReportFilters 
+import { Report,
+         PaginatedResponse,
+         ReportFilters,
+         ReportStatusEnum
 } from '../../../models/item-model';
+
 import { User } from '../../../models/user-model';
 
 import { 
@@ -92,7 +95,7 @@ export class MyReportsPage implements OnInit, AfterViewInit, OnDestroy {
   public visibleReports = computed((): Report[] => {
     let reports = [...this.allReports()];
     const type = this.itemType();
-    const status = this.currentStatus();
+    const statusFilter = this.currentStatus();
     const query = this.searchQuery().toLowerCase();
 
     if (type !== 'all') {
@@ -101,8 +104,11 @@ export class MyReportsPage implements OnInit, AfterViewInit, OnDestroy {
 
     if (status !== 'all') {
       reports = reports.filter((r: Report) => {
-        const isResolved = r.status === 'resolved' || r.status === 'claimed';
-        return status === 'resolved' ? isResolved : !isResolved;
+        const isResolved =
+          r.status.status_id === ReportStatusEnum.RESOLVED ||
+          r.status.status_id === ReportStatusEnum.CLAIMED;
+
+          return statusFilter === 'resolved' ? isResolved : !isResolved;
       });
     }
 

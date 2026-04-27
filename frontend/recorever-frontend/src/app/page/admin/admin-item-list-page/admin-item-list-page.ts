@@ -38,9 +38,10 @@ import {
 } from '../../../modal/unarchive-confirmation-modal/unarchive-confirmation-modal';
 import { ClaimFormModal } from '../../../modal/claim-form-modal/claim-form-modal';
 
-import type {
+import {
   Report,
-  ReportFilters
+  ReportFilters,
+  ReportStatusEnum
 } from '../../../models/item-model';
 
 type ItemType = 'lost' | 'found';
@@ -63,6 +64,8 @@ type ItemType = 'lost' | 'found';
   styleUrl: './admin-item-list-page.scss',
 })
 export class AdminItemListPage implements OnInit, AfterViewInit, OnDestroy {
+  protected readonly REPORT_STATUS = ReportStatusEnum;
+  protected readonly ReportStatusEnum = ReportStatusEnum;
   private route = inject(ActivatedRoute);
   private itemService = inject(ItemService);
   private authService = inject(AuthService);
@@ -200,9 +203,12 @@ export class AdminItemListPage implements OnInit, AfterViewInit, OnDestroy {
         this.isLoading.set(true);
       }),
       switchMap(([data]) => {
+        let statusId: number = ReportStatusEnum.APPROVED;
+        if (data['status'] === 'resolved') statusId = ReportStatusEnum.RESOLVED;
+        if (data['status'] === 'claimed') statusId = ReportStatusEnum.CLAIMED;
         const filters: ReportFilters = {
           type: this.itemType(),
-          status: data['status'] || 'approved',
+          status_id: statusId,
           query: this.searchQuery(),
           page: this.currentPage(),
           size: this.pageSize()
@@ -272,9 +278,9 @@ export class AdminItemListPage implements OnInit, AfterViewInit, OnDestroy {
     const item = this.itemToUnarchive();
     if (!item) return;
 
-    const targetStatus: string = 'approved';
+    const targetStatusId = ReportStatusEnum.APPROVED;
 
-    this.adminService.updateReportStatus(item.report_id, targetStatus)
+    this.adminService.updateReportStatus(item.report_id, targetStatusId)
       .pipe(
         tap(() => {
           this.adminService.clearCache();

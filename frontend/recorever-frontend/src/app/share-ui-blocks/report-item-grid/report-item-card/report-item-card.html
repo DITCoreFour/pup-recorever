@@ -135,7 +135,7 @@
         </div>
       }
 
-      @else if (report().status !== 'claimed') {
+      @else if (report().status.status_id !== ReportStatusEnum.CLAIMED) {
         <button
               mat-button class="view-ticket-btn"
               (click)="onTicketClick();
