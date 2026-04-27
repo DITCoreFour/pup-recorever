@@ -23,7 +23,8 @@ import {
   Report,
   ReportFilters,
   ReportStatus,
-  PaginatedResponse
+  PaginatedResponse,
+  ReportStatusEnum
 } from '../../../models/item-model';
 
 import {
@@ -105,9 +106,11 @@ export class ClaimStatusPage implements OnInit, AfterViewInit, OnDestroy {
     return [...new Set(locs)];
   });
 
-  public filteredReports = computed((): Report[] => {
-    let data = this.reports().filter((r: Report) => r.status !== 'claimed');
-    
+  protected filteredReports = computed(() => {
+    let data = this.reports().filter(
+      r => r.status.status_id !== ReportStatusEnum.CLAIMED
+    );
+
     const filter = this.currentFilter();
     const surrenderedFilter = this.currentSurrenderedLocationFilter();
 
@@ -158,13 +161,14 @@ export class ClaimStatusPage implements OnInit, AfterViewInit, OnDestroy {
       tap((): void => this.isLoading.set(true)),
       switchMap(() => {
         const currentStatus = this.currentStatusFilter();
-        const statusParam: ReportStatus | undefined =
-            currentStatus === 'All Statuses' ? undefined :
-                (currentStatus as unknown as ReportStatus);
+        let statusId: number | undefined = undefined;
+        if (currentStatus !== 'All Statuses') {
+          statusId = (currentStatus as any).status_id ?? currentStatus;
+        }
 
         const filters: ReportFilters = {
           type: 'found' as const,
-          status: statusParam,
+          status_id: statusId,
           query: this.searchQuery(),
           page: this.currentPage(),
           size: this.pageSize()
@@ -257,7 +261,7 @@ export class ClaimStatusPage implements OnInit, AfterViewInit, OnDestroy {
     this.selectedReport.set(null);
   }
 
-  public onStatusChanged(newStatus: string): void {
+  protected onStatusChanged(statusId: ReportStatusEnum): void {
     const report = this.selectedReport();
 
     this.reportCache.clear();
@@ -269,8 +273,8 @@ export class ClaimStatusPage implements OnInit, AfterViewInit, OnDestroy {
     let actionRoute = '';
     let queryParams: Params | undefined = undefined;
 
-    switch (newStatus.toLowerCase()) {
-      case 'claimed':
+    switch (statusId) {
+      case ReportStatusEnum.CLAIMED:
         message = 'Item successfully marked as Claimed';
         actionLabel = 'View Archive';
         actionRoute = '/admin/archive/claimed';
@@ -278,10 +282,10 @@ export class ClaimStatusPage implements OnInit, AfterViewInit, OnDestroy {
           queryParams = { highlightId: report.report_id };
         }
         break;
-      case 'approved':
+      case ReportStatusEnum.APPROVED:
         message = 'Item status updated to Verified';
         break;
-      case 'rejected':
+      case ReportStatusEnum.REJECTED:
         message = 'Item status updated to Denied';
         break;
       default:

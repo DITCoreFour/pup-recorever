@@ -25,34 +25,33 @@ public class ImageController {
 
     @Autowired
     private ImageRepository imageRepository;
-    
+
     @Autowired
     private ImageService imageService;
 
     private ImageResponseDTO convertToDto(Image image) {
         if (image == null) return null;
-        
+
         ImageResponseDTO dto = new ImageResponseDTO();
         dto.setImageId(image.getImageId());
         dto.setFileName(image.getFileName());
         dto.setFileType(image.getFileType());
         dto.setReportId(image.getReportId());
-        dto.setClaimId(image.getClaimId());
         dto.setUploadedAt(image.getUploadedAt());
 
         String imageUrl = ServletUriComponentsBuilder.fromCurrentContextPath()
                 .path("/api/image/download/")
-                .path(image.getFilePath()) 
+                .path(image.getFilePath())
                 .toUriString();
         dto.setImageUrl(imageUrl);
-        
+
         return dto;
     }
 
     @GetMapping("/images")
     public List<ImageResponseDTO> getAllImages() {
         return imageRepository.findAll().stream()
-                .filter(img -> !img.isDeleted()) 
+                .filter(img -> !img.isDeleted())
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
     }
@@ -69,11 +68,11 @@ public class ImageController {
     @DeleteMapping("/image/{id}")
     public ResponseEntity<Void> deleteImage(@PathVariable int id) {
         return imageRepository.findById(id).map(image -> {
-            imageService.deleteFile(image.getFilePath()); 
+            imageService.deleteFile(image.getFilePath());
 
-            image.setDeleted(true); 
-            imageRepository.save(image); 
-            
+            image.setDeleted(true);
+            imageRepository.save(image);
+
             return ResponseEntity.ok().<Void>build();
         }).orElse(ResponseEntity.notFound().build());
     }
@@ -88,36 +87,37 @@ public class ImageController {
             Image image = new Image(file.getOriginalFilename(),
                     file.getContentType(), uniqueFileName, id);
             Image savedImage = imageRepository.save(image);
-            return convertToDto(savedImage); 
+            return convertToDto(savedImage);
         }).collect(Collectors.toList());
 
         return ResponseEntity.ok(uploadedImages);
     }
 
-    @PostMapping("/claim/{id}/upload-image")
-    public ResponseEntity<ImageResponseDTO> uploadClaimImage(
-            @PathVariable int id,
-            @RequestParam("file") MultipartFile file) {
+    // Useless??
+    // @PostMapping("/claim/{id}/upload-image")
+    // public ResponseEntity<ImageResponseDTO> uploadClaimImage(
+    //         @PathVariable int id,
+    //         @RequestParam("file") MultipartFile file) {
 
-        String uniqueFileName = imageService.storeFile(file);
-        Image image = new Image(file.getOriginalFilename(),
-                file.getContentType(), uniqueFileName, id, true);
-        Image savedImage = imageRepository.save(image);
-        return ResponseEntity.ok(convertToDto(savedImage)); 
-    }
+    //     String uniqueFileName = imageService.storeFile(file);
+    //     Image image = new Image(file.getOriginalFilename(),
+    //             file.getContentType(), uniqueFileName, id, true);
+    //     Image savedImage = imageRepository.save(image);
+    //     return ResponseEntity.ok(convertToDto(savedImage));
+    // }
 
     @GetMapping("/image/download/{fileName:.+}")
     public ResponseEntity<Resource> downloadFile(@PathVariable String fileName) {
         Path filePath = imageService.loadFileAsResource(fileName);
         try {
             Resource resource = new UrlResource(filePath.toUri());
-            
+
             if (resource.exists() || resource.isReadable()) {
                 String contentType = Files.probeContentType(filePath);
                 if (contentType == null) {
                     contentType = "application/octet-stream";
                 }
-                
+
                 return ResponseEntity.ok()
                         .contentType(MediaType.parseMediaType(contentType))
                         .header(HttpHeaders.CONTENT_DISPOSITION,

@@ -67,13 +67,13 @@
   @if (isAdmin() && report.type === 'found') {
     <app-claim-form-modal
       [claimData]="report"
-      [isArchive]="report.status === 'claimed'"
-      [isReadOnly]="report.status === 'claimed'"
+      [isArchive]="report.status.status_id === ReportStatusEnum.CLAIMED"
+      [isReadOnly]="report.status.status_id === ReportStatusEnum.CLAIMED"
       (close)="onModalClose()"
       (statusChange)="onStatusChange($event)">
     </app-claim-form-modal>
   }
-  @else if (!isAdmin() && report.status === 'matched'
+  @else if (!isAdmin() && report.status.status_id === ReportStatusEnum.MATCHED
       && report.type === 'lost') {
     <app-match-detail-modal
       [report]="report"
@@ -87,8 +87,8 @@
       [currentUserId]="currentUserId()"
       [userProfilePicture]="getUserProfilePicture()"
       [isAdmin]="isAdmin()"
-      [isArchiveView]="report.status === 'matched' ||
-          report.status === 'claimed'"
+      [isArchiveView]="report.status.status_id === ReportStatusEnum.MATCHED ||
+          report.status.status_id === ReportStatusEnum.CLAIMED"
       (close)="onModalClose()"
       (viewTicket)="onViewTicket()"
       (editClicked)="onEdit()"

@@ -48,8 +48,11 @@ import {
   ClaimFormModal 
 } from '../../../modal/claim-form-modal/claim-form-modal';
 
-import type {
-  PaginatedResponse, Report, ReportFilters
+import {
+  PaginatedResponse,
+  Report,
+  ReportFilters,
+  ReportStatusEnum
 } from '../../../models/item-model';
 
 type ItemType = 'lost' | 'found';
@@ -74,6 +77,8 @@ type ItemType = 'lost' | 'found';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AdminItemListPage implements OnInit, AfterViewInit, OnDestroy {
+  protected readonly REPORT_STATUS = ReportStatusEnum;
+  protected readonly ReportStatusEnum = ReportStatusEnum;
   private route = inject(ActivatedRoute);
   private itemService = inject(ItemService);
   private authService = inject(AuthService);
@@ -242,23 +247,19 @@ export class AdminItemListPage implements OnInit, AfterViewInit, OnDestroy {
         );
         this.isLoading.set(true);
       }),
-      switchMap(([data]: [Data, void]) => {
-        
-        const fetchStatus = this.isArchiveView() 
-            ? data['status'] 
-            : (this.currentStatusFilter() === 'All Statuses' 
-                ? undefined 
-                : this.currentStatusFilter());
-
-        const fetchFilters: ReportFilters = {
+      switchMap(([data]) => {
+        let statusId: number = ReportStatusEnum.APPROVED;
+        if (data['status'] === 'resolved') statusId = ReportStatusEnum.RESOLVED;
+        if (data['status'] === 'claimed') statusId = ReportStatusEnum.CLAIMED;
+        const filters: ReportFilters = {
           type: this.itemType(),
-          status: fetchStatus,
+          status_id: statusId,
           query: this.searchQuery(),
           page: this.currentPage(),
           size: this.pageSize()
         };
 
-        return this.itemService.getReports(fetchFilters).pipe(
+        return this.itemService.getReports(filters).pipe(
           catchError(() => of({ 
             items: [], 
             totalItems: 0, 
@@ -357,9 +358,9 @@ export class AdminItemListPage implements OnInit, AfterViewInit, OnDestroy {
     const item = this.itemToUnarchive();
     if (!item) return;
 
-    const targetStatus = 'approved';
+    const targetStatusId = ReportStatusEnum.APPROVED;
 
-    this.adminService.updateReportStatus(item.report_id, targetStatus)
+    this.adminService.updateReportStatus(item.report_id, targetStatusId)
       .pipe(
         tap((): void => {
           this.adminService.clearCache();

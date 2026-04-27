@@ -1,12 +1,33 @@
-<form [formGroup]="reportForm" (ngSubmit)="onSubmit()" class="item-report-form">
+<form [formGroup]="reportForm"
+      (ngSubmit)="onSubmit()"
+      class="item-report-form">
 
-  <div class="form-field">
-    <mat-form-field appearance="outline" class="full-width">
+  <div class="form-field joined-inputs-container">
+    <mat-form-field appearance="outline" class="item-name-field">
       <mat-label>Item Name</mat-label>
-      <input matInput formControlName="item_name" />
-      @if (reportForm.controls.item_name.invalid &&
-          reportForm.controls.item_name.touched) {
+
+      <input matInput formControlName="item_name"/>
+
+      @if (reportForm.controls.item_name.invalid
+           && reportForm.controls.item_name.touched) {
         <mat-error>Item name is required.</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="category-field">
+      <mat-label>Category</mat-label>
+
+      <mat-select formControlName="category">
+        @for (cat of categories; track cat.category_id) {
+          <mat-option [value]="cat.category_id">
+            {{ cat.category_name }}
+          </mat-option>
+        }
+      </mat-select>
+
+      @if (reportForm.controls.category.invalid
+           && reportForm.controls.category.touched) {
+        <mat-error>Category is required.</mat-error>
       }
     </mat-form-field>
   </div>
@@ -30,6 +51,26 @@
       }
     </mat-form-field>
   </div>
+
+  @if (formType === 'found') {
+    <div class="form-field">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Surrendered Location</mat-label>
+        <mat-select formControlName="surrendered_location">
+          @for (opt of surrenderOptions; track opt.surrendered_location_id) {
+            <mat-option [value]="opt.surrendered_location_id">
+              {{ opt.surrendered_location_name }}
+            </mat-option>
+          }
+        </mat-select>
+
+        @if (reportForm.controls.surrendered_location.invalid
+            && reportForm.controls.surrendered_location.touched) {
+          <mat-error>Please select where the item was surrendered.</mat-error>
+        }
+      </mat-form-field>
+    </div>
+  }
 
   <div class="form-field">
     <mat-form-field appearance="outline" class="full-width">
@@ -60,6 +101,7 @@
       <textarea
           matInput
           formControlName="description"
+          [placeholder]="placeholderText"
           rows="5"></textarea>
       
       <mat-hint align="end">
@@ -76,7 +118,7 @@
 
   <div class="form-field photo-upload-field">
     <label>Upload Photo <span class="required-asterisk">*</span>: 
-    <small>(Required, max 5 photos)</small>
+    <small>(Required, max 5 photos, max 10MB each)</small>
     </label>
 
     <input

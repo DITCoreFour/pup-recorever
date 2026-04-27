@@ -30,8 +30,10 @@ import { ItemService } from '../../../core/services/item-service';
 import { AuthService } from '../../../core/auth/auth-service';
 import { ClaimService } from '../../../core/services/claim-service';
 
-import type {
-  PaginatedResponse, Report, ReportFilters
+import { ReportStatusEnum,
+         PaginatedResponse,
+         Report,
+         ReportFilters
 } from '../../../models/item-model';
 
 // Modals
@@ -121,7 +123,7 @@ export class UserItemListPage implements OnInit, AfterViewInit, OnDestroy {
 
   public filters = signal<ReportFilters>({
       type: 'found',
-      status: 'approved',
+      status_id: ReportStatusEnum.APPROVED,
   });
 
   public visibleReports = computed((): Report[] => {
@@ -186,7 +188,7 @@ export class UserItemListPage implements OnInit, AfterViewInit, OnDestroy {
       )
       .subscribe((type: ItemType) => {
         this.itemType.set(type);
-        this.filters.set({ type, status: 'approved' });
+        this.filters.set({ type, status_id: ReportStatusEnum.APPROVED });
         this.resetPagination();
       });
     this.refreshTrigger$.pipe(
@@ -259,11 +261,17 @@ export class UserItemListPage implements OnInit, AfterViewInit, OnDestroy {
 
   private applyStatusFilter(statusVal: string, type: ItemType): void {
     const isResolved = statusVal === 'resolved';
-    const apiStatus = type === 'found'
-      ? (isResolved ? 'claimed' : 'approved')
-      : (isResolved ? 'resolved' : 'approved');
+    let apiStatusId: ReportStatusEnum;
 
-    this.filters.update(curr => ({ ...curr, status: apiStatus as any }));
+    if (type === 'found') {
+      apiStatusId = isResolved ?
+                    ReportStatusEnum.CLAIMED : ReportStatusEnum.APPROVED;
+    } else {
+      apiStatusId = isResolved ?
+                    ReportStatusEnum.RESOLVED : ReportStatusEnum.APPROVED;
+    }
+
+    this.filters.update(curr => ({ ...curr, status_id: apiStatusId }));
     this.resetPagination();
   }
 

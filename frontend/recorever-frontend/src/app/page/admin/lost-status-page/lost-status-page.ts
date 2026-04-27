@@ -11,7 +11,7 @@ import {
   ChangeDetectionStrategy
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, Params } from '@angular/router';
+import { RouterModule, ActivatedRoute, Params } from '@angular/router';
 import {
   tap,
   catchError,
@@ -33,7 +33,8 @@ import { Filter, FilterState } from '../../../share-ui-blocks/filter/filter';
 import {
   Report,
   ReportFilters,
-  PaginatedResponse
+  PaginatedResponse,
+  ReportStatusEnum
 } from '../../../models/item-model';
 import { ItemService } from '../../../core/services/item-service';
 import { AdminService } from '../../../core/services/admin-service';
@@ -170,13 +171,16 @@ export class LostStatusPage implements OnInit, AfterViewInit, OnDestroy {
     this.refreshTrigger$.pipe(
       tap((): void => this.isLoading.set(true)),
       switchMap(() => {
-        const apiStatus = this.currentStatusFilter() === 'All Statuses'
-          ? undefined
-          : (this.currentStatusFilter() as Report['status']);
+        const currentStatus = this.currentStatusFilter();
+
+        let statusId: number | undefined = undefined;
+        if (currentStatus !== 'All Statuses') {
+          statusId = (currentStatus as any).status_id ?? currentStatus;
+        }
 
         const filters: ReportFilters = {
           type: 'lost' as const,
-          status: apiStatus,
+          status_id: statusId,
           query: this.currentSearchQuery() || undefined,
           page: this.currentPage(),
           size: this.pageSize()
@@ -204,11 +208,9 @@ export class LostStatusPage implements OnInit, AfterViewInit, OnDestroy {
       }),
       takeUntil(this.destroy$)
     ).subscribe((response: PaginatedResponse<Report>) => {
-      
-      const filtered = response.items.filter((item: Report) => {
-        const stat = item.status?.toLowerCase();
-        return stat !== 'resolved' && stat !== 'claimed';
-      });
+      const filtered = response.items.filter(item =>
+        item.status?.status_id !== ReportStatusEnum.RESOLVED
+      );
 
       this.reports.update((existing: Report[]) =>
         this.currentPage() === 1 ? filtered : [...existing, ...filtered]
@@ -239,16 +241,16 @@ export class LostStatusPage implements OnInit, AfterViewInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  public onStatusUpdate(newStatus: string): void {
+  public onStatusUpdate(newStatus: ReportStatusEnum): void {
     const item = this.selectedReport();
     if (!item) return;
 
     this.adminService.updateReportStatus(item.report_id, newStatus).subscribe({
-      next: (): void => {
+      next: () => {
         this.onStatusUpdated();
-        this.toastService.showSuccess(
-            `Item marked as ${newStatus} successfully.`
-        );
+          this.toastService.showSuccess(
+            `Item marked as ${this.getStatusNameById(newStatus)} successfully.`
+          );
       },
       error: (): void => {
         this.toastService.showError(
@@ -256,6 +258,19 @@ export class LostStatusPage implements OnInit, AfterViewInit, OnDestroy {
         );
       }
     });
+  }
+
+  private getStatusNameById(statusId: ReportStatusEnum): string {
+    const statusMap: Record<number, string> = {
+      [ReportStatusEnum.PENDING]: 'pending',
+      [ReportStatusEnum.APPROVED]: 'approved',
+      [ReportStatusEnum.REJECTED]: 'rejected',
+      [ReportStatusEnum.CLAIMED]: 'claimed',
+      [ReportStatusEnum.RESOLVED]: 'resolved',
+      [ReportStatusEnum.MATCHED]: 'matched'
+    };
+
+    return statusMap[statusId] || 'unknown';
   }
 
   public setStatusFilter(status: string): void {
