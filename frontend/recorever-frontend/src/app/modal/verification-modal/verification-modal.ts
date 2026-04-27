@@ -20,8 +20,12 @@ import { Observable, of } from 'rxjs';
 import { UserService } from '../../core/services/user-service';
 import { ToastService } from '../../core/services/toast-service';
 import { AuthService } from '../../core/auth/auth-service';
-import { MessageResponse, ErrorResponse } from '../../models/auth-model';
-
+import {
+  MessageResponse,
+  ErrorResponse,
+  AuthActionResponse
+} from '../../models/auth-model';
+import { User } from '../../models/user-model';
 @Component({
   selector: 'app-verification-modal',
   standalone: true,
@@ -175,15 +179,21 @@ export class VerificationModalComponent implements OnInit, OnDestroy {
     }
   }
 
-  public confirm(): void {
+public confirm(): void {
     const code = this.digits.join('');
     if (code.length !== 5) return;
 
     this.isLoading.set(true);
     this.serverErrorMessage.set(null);
-    
-    this.userService.verifyUserEmail(code).pipe(
-      switchMap((): Observable<unknown> => {
+
+    const verificationRequest$:
+      Observable<AuthActionResponse | MessageResponse> = 
+      this.context === 'forgot-password'
+        ? this.authService.verifyResetCode(code)
+        : this.userService.verifyUserEmail(code);
+
+    verificationRequest$.pipe(
+      switchMap((): Observable<string | User | null> => {
         if (this.context === 'forgot-password') {
           return of('forgot-password-success');
         }
@@ -193,22 +203,26 @@ export class VerificationModalComponent implements OnInit, OnDestroy {
         });
       })
     ).subscribe({
-      next: (res: unknown): void => {
+      next: (res: string | User | null): void => {
         this.isLoading.set(false);
+        this.close.emit(); 
+
         if (res === 'forgot-password-success') {
-          this.toastService.showSuccess('Email verified successfully!');
-          this.close.emit();
+          this.toastService
+            .showSuccess('Email verified! Proceed to change password.');
           this.router.navigate(['/reset-password'], { 
-              queryParams: { email: this.email } 
+            queryParams: { 
+              email: this.email,
+              token: code 
+            } 
           });
-        } else {
+        } else if (res && typeof res !== 'string') {
           this.toastService.showSuccess('Account activated!');
-          this.close.emit();
           this.router.navigate(['/app/browse']);
         }
       },
       error: (err: HttpErrorResponse): void => {
-        this.extractError(err, 'Verification failed. Invalid code.');
+        this.extractError(err, 'Verification failed. Please check the code.');
       }
     });
   }

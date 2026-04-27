@@ -1,3 +1,8 @@
+export interface AuthActionResponse {
+  success: boolean;
+  message: string;
+}
+
 export type LoginRequest = {
   email: string;
   password: string;
@@ -36,6 +41,6 @@ export interface ErrorResponse {
 
 export interface VerificationResponse {
   success: boolean;
-  message?: string;
+  message: string;
   error?: string;
 }
