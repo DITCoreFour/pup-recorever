@@ -70,9 +70,14 @@ public class ReportService {
     private SurrenderedLocationRepository surrenderedLocationRepo;
 
     private int getAdminUserId() {
-        return userRepository.findFirstByRoleAndIsDeletedFalse("admin")
+        return userRepository.findFirstByRoleAndIsDeletedFalse("superadmin")
                 .map(User::getUserId)
-                .orElse(1); // Default to 1 as a safety fallback
+                .orElseGet(() -> 
+                    // Fallback to standard admin if no superadmin is found
+                    userRepository.findFirstByRoleAndIsDeletedFalse("admin")
+                        .map(User::getUserId)
+                        .orElse(1) // Safety fallback
+                );
     }
 
     @Transactional
