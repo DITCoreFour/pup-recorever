@@ -116,25 +116,55 @@
           </div>
         }
 
-        <div class="detail-row">
-          <mat-icon>label</mat-icon>
-          <span class="detail-label">Type:</span>
-          <span class="detail-value">{{ item().type === 'lost' ?
-              'Lost Item' : 'Found Item' }}</span>
+        <div class="two-column-row">
+          <div class="detail-row">
+            <mat-icon>label</mat-icon>
+            <div class="text-group">
+              <span class="detail-label">Type</span>
+              <span class="detail-value">{{ item().type === 'lost' ?
+                  'Lost Item' : 'Found Item' }}</span>
+            </div>
+          </div>
+
+          <div class="detail-row">
+            <mat-icon>category</mat-icon>
+            <div class="text-group">
+              <span class="detail-label">Category</span>
+              <span class="detail-value">{{ categoryName() }}</span>
+            </div>
+          </div>
         </div>
 
-        <div class="detail-row">
-          <mat-icon>location_on</mat-icon>
-          <span class="detail-label">Location:</span>
-          <span class="detail-value">{{ item().location }}</span>
+        <div class="two-column-row">
+          <div class="detail-row">
+            <mat-icon>location_on</mat-icon>
+            <div class="text-group">
+              <span class="detail-label">Location
+                  {{ item().type === 'lost' ? 'Lost' : 'Found' }}</span>
+              <span class="detail-value">{{ item().location }}</span>
+            </div>
+          </div>
+
+          @if (surrenderedLocationName()) {
+            <div class="detail-row">
+              <mat-icon>storefront</mat-icon>
+              <div class="text-group">
+                <span class="detail-label">Surrendered At</span>
+                <span class="detail-value">{{ surrenderedLocationName() }}
+                </span>
+              </div>
+            </div>
+          }
         </div>
 
         <div class="detail-row">
           <mat-icon>calendar_today</mat-icon>
-          <span class="detail-label">Date {{ item().type === 'lost' ?
-              'Lost' : 'Found' }}:</span>
-          <span class="detail-value">{{ (item().date_lost_found ||
-              item().date_reported) | date: 'mediumDate' }}</span>
+          <div class="text-group">
+            <span class="detail-label">Date
+                {{ item().type === 'lost' ? 'Lost' : 'Found' }}</span>
+            <span class="detail-value">{{ (item().date_lost_found ||
+                item().date_reported) | date: 'mediumDate' }}</span>
+          </div>
         </div>
 
         <div class="description-section">

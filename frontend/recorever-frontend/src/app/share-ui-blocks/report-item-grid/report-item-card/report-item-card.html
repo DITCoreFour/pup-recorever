@@ -36,8 +36,9 @@
       }
     </div>
 
-    <div class="status-overlay">
+    <div class="status-overlay badges-wrapper">
       <app-status-badge [status]="displayStatus()"></app-status-badge>
+      <span class="category-badge">{{ categoryName() }}</span>
     </div>
 
     @if (isOwner() || report().claim_code) {
@@ -91,10 +92,19 @@
     <h3 class="item-title">{{ report().item_name }}</h3>
 
     <div class="details-group">
+
       <div class="detail-item">
         <mat-icon>location_on</mat-icon>
         <span class="text">{{ report().location }}</span>
       </div>
+
+      @if (surrenderedLocationName()) {
+        <div class="detail-item">
+          <mat-icon>storefront</mat-icon>
+          <span class="label">Surrendered at:</span>
+          <span class="value">{{ surrenderedLocationName() }}</span>
+        </div>
+      }
 
       <div class="detail-item highlighted">
         <mat-icon>calendar_today</mat-icon>

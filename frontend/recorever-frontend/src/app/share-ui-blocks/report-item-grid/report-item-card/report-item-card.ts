@@ -229,4 +229,16 @@ export class ReportItemCard {
   public onCloseModal(): void {
     this.activeModalMode.set(null);
   }
+
+  categoryName = computed((): string => {
+    return (this.report() as any).category_name || 'Uncategorized';
+  });
+
+  surrenderedLocationName = computed((): string | null => {
+    const r = this.report() as any;
+    if (r.type === 'found' && r.surrendered_location_name) {
+      return r.surrendered_location_name;
+    }
+    return null;
+  });
 }

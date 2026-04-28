@@ -251,4 +251,16 @@ export class ItemDetailModal {
   protected getOptionTooltip(status: ReportStatusEnum): string {
     return '';
   }
+
+  categoryName = computed((): string => {
+    return (this.item() as any).category_name || 'Uncategorized';
+  });
+
+  surrenderedLocationName = computed((): string | null => {
+    const r = this.item() as any;
+    if (r.type === 'found' && r.surrendered_location_name) {
+      return r.surrendered_location_name;
+    }
+    return null;
+  });
 }
