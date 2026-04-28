@@ -173,7 +173,12 @@ export class AuthService {
 
   isAdmin(): boolean {
     const user = this.getUserFromStorage();
-    return !!user && user.role === 'admin';
+    return !!user && (user.role === 'admin' || user.role === 'superadmin');
+  }
+  
+  isSuperAdmin(): boolean {
+    const user = this.getUserFromStorage();
+    return !!user && user.role === 'superadmin';
   }
 
   private getUserFromStorage(): User | null {
