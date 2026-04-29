@@ -9,12 +9,24 @@ import {
   AbstractControl,
   ValidationErrors
 } from '@angular/forms';
-import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import {
+  MatAutocompleteModule,
+  MatAutocompleteSelectedEvent
+} from '@angular/material/autocomplete';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
-import { BehaviorSubject, map, Observable, startWith } from 'rxjs';
+import {
+  BehaviorSubject,
+  map,
+  Observable,
+  startWith,
+  debounceTime,
+  distinctUntilChanged,
+  switchMap,
+  of
+} from 'rxjs';
 import {
     Report,
     ItemReportForm as ItemFormType,
@@ -23,13 +35,16 @@ import {
     FilePreview,
     StandardLocations,
     Category,
-    SurrenderLocation
+    SurrenderLocation,
+    ReportStatusEnum
 } from '../../models/item-model';
+import { User } from '../../models/user-model';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatIcon } from "@angular/material/icon";
 import { MatSelectModule } from '@angular/material/select';
 import { ToastService } from '../../core/services/toast-service';
 import { ItemService } from '../../core/services/item-service';
+import { UserService } from '../../core/services/user-service';
 import { environment } from '../../../environments/environment';
 import { ConfirmationModal } from '../../modal/confirmation-modal/confirmation-modal';
 
@@ -57,6 +72,7 @@ export class ItemReportForm implements OnInit {
   @Input() initialData?: Report | null;
   @Input() isEditMode = false;
   @Input() formType: 'lost' | 'found' = 'lost';
+  @Input() isAdminView = false;
 
   @Output() formSubmitted = new EventEmitter<ReportSubmissionWithFiles>();
   @Output() formCancelled = new EventEmitter<void>();
@@ -76,10 +92,13 @@ export class ItemReportForm implements OnInit {
   protected submissionError: string | null = null;
   protected showConfirmationModal = false;
   protected imageError = false;
+  protected filteredUsers$!: Observable<User[]>;
+  protected selectedUser: User | null = null;
 
   private fb = inject(FormBuilder);
   private toastService = inject(ToastService);
   private itemService = inject(ItemService);
+  private userService = inject(UserService);
 
   readonly placeholderText =
       'Please include brand, color, or unique markings '
@@ -105,6 +124,34 @@ export class ItemReportForm implements OnInit {
 
   constructor() {
     this.reportForm = this.fb.group({
+      reported_by: [
+        '',
+        { validators: [
+            Validators.required,
+            (control: AbstractControl): ValidationErrors | null => {
+              const value = control.value;
+
+              if (typeof value === 'string') {
+                return value.trim().length === 0 ? { required: true } : null;
+              }
+
+              if (value && typeof value === 'object') {
+                return null;
+              }
+
+              return { required: true };
+            }
+          ]
+        }
+      ],
+      reporter_email: [
+        '',
+        { validators: [Validators.email] }
+      ],
+      reporter_phone: [
+        '',
+        { validators: [Validators.pattern('^[0-9]*$')] }
+      ],
       item_name: ['', {
         validators: [Validators.required, Validators.maxLength(100)],
         updateOn: 'blur'
@@ -151,6 +198,40 @@ export class ItemReportForm implements OnInit {
   }
 
   ngOnInit(): void {
+    if (!this.isAdminView) {
+      const control = this.reportForm.get('reported_by');
+      control?.clearValidators();
+      control?.updateValueAndValidity();
+    }
+    if (this.isAdminView) {
+      this.filteredUsers$ = this.reportForm.controls.reported_by.valueChanges
+      .pipe(
+        startWith(''),
+        debounceTime(300),
+        distinctUntilChanged(),
+        switchMap(value => {
+          if (typeof value === 'string' && value.length >= 2) {
+            return this.userService.searchUsers(value);
+          }
+          return of([]);
+        })
+      );
+
+      this.reportForm.controls.reported_by.valueChanges
+        .pipe(distinctUntilChanged())
+        .subscribe(value => {
+          const selectedName = this.selectedUser
+            ? `${this.selectedUser.first_name} ${this.selectedUser.last_name}`
+              .trim()
+            : null;
+
+          if (typeof value === 'string' && value.trim() !== selectedName) {
+            this.selectedUser = null;
+            this.reportForm.controls.reporter_email.enable();
+          }
+        });
+    }
+
     this.itemService.getCategories().subscribe({
       next: (data) => {
         this.categories = data;
@@ -230,6 +311,38 @@ export class ItemReportForm implements OnInit {
         });
       }
     }
+  }
+
+  onUserSelected(event: MatAutocompleteSelectedEvent): void {
+    const user = event.option.value as User;
+
+    this.selectedUser = user;
+
+    this.reportForm.patchValue({
+      reported_by: `${user.first_name} ${user.last_name}`,
+      reporter_email: user.email
+    });
+
+    this.reportForm.controls.reporter_email.disable();
+  }
+
+  displayUser(user: User | string): string {
+    if (!user) return '';
+    if (typeof user === 'string') return user;
+    return `${user.first_name} ${user.last_name}`;
+  }
+
+  protected getProfileImageUrl(path: string | null): string {
+    if (!path) {
+      return 'assets/default-avatar.png';
+    }
+
+    if (path.startsWith('http')) {
+      return path.replace('http://', 'https://');
+    }
+
+    const secureBaseUrl = environment.apiUrl.replace('http://', 'https://');
+    return `${secureBaseUrl}/image/download/${path}`;
   }
 
   private setupFiltering(): void {
@@ -331,6 +444,8 @@ export class ItemReportForm implements OnInit {
     this.loadingMessage = this.isEditMode ? 
                 'Updating Report...' : 'Submitting...';
 
+    const rawForm = this.reportForm.getRawValue();
+
     const formatDateForMySQL = (dateInput: string | Date | null): string => {
         if (!dateInput) return '';
         const d = new Date(dateInput);
@@ -361,8 +476,14 @@ export class ItemReportForm implements OnInit {
 
     const finalPayload: ReportSubmissionWithFiles = {
       ...basePayload,
+      reported_by_user_id: this.selectedUser ? this.selectedUser.user_id : null,
+      reported_by: rawForm.reported_by,
+      reporter_email: rawForm.reporter_email,
+      reporter_phone: rawForm.reporter_phone,
       report_id: this.isEditMode ? this.initialData?.report_id : undefined,
-      status: 'pending',
+      status: this.isAdminView
+              ? ReportStatusEnum.APPROVED
+              : ReportStatusEnum.PENDING,
       date_lost_found:
         formatDateForMySQL(this.reportForm.controls.date_lost_found.value),
       date_reported: formatDateForMySQL(new Date()),

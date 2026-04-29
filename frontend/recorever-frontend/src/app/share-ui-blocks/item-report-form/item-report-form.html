@@ -1,6 +1,61 @@
 <form [formGroup]="reportForm"
       (ngSubmit)="onSubmit()"
       class="item-report-form">
+  
+  @if (isAdminView) {
+    <div class="admin-contact-section">
+      <h3 class="section-title">Contact Information</h3>
+      <div class="form-row">
+        <h3>Reported by</h3>
+        <mat-form-field appearance="outline" class="flex-2">
+          <mat-label>Name:</mat-label>
+          <input matInput
+                 formControlName="reported_by"
+                 [matAutocomplete]="userAuto"
+                 placeholder="Enter name or search existing user">
+          <mat-autocomplete #userAuto="matAutocomplete"
+                            [displayWith]="displayUser"
+                            (optionSelected)="onUserSelected($event)">
+            @for (user of filteredUsers$ | async; track user.user_id) {
+              <mat-option [value]="user" class="user-option">
+                <div class="user-search-item">
+                  <img [src]="getProfileImageUrl(user.profile_picture)"
+                       class="mini-avatar">
+                  <div class="user-details">
+                    <span class="user-name">
+                      {{ user.first_name }} {{ user.last_name }}
+                    </span>
+                    <small class="user-email">{{ user.email }}</small>
+                  </div>
+                </div>
+              </mat-option>
+            }
+          </mat-autocomplete>
+          @if (
+            reportForm.controls.reported_by.invalid &&
+            reportForm.controls.reported_by.touched
+          ) {
+            <mat-error>Reporter name is required for admin entries.</mat-error>
+          }
+        </mat-form-field>
+
+        <h3>Contact Details (Optional)</h3>
+        <mat-form-field appearance="outline" class="flex-1">
+          <mat-label>Email</mat-label>
+          <input matInput formControlName="reporter_email"
+                          placeholder="example.email.com">
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="flex-1">
+          <mat-label>Phone</mat-label>
+          <input matInput formControlName="reporter_phone"
+                          placeholder="e.g. 09171234567">
+        </mat-form-field>
+      </div>
+    </div>
+
+    <h3 class="section-title">Item Details</h3>
+  }
 
   <div class="form-field joined-inputs-container">
     <mat-form-field appearance="outline" class="item-name-field">
