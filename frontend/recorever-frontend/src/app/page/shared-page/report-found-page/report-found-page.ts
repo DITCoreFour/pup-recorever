@@ -33,6 +33,7 @@ export class ReportFoundPage implements OnInit {
   protected isEditMode = signal<boolean>(false);
   protected pageTitle = signal<string>('Report Found Item');
   protected initialData = signal<Report | null>(null);
+  protected isAdminMode = false;
 
   ngOnInit(): void {
     const state = history.state;
@@ -41,6 +42,8 @@ export class ReportFoundPage implements OnInit {
       this.initialData.set(state.data as Report);
       this.pageTitle.set('Edit Report Found Item');
     }
+
+    this.isAdminMode = this.router.url.includes('/admin');
   }
 
   handleSubmission(data: FinalReportSubmission & { files?: File[] }): void {
