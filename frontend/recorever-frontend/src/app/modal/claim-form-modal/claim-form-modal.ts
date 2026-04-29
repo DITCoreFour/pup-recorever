@@ -548,4 +548,16 @@ export class ClaimFormModal implements OnInit {
   onClose(): void {
     this.close.emit();
   }
+
+  protected categoryName = computed((): string => {
+    return (this.report() as any)?.category_name || 'Uncategorized';
+  });
+
+  protected surrenderedLocationName = computed((): string | null => {
+    const r = this.report() as any;
+    if (r?.type === 'found' && r?.surrendered_location_name) {
+      return r.surrendered_location_name;
+    }
+    return null;
+  });
 }
