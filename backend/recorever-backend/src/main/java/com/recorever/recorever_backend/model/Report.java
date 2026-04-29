@@ -22,9 +22,13 @@ public class Report {
     @JsonProperty("report_id")
     private int reportId;
 
+    @OneToOne(mappedBy = "report", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @JsonProperty("details")
+    private ReportDetail details;
+
     @Column(name = "user_id")
     @JsonProperty("user_id")
-    private int userId;
+    private Integer userId;
 
     private String type;
 
