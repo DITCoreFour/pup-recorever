@@ -37,9 +37,11 @@
                (click)="closeReportDropdown()">
                My Reports
             </a>
-            <a class="dropdown-item" routerLink="/null"
+            <a class="dropdown-item"
+                [routerLink]="AppPaths.ADMIN_REPORT_FOUND"
                 (click)="closeReportDropdown()">Report found item</a>
-            <a class="dropdown-item" routerLink="/null"
+            <a class="dropdown-item"
+                [routerLink]="AppPaths.ADMIN_REPORT_LOST"
                 (click)="closeReportDropdown()">Report lost item</a>
           </div>
         }
@@ -155,13 +157,15 @@
                 class="sidebar-icon" alt="">
             <span>My Reports</span>
           </a>
-          <a class="sidebar-nav-item sub-item" routerLink="/null"
+          <a class="sidebar-nav-item sub-item"
+              [routerLink]="AppPaths.ADMIN_REPORT_FOUND"
               (click)="closeSidebar()">
             <img src="../../../../assets/reported-found-item.png"
                 class="sidebar-icon" alt="">
             <span>Report Found Item</span>
           </a>
-          <a class="sidebar-nav-item sub-item" routerLink="/null"
+          <a class="sidebar-nav-item sub-item"
+              [routerLink]="AppPaths.ADMIN_REPORT_LOST"
               (click)="closeSidebar()">
             <img src="../../../../assets/reported-lost-items.png"
                 class="sidebar-icon" alt="">

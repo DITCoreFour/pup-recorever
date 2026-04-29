@@ -63,6 +63,7 @@ export class AdminHeader implements OnDestroy {
     { initialValue: null }
   );
 
+  protected readonly AppPaths = AppRoutePaths;
   protected isLogoutModalOpen = false;
   protected isProfileDropdownOpen = false;
   protected isReportDropdownOpen = false; 
