@@ -8,19 +8,103 @@ $text-color: #333;
 $secondary-text: #666;
 
 .item-report-form {
-  max-width: 600px;
   margin: 30px auto;
   padding: 20px;
   background-color: white;
   border: 1px solid #000;
   border-radius: 20px;
   box-shadow: 0 4px 4px 0 rgba(0, 0, 0, 0.25);
+  max-width: 600px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  &.admin-mode {
+    max-width: 850px;
+  }
+
+  .admin-contact-section {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+
+    h3.section-title {
+      margin-left: 45px;
+    }
+  }
+
+  .form-row {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    gap: 10px;
+
+    @media (max-width: 426px) {
+      flex-direction: column;
+      gap: 0px;
+    }
+
+    .reported-by-group {
+      width: 35%;
+
+      .flex-2 {
+        width: 100%;
+      }
+
+      @media (max-width: 426px) {
+        width: 100%;
+      }
+    }
+
+    .contact-details-group {
+      width: 65%;
+
+      .field-group {
+        display: flex;
+        flex-direction: row;
+        gap: 10px;
+
+        @media (max-width: 426px) {
+          flex-direction: column;
+          gap: 0px;
+        }
+      }
+
+      .flex-1 {
+        width: 100%;
+      }
+
+      @media (max-width: 426px) {
+        width: 100%;
+      }
+    }
+  }
+
+  .custom-line {
+    border: none;
+    border-top: 1px solid $border-color;
+    margin: 30px;
+  }
+
+  .user-form {
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+
+    &.admin-mode {
+      width: 90%;
+    }
+  }
 
   .joined-inputs-container {
     display: flex;
     gap: 0;
     width: 100%;
     margin-bottom: 20px;
+
+    &.admin-mode {
+      width: 50%;
+    }
 
     .item-name-field {
       flex: 2;
