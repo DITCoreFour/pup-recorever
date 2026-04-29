@@ -146,7 +146,7 @@
       }
     }
 
-    input, select {
+    input {
       width: 100%;
       box-sizing: border-box;
       padding: 0.65rem 1rem;
@@ -162,9 +162,89 @@
         border-color: #800000;
       }
     }
-    
-    select {
+  }
+
+  .custom-select {
+    position: relative;
+    width: 100%;
+    user-select: none;
+
+    .select-trigger {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 0.65rem 1rem;
+      border: 1px solid #e5e7eb;
+      border-radius: 0.5rem;
+      font-size: 0.95rem;
+      color: #333333;
+      background-color: #ffffff;
       cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: border-color 0.2s ease;
+
+      &:hover {
+        border-color: #9ca3af;
+      }
+
+      .dropdown-arrow {
+        color: #6b7280;
+        font-size: 1.1rem;
+        transition: transform 0.2s ease;
+
+        &.open {
+          transform: rotate(180deg);
+        }
+      }
+    }
+
+    .options-container {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      margin-top: 0.35rem;
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 0.5rem;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      z-index: 50;
+      max-height: 250px;
+      overflow-y: auto;
+      animation: fadeIn 0.15s ease-out;
+
+      .custom-option {
+        padding: 0.75rem 1rem;
+        cursor: pointer;
+        border-bottom: 1px solid #f3f4f6;
+        transition: background-color 0.15s ease;
+
+        &:last-child {
+          border-bottom: none;
+        }
+
+        &:hover {
+          background-color: #e8f0fe;
+        }
+
+        &.selected {
+          background-color: #f3f4f6;
+        }
+
+        .option-main {
+          font-weight: 600;
+          font-size: 0.95rem;
+          color: #1f2937;
+        }
+
+        .option-sub {
+          font-size: 0.75rem;
+          color: #64748b;
+          margin-top: 0.2rem;
+          line-height: 1.2;
+        }
+      }
     }
   }
 
@@ -219,4 +299,9 @@
 
 .hidden-file-input {
   display: none !important;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
 }
