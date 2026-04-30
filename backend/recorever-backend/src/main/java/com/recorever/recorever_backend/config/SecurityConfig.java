@@ -49,7 +49,7 @@ public class SecurityConfig {
           "/api/categories",
           "/error"
         ).permitAll()
-        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+        .requestMatchers("/api/admin/**").hasAnyRole("ADMIN", "SUPERADMIN")
 
         // Allow public access to view reports and locations
         .requestMatchers(HttpMethod.GET, "/api/reports").permitAll()
