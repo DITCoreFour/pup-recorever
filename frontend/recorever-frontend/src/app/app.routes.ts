@@ -9,6 +9,7 @@ import { HeaderNFooterOnly
 import { HeaderOnly } from './layout/header-only/header-only';
 import { UserLayout } from './layout/user-layout/user-layout';
 import { AdminLayout } from './layout/admin-layout/admin-layout';
+import { SuperadminLayout } from './layout/superadmin-layout/superadmin-layout';
 
 export const AppRoutePaths = {
   REPORT_LOST: '/app/report-lost',
@@ -175,6 +176,24 @@ export const routes: Routes = [
           .then(m => m.MyReportsPage)
       },
 
+      { path: 'notifications',
+        loadComponent: () => import(
+          './page/shared-page/notification-page/notification-page'
+        ).then(m => m.NotificationPage)
+      },
+      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+    ],
+  },
+  {
+    path: 'superadmin',
+    component: SuperadminLayout,
+    canActivate: [authGuard, adminGuard],
+    children: [
+      { path: 'dashboard',
+        loadComponent: () =>
+          import('./page/admin/admin-dashboard-page/admin-dashboard-page')
+            .then(m => m.AdminDashboardPage)
+      },
       { path: 'notifications',
         loadComponent: () => import(
           './page/shared-page/notification-page/notification-page'
