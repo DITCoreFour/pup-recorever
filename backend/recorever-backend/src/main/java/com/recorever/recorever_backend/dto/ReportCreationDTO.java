@@ -1,5 +1,6 @@
 package com.recorever.recorever_backend.dto;
 
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -11,6 +12,18 @@ import java.util.List;
 
 @Data
 public class ReportCreationDTO {
+
+    private String reported_by;
+
+    private Integer reported_by_user_id;
+
+    @Email(message = "Invalid email format")
+    private String reporter_email;
+
+    private String reporter_phone;
+
+    @NotNull(message = "Status is required")
+    private Integer status;
 
     @NotBlank(message = "Report type is required")
     @Pattern(regexp = "lost|found", message = "Type must be 'lost' or 'found'")

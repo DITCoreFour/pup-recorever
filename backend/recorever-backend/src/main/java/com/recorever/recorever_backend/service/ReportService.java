@@ -1,6 +1,7 @@
 package com.recorever.recorever_backend.service;
 
 import com.recorever.recorever_backend.model.Report;
+import com.recorever.recorever_backend.model.ReportDetail;
 import com.recorever.recorever_backend.repository.ReportRepository;
 import com.recorever.recorever_backend.repository.ReportScheduleRepository;
 import com.recorever.recorever_backend.repository.StatusRepository;
@@ -9,6 +10,7 @@ import com.recorever.recorever_backend.repository.UserRepository;
 import com.recorever.recorever_backend.repository.CategoryRepository;
 import com.recorever.recorever_backend.repository.ClaimRepository;
 import com.recorever.recorever_backend.repository.ImageRepository;
+import com.recorever.recorever_backend.repository.ReportDetailRepository;
 import com.recorever.recorever_backend.model.Category;
 import com.recorever.recorever_backend.model.Image;
 import com.recorever.recorever_backend.model.ReportSchedule;
@@ -66,12 +68,18 @@ public class ReportService {
     private CategoryRepository categoryRepo;
 
     @Autowired
+    private ReportDetailRepository reportDetailRepo;
+
+    @Autowired
     private SurrenderedLocationRepository surrenderedLocationRepo;
 
     private static final int ADMIN_USER_ID = 1;
 
     @Transactional
-    public Map<String, Object> create(int userId, String type, int categoryId,
+    public Map<String, Object> create(int userId, Integer reporterUserId,
+                                      String reporterName, String reporterEmail,
+                                      String reporterPhone, int statusId,
+                                      String type, int categoryId,
                                       String itemName, String location,
                                       Integer surrenderedLocationId,
                                       String description, String dateLostFound) {
@@ -97,7 +105,7 @@ public class ReportService {
             report.setSurrenderedLocation(surrLoc);
         }
 
-        report.setStatus(statusService.getByName(ReportStatus.PENDING));
+        report.setStatus(statusService.getById(statusId));
 
         String surrenderCode = null;
         if ("found".equalsIgnoreCase(type)) {
@@ -108,6 +116,27 @@ public class ReportService {
 
         Report savedReport = repo.save(report);
         int id = savedReport.getReportId();
+
+        if (reporterUserId != null || reporterName != null ||
+            reporterEmail != null || reporterPhone != null) {
+
+            ReportDetail details = new ReportDetail();
+            details.setReport(savedReport);
+
+            Integer finalUserId = (reporterUserId != null) ?
+                                   reporterUserId : userId;
+
+            details.setUserId(finalUserId);
+            details.setPersonName(reporterName);
+            details.setPersonContactEmail(reporterEmail);
+            details.setPersonContactPhone(reporterPhone);
+
+            if (reporterUserId != null) {
+                details.setAdminId(userId);
+            }
+
+            reportDetailRepo.save(details);
+        }
 
         if ("lost".equalsIgnoreCase(type)) {
             LocalDate postDate = LocalDate.now();
@@ -268,9 +297,23 @@ public class ReportService {
             List<Image> images = imageRepo.findByReportIdAndIsDeletedFalse(id);
             report.setImages(images);
 
-            userRepository.findById(report.getUserId()).ifPresent(user -> {
-                report.setReporterName(user.getFullName());
+            reportDetailRepo.findByReportReportId(id).ifPresent(details -> {
+                report.setDetails(details);
+
+                if (details.getAdminId() != null) {
+                    report.setReporterName(details.getPersonName());
+                } else {
+                    userRepository.findById(report.getUserId()).ifPresent(user -> {
+                        report.setReporterName(user.getFullName());
+                    });
+                }
             });
+
+            if (report.getDetails() == null) {
+                userRepository.findById(report.getUserId()).ifPresent(user -> {
+                    report.setReporterName(user.getFullName());
+                });
+            }
 
             scheduleRepo.findByReportId(id).ifPresent(schedule -> {
                 report.setExpiryDate(schedule.getDeleteTime().toString());

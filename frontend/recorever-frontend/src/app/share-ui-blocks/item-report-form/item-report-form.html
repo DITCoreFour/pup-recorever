@@ -1,180 +1,248 @@
 <form [formGroup]="reportForm"
       (ngSubmit)="onSubmit()"
-      class="item-report-form">
+      class="item-report-form"
+      [class.admin-mode]="isAdminView">
+  
+  @if (isAdminView) {
+    <div class="admin-contact-section">
+      <h2 class="section-title">Contact Information</h2>
+      <div class="form-row">
+        <div class="reported-by-group">
+          <h3>Reported by</h3>
+          <mat-form-field appearance="outline" class="flex-2">
+            <mat-label>Name:</mat-label>
+            <input matInput
+                  formControlName="reported_by"
+                  [matAutocomplete]="userAuto"
+                  placeholder="Enter name or search existing user">
+            <mat-autocomplete #userAuto="matAutocomplete"
+                              [displayWith]="displayUser"
+                              (optionSelected)="onUserSelected($event)">
 
-  <div class="form-field joined-inputs-container">
-    <mat-form-field appearance="outline" class="item-name-field">
-      <mat-label>Item Name</mat-label>
+              @for (user of filteredUsers$ | async; track user.user_id) {
+                <mat-option [value]="user" class="user-option">
+                  <div class="user-search-item">
+                    <img [src]="getProfileImageUrl(user.profile_picture)"
+                        class="mini-avatar">
+                    <div class="user-details">
+                      <span class="user-name">
+                        {{ user.first_name }} {{ user.last_name }}
+                      </span>
+                      <small class="user-email">{{ user.email }}</small>
+                    </div>
+                  </div>
+                </mat-option>
+              }
+            </mat-autocomplete>
 
-      <input matInput formControlName="item_name"/>
+            @if (
+              reportForm.controls.reported_by.invalid &&
+              reportForm.controls.reported_by.touched
+            ) {
+              <mat-error>Reporter name is required for admin entries.</mat-error>
+            }
+          </mat-form-field>
+        </div>
 
-      @if (reportForm.controls.item_name.invalid
-           && reportForm.controls.item_name.touched) {
-        <mat-error>Item name is required.</mat-error>
-      }
-    </mat-form-field>
+        <div class="contact-details-group">
+          <h3>Contact Details (Optional)</h3>
+          <div class="field-group">
+            <mat-form-field appearance="outline" class="flex-1">
+              <mat-label>Email</mat-label>
+              <input matInput formControlName="reporter_email"
+                              placeholder="example.email.com">
+            </mat-form-field>
 
-    <mat-form-field appearance="outline" class="category-field">
-      <mat-label>Category</mat-label>
+            <mat-form-field appearance="outline" class="flex-1">
+              <mat-label>Phone</mat-label>
+              <input matInput formControlName="reporter_phone"
+                              placeholder="e.g. 09171234567">
+            </mat-form-field>
+          </div>
+        </div>
+      </div>
 
-      <mat-select formControlName="category">
-        @for (cat of categories; track cat.category_id) {
-          <mat-option [value]="cat.category_id">
-            {{ cat.category_name }}
-          </mat-option>
+      <hr class="custom-line">
+      <h3 class="section-title">Item Details</h3>
+    </div>
+  }
+
+  <div class="user-form" [class.admin-mode]="isAdminView">
+    <div class="form-field joined-inputs-container">
+      <mat-form-field appearance="outline" class="item-name-field">
+        <mat-label>Item Name</mat-label>
+
+        <input matInput formControlName="item_name"/>
+
+        @if (reportForm.controls.item_name.invalid
+            && reportForm.controls.item_name.touched) {
+          <mat-error>Item name is required.</mat-error>
         }
-      </mat-select>
+      </mat-form-field>
 
-      @if (reportForm.controls.category.invalid
-           && reportForm.controls.category.touched) {
-        <mat-error>Category is required.</mat-error>
-      }
-    </mat-form-field>
-  </div>
+      <mat-form-field appearance="outline" class="category-field">
+        <mat-label>Category</mat-label>
 
-  <div class="form-field">
-    <mat-form-field appearance="outline" class="full-width">
-      <mat-label>{{ locationLabel }}</mat-label>
-      <input
-          type="text"
-          matInput
-          formControlName="location"
-          [matAutocomplete]="auto" />
-      <mat-autocomplete #auto="matAutocomplete">
-        @for (location of filteredLocations | async; track location) {
-          <mat-option [value]="location">{{ location }}</mat-option>
-        }
-      </mat-autocomplete>
-      @if (reportForm.controls.location.invalid &&
-          reportForm.controls.location.touched) {
-        <mat-error>Location is required.</mat-error>
-      }
-    </mat-form-field>
-  </div>
-
-  @if (formType === 'found') {
-    <div class="form-field">
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Surrendered Location</mat-label>
-        <mat-select formControlName="surrendered_location">
-          @for (opt of surrenderOptions; track opt.surrendered_location_id) {
-            <mat-option [value]="opt.surrendered_location_id">
-              {{ opt.surrendered_location_name }}
+        <mat-select formControlName="category">
+          @for (cat of categories; track cat.category_id) {
+            <mat-option [value]="cat.category_id">
+              {{ cat.category_name }}
             </mat-option>
           }
         </mat-select>
 
-        @if (reportForm.controls.surrendered_location.invalid
-            && reportForm.controls.surrendered_location.touched) {
-          <mat-error>Please select where the item was surrendered.</mat-error>
+        @if (reportForm.controls.category.invalid
+            && reportForm.controls.category.touched) {
+          <mat-error>Category is required.</mat-error>
         }
       </mat-form-field>
     </div>
-  }
 
-  <div class="form-field">
-    <mat-form-field appearance="outline" class="full-width">
-      <mat-label>{{ dateLabel }}</mat-label>
-      <input
-          matInput
-          [matDatepicker]="picker"
-          formControlName="date_lost_found"
-          placeholder="mm/dd/yyyy"
-       />
-      <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
-      <mat-datepicker #picker></mat-datepicker>
-    
-      @if (reportForm.controls.date_lost_found.touched) {
-        @if (reportForm.controls.date_lost_found.hasError('required')) {
-          <mat-error>Date is required.</mat-error>
+    <div class="form-field">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>{{ locationLabel }}</mat-label>
+        <input
+            type="text"
+            matInput
+            formControlName="location"
+            [matAutocomplete]="auto" />
+        <mat-autocomplete #auto="matAutocomplete">
+          @for (location of filteredLocations | async; track location) {
+            <mat-option [value]="location">{{ location }}</mat-option>
+          }
+        </mat-autocomplete>
+        @if (reportForm.controls.location.invalid &&
+            reportForm.controls.location.touched) {
+          <mat-error>Location is required.</mat-error>
         }
-        @if (reportForm.controls.date_lost_found.hasError('futureDate')) {
-          <mat-error>Future dates are not allowed.</mat-error>
-        }
-      }
-    </mat-form-field>
-  </div>
-
-  <div class="form-field">
-    <mat-form-field appearance="outline" class="full-width">
-      <mat-label>Item Description</mat-label>
-      <textarea
-          matInput
-          formControlName="description"
-          [placeholder]="placeholderText"
-          rows="5"></textarea>
-      
-      <mat-hint align="end">
-        {{ descriptionCharCount }} / 500
-      </mat-hint>
-
-      @if (reportForm.controls.description.invalid &&
-        reportForm.controls.description.touched) {
-        <mat-error>Description is required (min 10 characters).</mat-error>
-      }
-
       </mat-form-field>
-  </div>
+    </div>
 
-  <div class="form-field photo-upload-field">
-    <label>Upload Photo <span class="required-asterisk">*</span>: 
-    <small>(Required, max 5 photos, max 10MB each)</small>
-    </label>
+    @if (formType === 'found') {
+      <div class="form-field">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Surrendered Location</mat-label>
+          <mat-select formControlName="surrendered_location">
+            @for (opt of surrenderOptions; track opt.surrendered_location_id) {
+              <mat-option [value]="opt.surrendered_location_id">
+                {{ opt.surrendered_location_name }}
+              </mat-option>
+            }
+          </mat-select>
 
-    <input
-        #fileInput
-        type="file"
-        accept="image/png, image/jpeg"
-        multiple
-        hidden
-        (change)="onFileSelected($event)"
-    />
-
-    @if (selectedFilesPreview.length === 0
-        && reportForm.controls.photoUrls.length === 0) {
-      <div class="upload-area" (click)="fileInput.click()">
-        <span class="upload-icon">↑</span>
-        <p>Click to select photos</p>
+          @if (reportForm.controls.surrendered_location.invalid
+              && reportForm.controls.surrendered_location.touched) {
+            <mat-error>Please select where the item was surrendered.</mat-error>
+          }
+        </mat-form-field>
       </div>
     }
 
-    <div class="photo-thumbnails">
-      @for (photo of selectedFilesPreview; track $index) {
-        <div class="photo-box">
-          <img [src]="photo.url" [alt]="photo.name" class="photo-thumbnail" />
-          <span class="remove-photo" (click)="removeLocalPhoto($index)">
-            <img src="assets/remove.png" alt="Remove">
-          </span>
+    <div class="form-field">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>{{ dateLabel }}</mat-label>
+        <input
+            matInput
+            [matDatepicker]="picker"
+            formControlName="date_lost_found"
+            placeholder="mm/dd/yyyy"
+        />
+        <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+        <mat-datepicker #picker></mat-datepicker>
+      
+        @if (reportForm.controls.date_lost_found.touched) {
+          @if (reportForm.controls.date_lost_found.hasError('required')) {
+            <mat-error>Date is required.</mat-error>
+          }
+          @if (reportForm.controls.date_lost_found.hasError('futureDate')) {
+            <mat-error>Future dates are not allowed.</mat-error>
+          }
+        }
+      </mat-form-field>
+    </div>
+
+    <div class="form-field">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Item Description</mat-label>
+        <textarea
+            matInput
+            formControlName="description"
+            [placeholder]="placeholderText"
+            rows="5"></textarea>
+        
+        <mat-hint align="end">
+          {{ descriptionCharCount }} / 500
+        </mat-hint>
+
+        @if (reportForm.controls.description.invalid &&
+          reportForm.controls.description.touched) {
+          <mat-error>Description is required (min 10 characters).</mat-error>
+        }
+
+        </mat-form-field>
+    </div>
+
+    <div class="form-field photo-upload-field">
+      <label>Upload Photo <span class="required-asterisk">*</span>: 
+      <small>(Required, max 5 photos, max 10MB each)</small>
+      </label>
+
+      <input
+          #fileInput
+          type="file"
+          accept="image/png, image/jpeg"
+          multiple
+          hidden
+          (change)="onFileSelected($event)"
+      />
+
+      @if (selectedFilesPreview.length === 0
+          && reportForm.controls.photoUrls.length === 0) {
+        <div class="upload-area" (click)="fileInput.click()">
+          <span class="upload-icon">↑</span>
+          <p>Click to select photos</p>
         </div>
       }
-      @for (photoUrlControl of reportForm.controls.photoUrls.controls;
-          track $index) {
-        @if (photoUrlControl.value) {
-          <div class="photo-box existing-photo">
-            <img [src]="photoUrlControl.value" alt="Existing Item Photo"
-                class="photo-thumbnail" />
-            <span class="remove-photo" (click)="removeExistingPhoto($index)">
+
+      <div class="photo-thumbnails">
+        @for (photo of selectedFilesPreview; track $index) {
+          <div class="photo-box">
+            <img [src]="photo.url" [alt]="photo.name" class="photo-thumbnail" />
+            <span class="remove-photo" (click)="removeLocalPhoto($index)">
               <img src="assets/remove.png" alt="Remove">
             </span>
           </div>
         }
-      }
+        @for (photoUrlControl of reportForm.controls.photoUrls.controls;
+            track $index) {
+          @if (photoUrlControl.value) {
+            <div class="photo-box existing-photo">
+              <img [src]="photoUrlControl.value" alt="Existing Item Photo"
+                  class="photo-thumbnail" />
+              <span class="remove-photo" (click)="removeExistingPhoto($index)">
+                <img src="assets/remove.png" alt="Remove">
+              </span>
+            </div>
+          }
+        }
 
-      @if ((selectedFilesPreview.length 
-              + reportForm.controls.photoUrls.length) > 0 && 
-          (selectedFilesPreview.length
-              + reportForm.controls.photoUrls.length) < 5) {
-        <div class="photo-box add-photo-box" (click)="fileInput.click()">
-          <span class="plus-icon">+</span>
-        </div>
+        @if ((selectedFilesPreview.length 
+                + reportForm.controls.photoUrls.length) > 0 && 
+            (selectedFilesPreview.length
+                + reportForm.controls.photoUrls.length) < 5) {
+          <div class="photo-box add-photo-box" (click)="fileInput.click()">
+            <span class="plus-icon">+</span>
+          </div>
+        }
+      </div>
+      
+      @if (imageError) {
+          <mat-error class="photo-error">
+              At least one image is required.
+          </mat-error>
       }
     </div>
-    
-    @if (imageError) {
-        <mat-error class="photo-error">
-            At least one image is required.
-        </mat-error>
-    }
+
   </div>
 
   @if (submissionError) {

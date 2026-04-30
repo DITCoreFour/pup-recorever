@@ -44,6 +44,13 @@ export type Report = {
   photoUrls?: string[];
   images?: { imageUrl: string; fileName: string }[];
   reporter_profile_picture?: string | null;
+  reporter_details?: {
+    reported_by_user_id: number | null;
+    person_name: string;
+    person_email: string;
+    person_phone: string;
+    admin_id: number | null;
+  };
 };
 
 export type ReportFilters = {
@@ -72,6 +79,9 @@ export const StandardRelativeDateFilters: string[] = [
 ];
 
 export type ItemReportForm = FormGroup<{
+  reported_by: FormControl<string | null>;
+  reporter_email: FormControl<string | null>;
+  reporter_phone: FormControl<string | null>;
   item_name: FormControl<string | null>;
   category: FormControl<number | null>;
   location: FormControl<string | null>;
@@ -82,6 +92,10 @@ export type ItemReportForm = FormGroup<{
 }>;
 
 export type ReportSubmissionPayload = {
+  reported_by_user_id?: number | null;
+  reported_by?: string | null;
+  reporter_email?: string | null;
+  reporter_phone?: string | null;
   type: 'lost' | 'found';
   item_name: string;
   category_id: number;
@@ -92,8 +106,12 @@ export type ReportSubmissionPayload = {
 
 export type FinalReportSubmission = {
   report_id?: number;
+  reported_by_user_id?: number | null;
+  reported_by?: string | null;
+  reporter_email?: string | null;
+  reporter_phone?: string | null;
   type: 'lost' | 'found';
-  status: 'pending';
+  status: ReportStatusEnum;
   item_name: string;
   category_id: number;
   location: string;

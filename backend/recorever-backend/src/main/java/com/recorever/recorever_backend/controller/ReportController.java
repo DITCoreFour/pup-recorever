@@ -81,6 +81,30 @@ public class ReportController {
         dto.setDate_resolved(report.getDateResolved());
         dto.setDescription(report.getDescription());
 
+        if (report.getDetails() != null) {
+            ReportResponseDTO.ReportDetailResponse detailDto = new ReportResponseDTO.ReportDetailResponse(
+                report.getDetails().getUserId(),
+                report.getDetails().getPersonName(),
+                report.getDetails().getPersonContactEmail(),
+                report.getDetails().getPersonContactPhone(),
+                report.getDetails().getAdminId() != null ? report.getDetails().getAdminId() : 0
+            );
+            dto.setReporter_details(detailDto);
+
+            dto.setUser_id(report.getDetails().getUserId());
+            dto.setReporter_name(report.getDetails().getPersonName());
+            dto.setReporter_email(report.getDetails().getPersonContactEmail());
+            dto.setReporter_phone(report.getDetails().getPersonContactPhone());
+        } else {
+            User reporter = userRepository.findById(report.getUserId()).orElse(null);
+            if (reporter != null) {
+                dto.setReporter_name(reporter.getFullName());
+                dto.setReporter_profile_picture(reporter.getProfilePicture());
+            }
+
+            dto.setReporter_details(null);
+        }
+
         ReportResponseDTO.StatusResponse status = new ReportResponseDTO.StatusResponse(
             report.getStatus().getStatusId(),
             report.getStatus().getStatusName()
@@ -126,11 +150,6 @@ public class ReportController {
                     .collect(Collectors.toList()));
         }
 
-        User reporter = userRepository.findById(report.getUserId()).orElse(null);
-        if (reporter != null) {
-            dto.setReporter_name(reporter.getFullName());
-            dto.setReporter_profile_picture(reporter.getProfilePicture());
-        }
         return dto;
     }
 
@@ -144,6 +163,11 @@ public class ReportController {
 
         Map<String, Object> creationResult = service.create(
                 userId,
+                reportDto.getReported_by_user_id(),
+                reportDto.getReported_by(),
+                reportDto.getReporter_email(),
+                reportDto.getReporter_phone(),
+                reportDto.getStatus(),
                 reportDto.getType(),
                 reportDto.getCategory_id(),
                 reportDto.getItem_name(),
@@ -178,24 +202,24 @@ public class ReportController {
                 .body(mapToReportResponseDTO(finalReport));
     }
 
-    @PostMapping("/report")
-    public ResponseEntity<?> createReport(
-            Authentication authentication,
-            @Valid @RequestBody ReportCreationDTO reportDto) {
+    // @PostMapping("/report")
+    // public ResponseEntity<?> createReport(
+    //         Authentication authentication,
+    //         @Valid @RequestBody ReportCreationDTO reportDto) {
 
-        User authUser = (User) authentication.getPrincipal();
-        Map<String, Object> result = service.create(
-                authUser.getUserId(),
-                reportDto.getType(),
-                reportDto.getCategory_id(),
-                reportDto.getItem_name(),
-                reportDto.getLocation(),
-                reportDto.getSurrendered_location_id(),
-                reportDto.getDescription(),
-                reportDto.getDate_lost_found()
-        );
-        return ResponseEntity.status(201).body(result);
-    }
+    //     User authUser = (User) authentication.getPrincipal();
+    //     Map<String, Object> result = service.create(
+    //             authUser.getUserId(),
+    //             reportDto.getType(),
+    //             reportDto.getCategory_id(),
+    //             reportDto.getItem_name(),
+    //             reportDto.getLocation(),
+    //             reportDto.getSurrendered_location_id(),
+    //             reportDto.getDescription(),
+    //             reportDto.getDate_lost_found()
+    //     );
+    //     return ResponseEntity.status(201).body(result);
+    // }
 
     @GetMapping("/reports")
     public ResponseEntity<Map<String, Object>> getReports(

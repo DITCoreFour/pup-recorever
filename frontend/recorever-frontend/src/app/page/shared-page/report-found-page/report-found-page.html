@@ -1,8 +1,9 @@
 <div class="report-page-container">
   <h1 class="page-title">{{ pageTitle() }}</h1>
 
-  <app-item-report-form 
+  <app-item-report-form
       [formType]="'found'"
+      [isAdminView]="isAdminMode"
       [initialData]="initialData()"
       [isEditMode]="isEditMode()"
       (formSubmitted)="handleSubmission($event)"

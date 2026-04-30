@@ -27,10 +27,33 @@ export class ItemService {
   ): Observable<Report> {
     const formData = new FormData();
 
+    if (report.reported_by != null) {
+      formData.append('reported_by', String(report.reported_by));
+    }
+
+    if (report.reporter_email != null) {
+      formData.append('reporter_email', report.reporter_email);
+    }
+
+    if (report.reporter_phone != null) {
+      formData.append('reporter_phone', report.reporter_phone);
+    }
+
+    if (report.reported_by_user_id != null) {
+      formData.append(
+        'reported_by_user_id',
+        report.reported_by_user_id.toString()
+      );
+    }
+
     formData.append('type', report.type);
     formData.append('item_name', report.item_name);
     formData.append('category_id', report.category_id.toString());
     formData.append('location', report.location);
+
+    if (report.status != null) {
+      formData.append('status', report.status.toString());
+    }
 
     if (report.surrendered_location_id != null) {
       formData.append(
