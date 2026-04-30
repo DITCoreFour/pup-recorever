@@ -39,8 +39,10 @@ export class LoginPage {
       )
       .subscribe({
         next: (user: User): void => {
-          if (user.role === 'admin') {
-            this.router.navigate(['/admin']);
+          if (user.role === 'superadmin') {
+            this.router.navigate(['/superadmin/dashboard']);
+          } else if (user.role === 'admin') {
+            this.router.navigate(['/admin/dashboard']);
           } else {
             this.router.navigate(['/app/browse']);
           }
