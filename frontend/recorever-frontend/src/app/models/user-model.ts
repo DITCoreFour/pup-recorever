@@ -4,7 +4,7 @@ export type User = {
   last_name: string;
   email: string;
   profile_picture: string;
-  role: 'user' | 'admin';
+  role: 'user' | 'admin' | 'superadmin';
   reports?: Report[];
   program_id: number | null;
   year_level: number | null;

@@ -16,6 +16,7 @@ import com.recorever.recorever_backend.model.Image;
 import com.recorever.recorever_backend.model.ReportSchedule;
 import com.recorever.recorever_backend.model.ReportStatus;
 import com.recorever.recorever_backend.model.SurrenderedLocation;
+import com.recorever.recorever_backend.model.User;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
@@ -73,7 +74,16 @@ public class ReportService {
     @Autowired
     private SurrenderedLocationRepository surrenderedLocationRepo;
 
-    private static final int ADMIN_USER_ID = 1;
+    private int getAdminUserId() {
+        return userRepository.findFirstByRoleAndIsDeletedFalse("superadmin")
+                .map(User::getUserId)
+                .orElseGet(() -> 
+                    // Fallback to standard admin if no superadmin is found
+                    userRepository.findFirstByRoleAndIsDeletedFalse("admin")
+                        .map(User::getUserId)
+                        .orElse(1) // Safety fallback
+                );
+    }
 
     @Transactional
     public Map<String, Object> create(int userId, Integer reporterUserId,
@@ -154,7 +164,7 @@ public class ReportService {
             scheduleRepo.save(schedule);
         }
 
-        notificationService.create(ADMIN_USER_ID, id, String.format(
+        notificationService.create(getAdminUserId(), id, String.format(
                 "New PENDING %s report submitted: %s.", type.toUpperCase(), itemName),
                 false);
 

@@ -33,7 +33,16 @@ public class UserService {
     @Autowired
     private EmailService emailService;
 
-    private static final int ADMIN_USER_ID = 1;
+    private int getAdminUserId() {
+        return repo.findFirstByRoleAndIsDeletedFalse("superadmin")
+                .map(User::getUserId)
+                .orElseGet(() -> 
+                    // Fallback to standard admin if no superadmin is found
+                    repo.findFirstByRoleAndIsDeletedFalse("admin")
+                        .map(User::getUserId)
+                        .orElse(1) // Safety fallback
+                );
+    }
 
     public static class ChangePasswordRequest {
         private String oldPassword;
@@ -310,6 +319,6 @@ public class UserService {
     public void deleteAccount(int userId) {
         repo.softDeleteUser(userId);        
         reportRepo.softDeleteLostReportsByUserId(userId);
-        reportRepo.transferFoundReportsToAdmin(userId, ADMIN_USER_ID);
+        reportRepo.transferFoundReportsToAdmin(userId, getAdminUserId());
     }
 }

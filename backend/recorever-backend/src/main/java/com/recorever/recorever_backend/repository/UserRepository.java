@@ -62,4 +62,10 @@ public interface UserRepository extends JpaRepository<User, Integer> {
     void deleteInactiveUserByEmail(@Param("email") String email);
 
     Optional<User> findByEmail(String email);
+
+    /**
+     * Used for dynamic admin identification.
+     */
+    @Query("SELECT u FROM User u WHERE u.role = :role AND u.isDeleted = false")
+    Optional<User> findFirstByRoleAndIsDeletedFalse(@Param("role") String role);
 }
