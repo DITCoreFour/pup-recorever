@@ -107,19 +107,19 @@
       <mat-label>Surrendered Location</mat-label>
       <mat-select formControlName="surrenderedLocation">
         <mat-option value="">Any Location</mat-option>
-        <mat-option value="DOST Lab">DOST Lab</mat-option>
-        <mat-option value="Guard House">Guard House</mat-option>
-      </mat-select>
-    </mat-form-field>
-  }
-  
-    <mat-form-field appearance="outline" class="filter-field fixed-size">
-      <mat-label>Category</mat-label>
-      <mat-select formControlName="category" multiple>
-        @for (cat of categories(); track cat) {
-          <mat-option [value]="cat">{{ cat }}</mat-option>
+        @for (loc of fetchedSurrenderedLocs(); track loc) {
+          <mat-option [value]="loc">{{ loc }}</mat-option>
         }
       </mat-select>
     </mat-form-field>
+  }
 
+  <mat-form-field appearance="outline" class="filter-field fixed-size">
+    <mat-label>Category</mat-label>
+    <mat-select formControlName="category" multiple>
+      @for (cat of fetchedCategories(); track cat) {
+        <mat-option [value]="cat">{{ cat }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
 </div>

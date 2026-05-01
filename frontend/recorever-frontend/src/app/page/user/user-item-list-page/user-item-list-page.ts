@@ -148,11 +148,12 @@ export class UserItemListPage implements OnInit, AfterViewInit, OnDestroy {
       );
     }
 
+
     if (categoryFilter && categoryFilter.length > 0) {
       reports = reports.filter(r => {
-        const lowerName = r.item_name.toLowerCase();
-        return categoryFilter.some((cat: string) =>
-            lowerName.includes(cat.toLowerCase()));
+        const catName = ((r as any).category_name || r.category?.category_name
+            || '').toLowerCase().trim();
+        return categoryFilter.some(cat => cat.toLowerCase().trim() === catName);
       });
     }
 

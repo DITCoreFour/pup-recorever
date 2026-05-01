@@ -94,6 +94,7 @@ export class LostStatusPage implements OnInit, AfterViewInit, OnDestroy {
   public currentStatusFilter = signal<LostReportStatusFilter>('All Statuses');
   public highlightId = signal<number | null>(null);
   public currentSurrenderedLocationFilter = signal('');
+  public currentCategoryFilter = signal<string[]>([]);
 
   public readonly statusFilters: LostReportStatusFilter[] = [
     'All Statuses', 'pending', 'approved', 'rejected'
@@ -112,6 +113,19 @@ export class LostStatusPage implements OnInit, AfterViewInit, OnDestroy {
     const dateFilter = this.currentDateFilter();
     const locationFilter = this.currentLocationFilter();
     const surrenderedFilter = this.currentSurrenderedLocationFilter();
+
+    const categoryFilter = this.currentCategoryFilter();
+    if (categoryFilter && categoryFilter.length > 0) {
+      data = data.filter((r: Report) => 
+        categoryFilter.includes((r as any).category_name)
+      );
+    }
+
+    if (surrenderedFilter) {
+      data = data.filter((r: Report) => 
+        (r as any).surrendered_location_name === surrenderedFilter
+      );
+    }
 
     if (dateFilter) {
       const filterDateStr = dateFilter.toDateString();
@@ -152,6 +166,10 @@ export class LostStatusPage implements OnInit, AfterViewInit, OnDestroy {
     this.currentDateFilter.set(state.date);
     this.currentLocationFilter.set(state.location);
     this.currentSurrenderedLocationFilter.set(state.surrenderedLocation || '');
+
+    if (state.category !== undefined) {
+      this.currentCategoryFilter.set(state.category);
+}
 
     if (state.status !== undefined && 
         state.status !== this.currentStatusFilter()) {

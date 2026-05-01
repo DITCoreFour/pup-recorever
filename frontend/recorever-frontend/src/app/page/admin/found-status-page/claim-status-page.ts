@@ -76,6 +76,7 @@ export class ClaimStatusPage implements OnInit, AfterViewInit, OnDestroy {
   public pageSize = signal(10);
   public searchQuery = signal('');
   public isLoading = signal(true);
+  public currentCategoryFilter = signal<string[]>([]);
 
   public reports = signal<Report[]>([]);
   public selectedReport = signal<Report | null>(null);
@@ -121,10 +122,16 @@ export class ClaimStatusPage implements OnInit, AfterViewInit, OnDestroy {
       );
     }
 
+    const categoryFilter = this.currentCategoryFilter();
+    if (categoryFilter && categoryFilter.length > 0) {
+      data = data.filter((r: Report) => 
+        categoryFilter.includes((r as any).category_name)
+      );
+    }
+
     if (surrenderedFilter) {
-      const surTerm = surrenderedFilter.toLowerCase();
-      data = data.filter((r: Report) =>
-        (r.location || '').toLowerCase().includes(surTerm)
+      data = data.filter((r: Report) => 
+        (r as any).surrendered_location_name === surrenderedFilter
       );
     }
 
@@ -236,6 +243,10 @@ export class ClaimStatusPage implements OnInit, AfterViewInit, OnDestroy {
   public onFilterChange(state: FilterState): void {
     this.currentFilter.set(state);
     this.currentSurrenderedLocationFilter.set(state.surrenderedLocation || '');
+
+    if (state.category !== undefined) {
+      this.currentCategoryFilter.set(state.category);
+    }
 
     if (state.status !== undefined && 
         state.status !== this.currentStatusFilter()) {

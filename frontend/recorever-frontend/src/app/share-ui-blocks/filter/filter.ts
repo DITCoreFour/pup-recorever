@@ -84,6 +84,8 @@ export class Filter implements OnInit {
   protected isDefaultState = signal<boolean>(true);
   protected isFilterVisible = signal<boolean>(false);
   protected filteredLocations$: Observable<string[]> = of([]);
+  protected fetchedCategories = signal<string[]>([]);
+  protected fetchedSurrenderedLocs = signal<string[]>([]);
 
   private locations$ = toObservable(this.locations);
 
@@ -119,6 +121,15 @@ export class Filter implements OnInit {
   }
 
   public ngOnInit(): void {
+
+    this.itemService.getCategories().subscribe(cats => {
+    this.fetchedCategories.set(cats.map(c => c.category_name));
+  });
+  
+  this.itemService.getSurrenderLocations().subscribe(locs => {
+    this.fetchedSurrenderedLocs.set(locs.map(l => l.surrendered_location_name));
+  });
+
     if (this.isAdminPage()) {
       const initialStatus = this.adminStatusOptions().length > 0 
           ? this.initialAdminStatus() 
@@ -221,7 +232,8 @@ export class Filter implements OnInit {
     const state: FilterState = {
       sort: (formValue.sort as 'newest' | 'oldest') || 'newest',
       date: formValue.date || null,
-      location: formValue.location || ''
+      location: formValue.location || '',
+      category: formValue.category || []
     };
 
     if (this.isUserPage()) {

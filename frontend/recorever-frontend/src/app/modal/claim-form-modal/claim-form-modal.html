@@ -67,22 +67,68 @@
 
             <div class="details-section">
               <h2 class="item-title">{{ report()?.item_name }}</h2>
-              <div class="detail-row">
-                <mat-icon>tag</mat-icon>
-                <span class="detail-label">Ref Code:</span>
-                <span class="detail-value">{{ referenceCodeValue() }}</span>
+
+              <div class="two-column-row">
+                <div class="detail-row">
+                  <mat-icon>label</mat-icon>
+                  <div class="text-group">
+                    <span class="detail-label">Type</span>
+                    <span class="detail-value">{{ report()?.type ===
+                        'lost' ? 'Lost Item' : 'Found Item' }}</span>
+                  </div>
+                </div>
+
+                <div class="detail-row">
+                  <mat-icon>category</mat-icon>
+                  <div class="text-group">
+                    <span class="detail-label">Category</span>
+                    <span class="detail-value">{{ categoryName() }}</span>
+                  </div>
+                </div>
               </div>
-              <div class="detail-row">
-                <mat-icon>location_on</mat-icon>
-                <span class="detail-label">Location:</span>
-                <span class="detail-value">{{ report()?.location }}</span>
+
+              <div class="two-column-row">
+                <div class="detail-row">
+                  <mat-icon>location_on</mat-icon>
+                  <div class="text-group">
+                    <span class="detail-label">Location {{ report()?.type ===
+                        'lost' ? 'Lost' : 'Found' }}</span>
+                    <span class="detail-value">{{ report()?.location }}</span>
+                  </div>
+                </div>
+
+                @if (surrenderedLocationName()) {
+                  <div class="detail-row">
+                    <mat-icon>storefront</mat-icon>
+                    <div class="text-group">
+                      <span class="detail-label">Surrendered At</span>
+                      <span class="detail-value">{{ surrenderedLocationName()}}
+                      </span>
+                    </div>
+                  </div>
+                }
               </div>
-              <div class="detail-row">
-                <mat-icon>calendar_today</mat-icon>
-                <span class="detail-label">Date Reported:</span>
-                <span class="detail-value">{{
-                    report()?.date_reported | date:'mediumDate' }}</span>
+
+              <div class="two-column-row">
+                <div class="detail-row">
+                  <mat-icon>tag</mat-icon>
+                  <div class="text-group">
+                    <span class="detail-label">Ref Code</span>
+                    <span class="detail-value">{{ referenceCodeValue() }}</span>
+                  </div>
+                </div>
+
+                <div class="detail-row">
+                  <mat-icon>calendar_today</mat-icon>
+                  <div class="text-group">
+                    <span class="detail-label">Date {{ report()?.type ===
+                        'lost' ? 'Lost' : 'Found' }}</span>
+                    <span class="detail-value">{{ (report()?.date_lost_found
+                        || report()?.date_reported) | date:'mediumDate' }}</span>
+                  </div>
+                </div>
               </div>
+
               <div class="description-section">
                 <h3>Description</h3>
                 <p>{{ report()?.description }}</p>

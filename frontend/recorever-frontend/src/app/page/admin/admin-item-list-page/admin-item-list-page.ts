@@ -132,6 +132,7 @@ export class AdminItemListPage implements OnInit, AfterViewInit, OnDestroy {
   public currentStatusFilter = signal('pending');
   public currentSurrenderedLocation = signal('');
   public searchQuery = signal('');
+  public currentCategoryFilter = signal<string[]>([]);
 
   public headerIcon = signal('assets/archive-items.png');
 
@@ -178,11 +179,18 @@ export class AdminItemListPage implements OnInit, AfterViewInit, OnDestroy {
       );
     }
 
-    if (surrenderedLoc) {
-      reports = reports.filter((r: Report) => 
-        r.remarks?.includes(surrenderedLoc)
-      );
-    }
+    const categoryFilter = this.currentCategoryFilter();
+      if (categoryFilter && categoryFilter.length > 0) {
+        reports = reports.filter(r => 
+          categoryFilter.includes((r as any).category_name)
+        );
+      }
+
+      if (surrenderedLoc) {
+        reports = reports.filter((r: Report) => 
+          (r as any).surrendered_location_name === surrenderedLoc
+        );
+      }
 
     reports.sort((a: Report, b: Report): number => {
       const hId = this.highlightId();
@@ -314,6 +322,10 @@ export class AdminItemListPage implements OnInit, AfterViewInit, OnDestroy {
     this.currentSort.set(state.sort);
     this.currentDateFilter.set(state.date);
     this.currentLocationFilter.set(state.location);
+
+    if (state.category !== undefined) {
+      this.currentCategoryFilter.set(state.category);
+    }
 
     if (state.surrenderedLocation !== undefined) {
       this.currentSurrenderedLocation.set(state.surrenderedLocation);
