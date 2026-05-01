@@ -48,6 +48,9 @@ public class ReportController {
     private UserRepository userRepository;
 
     @Autowired
+    private ReportService reportService;
+
+    @Autowired
     private StatusService statusService;
 
     private ImageResponseDTO convertToImageDto(Image image) {
@@ -365,5 +368,11 @@ public class ReportController {
         List<Report> matches = matchService
             .findPotentialMatchesForUser(foundReport, claimantId);
         return ResponseEntity.ok(matches);
+    }
+    @PostMapping("/reports/{id}/keep-active")
+    public ResponseEntity<?> keepReportActive(@PathVariable int id) {
+        boolean success = reportService.keepReportActive(id);
+        return success ? ResponseEntity.ok().build() 
+            : ResponseEntity.notFound().build();
     }
 }

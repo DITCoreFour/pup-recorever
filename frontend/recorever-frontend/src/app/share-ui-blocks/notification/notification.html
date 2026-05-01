@@ -80,8 +80,16 @@
     </div>
   }
 
-  @if (selectedReport(); as report) {
-    @if (isAdmin() && report.type === 'found') {
+@if (selectedReport(); as report) {
+    @if (modalMode() === 'expiration') {
+      <app-match-detail-modal
+        [report]="report"
+        [mode]="'expiration'"
+        [currentUserId]="currentUserId()"
+        (close)="onModalClose()">
+      </app-match-detail-modal>
+    }
+    @else if (isAdmin() && report.type === 'found') {
       <app-claim-form-modal
         [claimData]="report"
         [isArchive]="report.status.status_id === ReportStatusEnum.CLAIMED"
@@ -94,6 +102,7 @@
         && report.type === 'lost') {
       <app-match-detail-modal
         [report]="report"
+        [mode]="'default'"
         [currentUserId]="currentUserId()"
         (close)="onModalClose()">
       </app-match-detail-modal>

@@ -2,7 +2,9 @@
   <div class="modal-container" (click)="$event.stopPropagation()">
 
     <div class="modal-header">
-      @if (step === 'confirm') {
+      @if (mode === 'expiration') {
+        <h2>Manage Report</h2>
+      } @else if (step === 'confirm') {
         <h2>Confirm Match</h2>
       } @else {
         <h2>It's a Match!</h2>
@@ -15,6 +17,48 @@
     <div class="modal-body">
       @if (isLoading()) {
         <div class="loading-state">Finding your match details...</div>
+      }
+      @else {
+        @if (mode === 'expiration') {
+          <div class="expiration-management">
+            <p class="instruction-text">
+              Your lost report for 
+              <strong>{{report.item_name}}</strong> is expiring soon.
+              <br>Would you like to keep it active?
+            </p>
+
+            <div class="item-card clickable"
+                (click)="onItemClick()"
+                title="View Report Details">
+              @if (report.images && report.images.length > 0) {
+                <img [src]="report.images[0].imageUrl" alt="Item Image"
+                    class="item-image">
+              } @else {
+                <div class="no-image-placeholder">No Image</div>
+              }
+              <div class="item-info">
+                <h3>{{ report.item_name }}</h3>
+                <p class="description">{{ report.description }}</p>
+                <div class="meta-row">
+                  <span class="label">Posted:</span>
+                  <span class="value">
+                      {{ report.date_reported | date:'mediumDate' }}</span>
+                </div>
+              </div>
+              <div class="chevron">
+                <img src="assets/arrow-right.png" alt="View">
+              </div>
+            </div>
+
+            <div class="actions-row">
+              <button mat-flat-button color="primary" (click)="handleKeep()">
+                Keep Active
+              </button>
+              <button mat-stroked-button color="warn" (click)="handleDelete()">
+                Delete Now
+              </button>
+            </div>
+          </div>
       }
       @else if (matchedItem(); as item) {
 
@@ -107,17 +151,18 @@
           <button mat-button (click)="onClose()">Close</button>
         </div>
       }
+    }
     </div>
   </div>
 </div>
 
-@if (showItemDetails && matchedItem()) {
+@if (showItemDetails && (mode === 'expiration' || matchedItem())) {
   <app-item-detail-modal
-    [item]="matchedItem()!"
+    [item]="mode === 'expiration' ? report : matchedItem()!"
     [currentUserId]="currentUserId"
     [isAdmin]="false"
     [isArchiveView]="false"
-    [isMatchView]="true"
+    [isMatchView]="mode !== 'expiration'"
     (close)="onItemDetailClose()">
   </app-item-detail-modal>
 }

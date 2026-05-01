@@ -5,6 +5,7 @@ import { MatTooltipModule } from '@angular/material/tooltip'
 import { ItemDetailModal } from '../item-detail-modal/item-detail-modal';
 import { Report } from '../../models/item-model';
 import { ItemService } from '../../core/services/item-service';
+import { ToastService } from '../../core/services/toast-service';
 import { switchMap, tap } from 'rxjs';
 
 @Component({
@@ -16,10 +17,12 @@ import { switchMap, tap } from 'rxjs';
 })
 export class MatchDetailModal implements OnInit {
   private itemService = inject(ItemService);
+  private toastService = inject(ToastService);
 
   @Input({ required: true }) report!: Report;
   @Input() currentUserId: number | null = null;
   @Output() close = new EventEmitter<void>();
+  @Input() mode: 'default' | 'expiration' = 'default';
 
   matchedItem = signal<Report | null>(null);
   isLoading = signal<boolean>(true);
@@ -30,6 +33,24 @@ export class MatchDetailModal implements OnInit {
 
   ngOnInit(): void {
     this.fetchMatchedItem();
+  }
+
+  handleKeep(): void {
+    this.itemService.keepReportActive(this.report.report_id).subscribe({
+      next: () => {
+        this.toastService.showSuccess('Report extended.');
+        this.close.emit();
+      }
+    });
+  }
+
+  handleDelete(): void {
+    this.itemService.deleteReport(this.report.report_id).subscribe({
+      next: () => {
+        this.toastService.showSuccess('Report deleted.');
+        this.close.emit();
+      }
+    });
   }
 
   fetchMatchedItem(): void {
