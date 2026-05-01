@@ -1,37 +1,67 @@
 <div class="forgot-pass-page">
   <div class="form-container">
-    <h2 class="form-title">Enter your email to reset password</h2>
+    
+    @if (currentStep === 'email') {
+      <h1 class="form-title">Reset Password</h1>
+      
+      <p class="form-subtitle">
+        Enter your email address to reset your password.
+      </p>
 
-    <div class="form-wrapper">
-      <form [formGroup]="forgotPasswordForm" (ngSubmit)="onSubmit()">
-        <div class="form-field">
-          <label class="input-label">Email</label>
-          
-          <mat-form-field appearance="outline" class="full-width">
-            <input 
-              matInput 
-              formControlName="email" 
-              type="email" 
-              placeholder="example@email.com">
+      <form [formGroup]="forgotPasswordForm" (ngSubmit)="onSubmit()" 
+            class="forgot-form">
             
-            @if (forgotPasswordForm.get('email')?.invalid
-                && forgotPasswordForm.get('email')?.touched) {
-              <mat-error>Please enter a valid email address.</mat-error>
+        <div class="input-group">
+          <label>Email Address<span class="asterisk">*</span></label>
+          <input 
+              type="email" 
+              formControlName="email" 
+              placeholder="example@email.com" />
+          
+          @if (emailControl?.touched || emailControl?.dirty) {
+            @if (emailControl?.hasError('required')) {
+              <span class="error-msg">A valid email is required.</span>
             }
-          </mat-form-field>
+            @if (emailControl?.hasError('email')) {
+              <span class="error-msg">Please enter a valid email format.</span>
+            }
+          }
         </div>
 
-        <div class="form-actions">
-          <button class="btn btn-submit" type="submit" [disabled]="isLoading">
-            {{ isLoading ? 'Verifying...' : 'Reset Password' }}
-          </button>
+        <button 
+            type="submit" 
+            class="submit-btn" 
+            [disabled]="forgotPasswordForm.invalid || isLoading">
           
-          <div class="back-to-login">
-            <span class="text-muted">Remember Password? </span>
-            <span class="login-link" routerLink="/login">Log In here</span>
+          @if (isLoading) {
+            <div class="btn-content">
+              <span class="spinner"></span> SENDING CODE...
+            </div>
+          } @else {
+            Reset Password
+          }
+        </button>
+
+        @if (serverErrorMessage) {
+          <div class="error-banner">
+            {{ serverErrorMessage }}
           </div>
+        }
+
+        <div class="back-to-login">
+          <a class="login-link" routerLink="/login">
+            <span class="arrow-back">←</span> Back to Log In
+          </a>
         </div>
       </form>
-    </div>
+
+    } @else {
+      <app-verification-modal
+          [email]="submittedEmail"
+          context="forgot-password"
+          (close)="resetToEmailStep()">
+      </app-verification-modal>
+    }
+
   </div>
 </div>

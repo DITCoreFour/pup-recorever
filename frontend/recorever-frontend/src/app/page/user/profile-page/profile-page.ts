@@ -1,4 +1,10 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { 
+  Component, 
+  OnInit, 
+  inject, 
+  signal,
+  HostListener 
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { 
@@ -83,10 +89,19 @@ export class ProfilePage implements OnInit {
   public showSuccessModal = signal<boolean>(false);
   public errorMessage: string | null = null; 
 
+  public isProgramOpen = signal<boolean>(false);
+  public isYearOpen = signal<boolean>(false);
+
   public ngOnInit(): void {
     this.initForm();
     this.fetchPrograms();
     this.patchUserData();
+  }
+
+  @HostListener('document:click')
+  public closeDropdowns(): void {
+    if (this.isProgramOpen()) this.isProgramOpen.set(false);
+    if (this.isYearOpen()) this.isYearOpen.set(false);
   }
 
   private initForm(): void {
@@ -130,6 +145,44 @@ export class ProfilePage implements OnInit {
 
   public getControl(controlName: string): AbstractControl | null {
     return this.profileForm.get(controlName);
+  }
+
+  public toggleProgram(event: Event): void {
+    event.stopPropagation();
+    this.isProgramOpen.update((v: boolean) => !v);
+    this.isYearOpen.set(false);
+  }
+
+  public toggleYear(event: Event): void {
+    event.stopPropagation();
+    this.isYearOpen.update((v: boolean) => !v);
+    this.isProgramOpen.set(false);
+  }
+
+  public selectProgram(id: number | null): void {
+    this.profileForm.get('programId')?.setValue(id);
+    this.profileForm.get('programId')?.markAsTouched();
+    this.isProgramOpen.set(false);
+  }
+
+  public selectYear(year: YearLevel | null): void {
+    this.profileForm.get('year')?.setValue(year);
+    this.profileForm.get('year')?.markAsTouched();
+    this.isYearOpen.set(false);
+  }
+
+  public getSelectedProgramDisplay(): string {
+    const id = this.profileForm.get('programId')?.value;
+    if (!id) return 'Select Program...';
+    const match = this.programs().find(
+        (p: ProgramResponse) => p.programId === id
+    );
+    return match ? match.programCode : 'Select Program...';
+  }
+
+  public getSelectedYearDisplay(): string {
+    const year = this.profileForm.get('year')?.value;
+    return year ? year : 'Select Year...';
   }
 
   public getProfileImageUrl(path: string | null | undefined): string {

@@ -28,6 +28,7 @@ export class ReportLostPage implements OnInit {
   protected isEditMode = signal<boolean>(false);
   protected pageTitle = signal<string>('Report Lost Item');
   protected initialData = signal<Report | null>(null);
+  protected isAdminMode = false;
 
   ngOnInit(): void {
     const state = history.state;
@@ -36,6 +37,8 @@ export class ReportLostPage implements OnInit {
       this.initialData.set(state.data as Report);
       this.pageTitle.set('Edit Report Lost Item');
     }
+
+    this.isAdminMode = this.router.url.includes('/admin');
   }
 
   handleSubmission(data: FinalReportSubmission & { files?: File[] }): void {

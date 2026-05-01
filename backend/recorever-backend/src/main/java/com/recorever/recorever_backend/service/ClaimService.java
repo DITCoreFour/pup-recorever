@@ -4,6 +4,7 @@ import com.recorever.recorever_backend.dto.ClaimResponseDTO;
 import com.recorever.recorever_backend.dto.ManualClaimRequestDTO;
 import com.recorever.recorever_backend.model.Claim;
 import com.recorever.recorever_backend.model.Report;
+import com.recorever.recorever_backend.model.ReportStatus;
 import com.recorever.recorever_backend.repository.ClaimRepository;
 import com.recorever.recorever_backend.repository.ReportRepository;
 import com.recorever.recorever_backend.repository.UserRepository;
@@ -28,6 +29,9 @@ public class ClaimService {
   private NotificationService notificationService;
 
   @Autowired
+  private StatusService statusService;
+
+  @Autowired
   private UserRepository userRepository;
 
   public List<ClaimResponseDTO> getClaimsForReport(int reportId) {
@@ -36,9 +40,9 @@ public class ClaimService {
         .collect(Collectors.toList());
   }
 
-  public String getClaimCode(int userId, int reportId) {
-    return repo.findClaimCode(userId, reportId).orElse(null);
-  }
+  // public String getClaimCode(int userId, int reportId) {
+  //   return repo.findClaimCode(userId, reportId).orElse(null);
+  // }
 
   public Claim getClaimByReportId(int reportId) {
     Claim claim = repo.findTopByReportId(reportId).orElse(null);
@@ -82,7 +86,7 @@ public class ClaimService {
                   .orElseThrow(() -> new RuntimeException(
                           "Matching lost report not found"));
 
-          lostReport.setStatus("resolved");
+          lostReport.setStatus(statusService.getByName(ReportStatus.RESOLVED));
           lostReport.setDateResolved(LocalDateTime.now().toString());
           reportRepo.save(lostReport);
 
@@ -97,7 +101,8 @@ public class ClaimService {
       }
 
       Claim saved = repo.save(claim);
-      foundReport.setStatus("claimed");
+
+      foundReport.setStatus(statusService.getByName(ReportStatus.CLAIMED));
       reportRepo.save(foundReport);
 
       // NOTIFICATION: To the user who FOUND the item
@@ -121,8 +126,8 @@ public class ClaimService {
           claim.setContactEmail(u.getEmail());
       });
 
-      repo.findClaimCode(claim.getUserId(), claim.getReportId())
-          .ifPresent(code -> claim.setClaimCode(code));
+      // repo.findClaimCode(claim.getUserId(), claim.getReportId())
+      //     .ifPresent(code -> claim.setClaimCode(code));
     }
   }
 

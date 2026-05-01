@@ -68,25 +68,60 @@
             <label>
               Program <span class="optional-text">(student only)</span>
             </label>
-            <select formControlName="programId">
-              <option [ngValue]="null">Select Program...</option>
-              @for (prog of programs(); track prog.programId) {
-                <option [ngValue]="prog.programId">
-                  {{ prog.programCode }}
-                </option>
+            
+            <div class="custom-select" (click)="toggleProgram($event)">
+              <div class="select-trigger">
+                <span>{{ getSelectedProgramDisplay() }}</span>
+                <span class="dropdown-arrow" 
+                      [class.open]="isProgramOpen()">▾</span>
+              </div>
+
+              @if (isProgramOpen()) {
+                <div class="options-container">
+                  <div class="custom-option" (click)="selectProgram(null)">
+                    <div class="option-main">Select Program...</div>
+                  </div>
+                  @for (prog of programs(); track prog.programId) {
+                    <div class="custom-option" 
+                         (click)="selectProgram(prog.programId)"
+                         [class.selected]="getControl('programId')
+                             ?.value === prog.programId">
+                      <div class="option-main">{{ prog.programCode }}</div>
+                      <div class="option-sub">{{ prog.programName }}</div>
+                    </div>
+                  }
+                </div>
               }
-            </select>
+            </div>
           </div>
+          
           <div class="input-group">
             <label>
               Year <span class="optional-text">(student only)</span>
             </label>
-            <select formControlName="year">
-              <option [ngValue]="null">Select Year...</option>
-              @for (yr of years; track yr) {
-                <option [ngValue]="yr">{{ yr }}</option>
+            
+            <div class="custom-select" (click)="toggleYear($event)">
+              <div class="select-trigger">
+                <span>{{ getSelectedYearDisplay() }}</span>
+                <span class="dropdown-arrow" 
+                      [class.open]="isYearOpen()">▾</span>
+              </div>
+
+              @if (isYearOpen()) {
+                <div class="options-container">
+                  <div class="custom-option" (click)="selectYear(null)">
+                    <div class="option-main">Select Year...</div>
+                  </div>
+                  @for (yr of years; track yr) {
+                    <div class="custom-option" 
+                         (click)="selectYear(yr)"
+                         [class.selected]="getControl('year')?.value === yr">
+                      <div class="option-main">{{ yr }}</div>
+                    </div>
+                  }
+                </div>
               }
-            </select>
+            </div>
           </div>
         </div>
 

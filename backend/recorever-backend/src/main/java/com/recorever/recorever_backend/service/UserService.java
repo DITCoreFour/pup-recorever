@@ -142,6 +142,62 @@ public class UserService {
         });
     }
 
+    @Transactional
+    public void initiatePasswordReset(String email) {
+        User user = repo.findByEmailAndIsDeletedFalse(email)
+                .orElseThrow(() -> new IllegalArgumentException("Email not found."));
+
+        String code = String.valueOf((int) (Math.random() * 90000) + 10000);
+
+        SecurityCode sc = new SecurityCode();
+        sc.setUserId(user.getUserId());
+        sc.setVerificationToken(code);
+        sc.setType("PASSWORD_RESET");
+        sc.setVerified(false);
+        sc.setCreatedAt(LocalDateTime.now());
+        sc.setExpiresAt(LocalDateTime.now().plusMinutes(5));
+        
+        securityCodeRepo.save(sc);
+        emailService.sendPasswordResetCode(email, code);
+    }
+
+    @Transactional
+    public boolean verifyResetCode(String token) {
+        SecurityCode code = securityCodeRepo.findByVerificationToken(token)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid reset code."));
+
+        if (!"PASSWORD_RESET".equals(code.getType())) {
+            throw new IllegalArgumentException("This code is not valid for password resets.");
+        }
+
+        if (code.isVerified() || code.getExpiresAt().isBefore(LocalDateTime.now())) {
+            throw new IllegalArgumentException("Reset code has expired or already been used.");
+        }
+
+        code.setVerified(true);
+        securityCodeRepo.save(code);
+        return true;
+    }
+
+    @Transactional
+    public void completePasswordReset(String email, String token, String newPassword) {
+        SecurityCode code = securityCodeRepo.findByVerificationToken(token)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid token."));
+
+        if (!"PASSWORD_RESET".equals(code.getType()) || !code.isVerified()) {
+            throw new IllegalArgumentException("Token not verified or invalid request.");
+        }
+
+        repo.findByEmailAndIsDeletedFalse(email).ifPresentOrElse(user -> {
+            user.setPasswordHash(BCrypt.hashpw(newPassword, BCrypt.gensalt()));
+            repo.save(user);
+        }, () -> {
+            throw new IllegalArgumentException("User no longer exists.");
+        });
+
+        securityCodeRepo.delete(code);
+    }
+
     public Map<String, Object> login(String email, String password) {
         User user = repo.findByEmailAndIsDeletedFalse(email)
                 .orElseThrow(() -> new IllegalArgumentException(

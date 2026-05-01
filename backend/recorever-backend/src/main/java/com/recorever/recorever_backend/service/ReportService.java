@@ -1,13 +1,22 @@
 package com.recorever.recorever_backend.service;
 
 import com.recorever.recorever_backend.model.Report;
+import com.recorever.recorever_backend.model.ReportDetail;
 import com.recorever.recorever_backend.repository.ReportRepository;
 import com.recorever.recorever_backend.repository.ReportScheduleRepository;
+import com.recorever.recorever_backend.repository.StatusRepository;
+import com.recorever.recorever_backend.repository.SurrenderedLocationRepository;
 import com.recorever.recorever_backend.repository.UserRepository;
+import com.recorever.recorever_backend.repository.CategoryRepository;
 import com.recorever.recorever_backend.repository.ClaimRepository;
 import com.recorever.recorever_backend.repository.ImageRepository;
+import com.recorever.recorever_backend.repository.ReportDetailRepository;
+import com.recorever.recorever_backend.model.Category;
 import com.recorever.recorever_backend.model.Image;
 import com.recorever.recorever_backend.model.ReportSchedule;
+import com.recorever.recorever_backend.model.ReportStatus;
+import com.recorever.recorever_backend.model.SurrenderedLocation;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -38,6 +47,9 @@ public class ReportService {
     private NotificationService notificationService;
 
     @Autowired
+    private StatusService statusService;
+
+    @Autowired
     private ReportScheduleRepository scheduleRepo;
 
     @Autowired
@@ -49,11 +61,28 @@ public class ReportService {
     @Autowired
     private ClaimRepository claimRepo;
 
+    @Autowired
+    private StatusRepository statusRepo;
+
+    @Autowired
+    private CategoryRepository categoryRepo;
+
+    @Autowired
+    private ReportDetailRepository reportDetailRepo;
+
+    @Autowired
+    private SurrenderedLocationRepository surrenderedLocationRepo;
+
     private static final int ADMIN_USER_ID = 1;
 
     @Transactional
-    public Map<String, Object> create(int userId, String type, String itemName,
-            String location, String description, String dateLostFound) {
+    public Map<String, Object> create(int userId, Integer reporterUserId,
+                                      String reporterName, String reporterEmail,
+                                      String reporterPhone, int statusId,
+                                      String type, int categoryId,
+                                      String itemName, String location,
+                                      Integer surrenderedLocationId,
+                                      String description, String dateLostFound) {
 
         Report report = new Report();
         report.setUserId(userId);
@@ -62,10 +91,21 @@ public class ReportService {
         report.setLocation(location);
         report.setDescription(description);
         report.setDateLostFound(dateLostFound);
-        report.setStatus("pending");
         report.setDeleted(false);
         report.setDateReported(LocalDateTime.now()
                 .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+
+        Category category = categoryRepo.findById(categoryId)
+                .orElseThrow(() -> new RuntimeException("Category not found with ID: " + categoryId));
+        report.setCategory(category);
+
+        if (surrenderedLocationId != null) {
+            SurrenderedLocation surrLoc = surrenderedLocationRepo.findById(surrenderedLocationId)
+                    .orElseThrow(() -> new RuntimeException("Location not found with ID: " + surrenderedLocationId));
+            report.setSurrenderedLocation(surrLoc);
+        }
+
+        report.setStatus(statusService.getById(statusId));
 
         String surrenderCode = null;
         if ("found".equalsIgnoreCase(type)) {
@@ -76,6 +116,27 @@ public class ReportService {
 
         Report savedReport = repo.save(report);
         int id = savedReport.getReportId();
+
+        if (reporterUserId != null || reporterName != null ||
+            reporterEmail != null || reporterPhone != null) {
+
+            ReportDetail details = new ReportDetail();
+            details.setReport(savedReport);
+
+            Integer finalUserId = (reporterUserId != null) ?
+                                   reporterUserId : userId;
+
+            details.setUserId(finalUserId);
+            details.setPersonName(reporterName);
+            details.setPersonContactEmail(reporterEmail);
+            details.setPersonContactPhone(reporterPhone);
+
+            if (reporterUserId != null) {
+                details.setAdminId(userId);
+            }
+
+            reportDetailRepo.save(details);
+        }
 
         if ("lost".equalsIgnoreCase(type)) {
             LocalDate postDate = LocalDate.now();
@@ -99,8 +160,7 @@ public class ReportService {
 
         return Map.of(
             "report_id", id,
-            "status", "pending",
-            "date_lost_found", dateLostFound != null ? dateLostFound : "N/A",
+            "status", report.getStatus().getStatusName(),
             "type", type,
             "item_name", itemName,
             "surrender_code", surrenderCode != null ? surrenderCode : "N/A");
@@ -139,11 +199,11 @@ public class ReportService {
     }
 
     public Map<String, Object> searchReports(Integer userId, String type,
-            String status, String query, int page, int size) {
+                                             String statusName, String categoryName,
+                                             String query, int page, int size) {
         Pageable pageable = PageRequest.of(page - 1, size);
-        List<Report> items = repo.searchReports(userId, type, status, query,
-                pageable);
-        int totalItems = repo.countSearchReports(userId, type, status, query);
+        List<Report> items = repo.searchReports(userId, type, statusName, categoryName, query, pageable);
+        int totalItems = repo.countSearchReports(userId, type, statusName, query);
 
         if (!items.isEmpty()) {
             List<Integer> reportIds = items.stream()
@@ -186,7 +246,7 @@ public class ReportService {
     }
 
     public List<Report> listByStatus(String status) {
-        return repo.findByStatusAndIsDeletedFalseOrderByDateReportedDesc(status);
+        return repo.findByStatus_StatusNameAndIsDeletedFalseOrderByDateReportedDesc(status);
     }
 
     public List<Report> getReportsByType(String type) {
@@ -194,55 +254,57 @@ public class ReportService {
     }
 
     public List<Report> getReportsByTypeAndStatus(String type, String status) {
-        return repo.findByTypeAndStatusAndIsDeletedFalseOrderByDateReportedDesc(
+        return repo.findByTypeAndStatus_StatusNameAndIsDeletedFalseOrderByDateReportedDesc(
                 type, status);
     }
 
     @Transactional
-    public boolean adminUpdateStatus(int id, String status) {
+    public boolean adminUpdateStatus(int id, String statusName) {
         return repo.findByReportIdAndIsDeletedFalse(id).map(report -> {
             String dateResolved = null;
-            if ("claimed".equalsIgnoreCase(status) ||
-                    "rejected".equalsIgnoreCase(status)) {
+            if (ReportStatus.CLAIMED.equalsIgnoreCase(statusName) ||
+                ReportStatus.REJECTED.equalsIgnoreCase(statusName)) {
                 dateResolved = LocalDateTime.now().toString();
             }
 
-            report.setStatus(status);
+            report.setStatus(statusService.getByName(statusName));
             report.setDateResolved(dateResolved);
 
-            if ("approved".equalsIgnoreCase(status)) {
+            if (ReportStatus.APPROVED.equalsIgnoreCase(statusName)) {
                 report.setDateResolved(null);
 
                 claimRepo.findByReportIdOrMatchingLostReportId(id, id)
-                .forEach(claim -> {
-                    int linkedId = (claim.getReportId() == id) 
-                        ? (claim.getMatchingLostReportId() != null ? claim.getMatchingLostReportId() : 0)
-                        : claim.getReportId();
-                    
-                    if (linkedId != 0) {
-                      repo.findByReportIdAndIsDeletedFalse(linkedId)
-                        .ifPresent(linked -> {
-                        if ("claimed".equalsIgnoreCase(linked.getStatus()) || 
-                          "rejected".equalsIgnoreCase(linked.getStatus())) {
-                          
-                          linked.setStatus("approved");
-                          linked.setDateResolved(null);
-                          repo.save(linked);
+                    .forEach(claim -> {
+                        int linkedId = (claim.getReportId() == id)
+                            ? (claim.getMatchingLostReportId() != null ? claim.getMatchingLostReportId() : 0)
+                            : claim.getReportId();
+
+                        if (linkedId != 0) {
+                            repo.findByReportIdAndIsDeletedFalse(linkedId)
+                                .ifPresent(linked -> {
+                                    String currentLinkedStatus = linked.getStatus().getStatusName();
+                                    if (ReportStatus.CLAIMED.equalsIgnoreCase(currentLinkedStatus) ||
+                                        ReportStatus.REJECTED.equalsIgnoreCase(currentLinkedStatus)) {
+                                            statusRepo.findByStatusName(ReportStatus.APPROVED).ifPresent(approvedStatus -> {
+                                                linked.setStatus(approvedStatus);
+                                                linked.setDateResolved(null);
+                                                repo.save(linked);
+                                            });
+                                    }
+                            });
                         }
-                      });
-                    }
                 });
             }
 
             repo.save(report);
 
-            if ("approved".equalsIgnoreCase(status)) {
+            if (ReportStatus.APPROVED.equalsIgnoreCase(statusName)) {
                 matchService.findAndCreateMatch(report);
             }
 
             notificationService.create(report.getUserId(), id, String.format(
                     "Your report for '%s' status changed to '%s'.",
-                    report.getItemName(), status), true);
+                    report.getItemName(), statusName), true);
 
             return true;
         }).orElse(false);
@@ -253,9 +315,23 @@ public class ReportService {
             List<Image> images = imageRepo.findByReportIdAndIsDeletedFalse(id);
             report.setImages(images);
 
-            userRepository.findById(report.getUserId()).ifPresent(user -> {
-                report.setReporterName(user.getFullName());
+            reportDetailRepo.findByReportReportId(id).ifPresent(details -> {
+                report.setDetails(details);
+
+                if (details.getAdminId() != null) {
+                    report.setReporterName(details.getPersonName());
+                } else {
+                    userRepository.findById(report.getUserId()).ifPresent(user -> {
+                        report.setReporterName(user.getFullName());
+                    });
+                }
             });
+
+            if (report.getDetails() == null) {
+                userRepository.findById(report.getUserId()).ifPresent(user -> {
+                    report.setReporterName(user.getFullName());
+                });
+            }
 
             scheduleRepo.findByReportId(id).ifPresent(schedule -> {
                 report.setExpiryDate(schedule.getDeleteTime().toString());
@@ -266,21 +342,34 @@ public class ReportService {
     }
 
     @Transactional
-    public boolean updateEditableFields(int id, String itemName,
-            String location, String description) {
+    public boolean updateEditableFields(int id, String itemName, Integer categoryId,
+            String location, Integer surrenderedLocationId, String description) {
         return repo.findByReportIdAndIsDeletedFalse(id).map(report -> {
             if (itemName != null) report.setItemName(itemName);
             if (location != null) report.setLocation(location);
             if (description != null) report.setDescription(description);
+
+            if (categoryId != null) {
+                Category category = categoryRepo.findById(categoryId)
+                    .orElseThrow(() -> new RuntimeException("Category not found with ID: " + categoryId));
+                report.setCategory(category);
+            }
+
+            if (surrenderedLocationId != null) {
+                SurrenderedLocation surrLoc = surrenderedLocationRepo.findById(surrenderedLocationId)
+                    .orElseThrow(() -> new RuntimeException("Location not found with ID: " + surrenderedLocationId));
+                report.setSurrenderedLocation(surrLoc);
+            }
+
             repo.save(report);
             return true;
         }).orElse(false);
     }
 
     @Transactional
-    public boolean update(int id, String status, String dateResolved) {
+    public boolean update(int id, String statusName, String dateResolved) {
         return repo.findByReportIdAndIsDeletedFalse(id).map(report -> {
-            report.setStatus(status);
+            report.setStatus(statusService.getByName(statusName));
             report.setDateResolved(dateResolved);
             repo.save(report);
             return true;
@@ -292,21 +381,20 @@ public class ReportService {
         return repo.softDeleteById(id) > 0;
     }
 
+    //Useless???
     @Transactional
     public boolean updateCodes(int id, String surrenderCode, String claimCode) {
         return repo.findByReportIdAndIsDeletedFalse(id).map(report -> {
             report.setSurrenderCode(surrenderCode);
-            report.setClaimCode(claimCode); 
             repo.save(report);
             return true;
         }).orElse(false);
     }
 
     public Map<String, Object> getDashboardData(int days) {
-        int total = (int) repo.countByIsDeletedFalse();
-        int claimed = repo.countByStatusAndIsDeletedFalse("claimed");
-        int pending = repo.countByStatusAndIsDeletedFalse("pending");
-
+        int total = repo.countByIsDeletedFalse();
+        int claimed = repo.countByStatus_StatusNameAndIsDeletedFalse(ReportStatus.CLAIMED);
+        int pending = repo.countByStatus_StatusNameAndIsDeletedFalse(ReportStatus.PENDING);
         int lost = repo.countByTypeAndIsDeletedFalse("lost");
         int found = repo.countByTypeAndIsDeletedFalse("found");
 

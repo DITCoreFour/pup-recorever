@@ -29,11 +29,11 @@ public interface ClaimRepository extends JpaRepository<Claim, Integer> {
            "ORDER BY c.createdAt DESC")
     List<Claim> findByReportId(@Param("reportId") int reportId);
 
-    @Query(value = "SELECT claim_code FROM claims WHERE contact_email = " +
-                   "(SELECT email FROM users WHERE user_id = :userId) " +
-                   "AND report_id = :reportId LIMIT 1", nativeQuery = true)
-    Optional<String> findClaimCode(@Param("userId") int userId, 
-                                   @Param("reportId") int reportId);
+//     @Query(value = "SELECT claim_code FROM claims WHERE contact_email = " +
+//                    "(SELECT email FROM users WHERE user_id = :userId) " +
+//                    "AND report_id = :reportId LIMIT 1", nativeQuery = true)
+//     Optional<String> findClaimCode(@Param("userId") int userId,
+//                                    @Param("reportId") int reportId);
 
     @Query(value = "SELECT * FROM claims WHERE report_id = :reportId " +
                    "ORDER BY created_at DESC LIMIT 1", nativeQuery = true)

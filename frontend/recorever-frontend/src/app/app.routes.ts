@@ -20,6 +20,8 @@ export const AppRoutePaths = {
   ABOUT_US: '/app/about-us',
   REPORT_STATUS_MANAGEMENT: '/admin/report-status',
   ADMIN_MY_REPORTS: '/admin/my-reports',
+  ADMIN_REPORT_LOST: '/admin/report-lost',
+  ADMIN_REPORT_FOUND: '/admin/report-found',
   HELP_PAGE: '/help-page',
 };
 
@@ -82,13 +84,13 @@ export const routes: Routes = [
       { path: 'report-lost',
         canActivate: [authGuard],
         loadComponent: () =>
-          import('./page/user/report-lost-page/report-lost-page')
+          import('./page/shared-page/report-lost-page/report-lost-page')
             .then(m => m.ReportLostPage)
       },
       { path: 'report-found',
         canActivate: [authGuard],
         loadComponent: () =>
-          import('./page/user/report-found-page/report-found-page')
+          import('./page/shared-page/report-found-page/report-found-page')
             .then(m => m.ReportFoundPage)
       },
       { path: 'profile',
@@ -170,11 +172,20 @@ export const routes: Routes = [
             .then(m => m.ClaimStatusPage)
       },
       { path: 'my-reports',
-        loadComponent: () => 
+        loadComponent: () =>
             import('./page/shared-page/my-reports-page/my-reports-page')
           .then(m => m.MyReportsPage)
       },
-
+      {
+        path: 'report-lost',
+        loadComponent: () => import('./page/shared-page/report-lost-page/report-lost-page')
+          .then(m => m.ReportLostPage)
+      },
+      {
+        path: 'report-found',
+        loadComponent: () => import('./page/shared-page/report-found-page/report-found-page')
+          .then(m => m.ReportFoundPage)
+      },
       { path: 'notifications',
         loadComponent: () => import(
           './page/shared-page/notification-page/notification-page'

@@ -23,8 +23,9 @@ public class Match {
     @Column(name = "found_report_id", nullable = false)
     private int foundReportId;
 
-    @Column(nullable = false)
-    private String status;
+    @ManyToOne
+    @JoinColumn(name = "status_id")
+    private ReportStatus status;
 
     @Column(name = "created_at", updatable = false)
     private String createdAt;
@@ -40,9 +41,6 @@ public class Match {
     public int getFound_report_id() { return foundReportId; }
     public void setFound_report_id(int found_report_id) {
         this.foundReportId = found_report_id; }
-
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
 
     public String getCreated_at() { return createdAt; }
     public void setCreated_at(String created_at) {

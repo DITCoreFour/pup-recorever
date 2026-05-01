@@ -22,7 +22,7 @@ import { ItemDetailModal } from '../../modal/item-detail-modal/item-detail-modal
 import { ClaimFormModal } from '../../modal/claim-form-modal/claim-form-modal';
 import { CodesModal } from '../../modal/codes-modal/codes-modal';
 import type { UserNotification } from '../../models/notification-model';
-import type { Report } from '../../models/item-model';
+import { Report, ReportStatusEnum } from '../../models/item-model';
 import { Subscription, tap, catchError, of, filter } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { MatchDetailModal } from '../../modal/match-detail-modal/match-detail-modal';
@@ -53,6 +53,8 @@ export class Notification implements OnInit, OnDestroy {
   private streamSub!: Subscription;
   private notificationSub!: Subscription;
   private routerSub!: Subscription;
+
+  protected readonly ReportStatusEnum = ReportStatusEnum;
 
   notifications: UserNotification[] = [];
   currentPage = 1;

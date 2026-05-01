@@ -27,7 +27,8 @@
           <app-status-badge [status]="displayStatus()"></app-status-badge>
 
           @if (!isMatchView() && (isOwner() || item().claim_code)) {
-            @if (isAdmin() || item().status !== 'matched') {
+            @if (isAdmin() ||
+                 item().status.status_id !== REPORT_STATUS.MATCHED) {
               <button mat-icon-button
                       [matMenuTriggerFor]="modalMenu"
                       class="modal-menu-trigger">
@@ -159,8 +160,8 @@
           </button>
         }
         @else {
-          @if (item().type === 'found' && !isOwner() && !isAdmin() 
-              && item().status !== 'claimed') {
+          @if (item().type === 'found' && !isOwner() && !isAdmin()
+              && item().status.status_id !== REPORT_STATUS.CLAIMED) {
             <button mat-raised-button
                     color="primary"
                     class="action-btn"
@@ -174,20 +175,21 @@
           <div class="status-dropdown-wrapper" style="flex: 1;">
             <button
                 class="status-btn"
-                [ngClass]="(item().status || 'pending').toLowerCase()"
+                [ngClass]="item().status.status_name.toLowerCase()"
                 (click)="toggleDropdown($event)">
-                {{ (item().status === 'approved' || item().status === 'matched'
+                {{ (item().status.status_id === REPORT_STATUS.APPROVED ||
+                    item().status.status_id === REPORT_STATUS.MATCHED
                   ? 'Verified'
-                  : item().status) | titlecase }}
+                  : item().status.status_name) | titlecase }}
               <span class="arrow">▼</span>
             </button>
 
             @if (isDropdownOpen()) {
               <div class="dropdown-content" (click)="$event.stopPropagation()">
                 @for (option of STATUS_OPTIONS; track option.value) {
-                  @if (option.value !== (item().status || 'pending')
-                        .toLowerCase() && !(option.label === 'Verified'
-                        && displayStatus() === 'Verified')) {
+                  @if (option.value !== item().status.status_id &&
+                      !(option.label === 'Verified'
+                       && displayStatus() === 'Verified')) {
                     <div
                       [class.disabled-option]="isStatusDisabled(option.value)"
                       [matTooltip]="getOptionTooltip(option.value)"
