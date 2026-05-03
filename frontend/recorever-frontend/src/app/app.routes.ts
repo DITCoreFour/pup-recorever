@@ -14,8 +14,7 @@ import { SuperadminLayout } from './layout/superadmin-layout/superadmin-layout';
 export const AppRoutePaths = {
   REPORT_LOST: '/app/report-lost',
   REPORT_FOUND: '/app/report-found',
-  LOST_ITEMS: '/app/lost-items',
-  FOUND_ITEMS: '/app/found-items',
+  BROWSE: '/app/browse',
   PROFILE: '/app/profile',
   MY_REPORTS: '/app/my-reports',
   USER_PROFILE: (id: number | string) => `/app/profile/${id}`,

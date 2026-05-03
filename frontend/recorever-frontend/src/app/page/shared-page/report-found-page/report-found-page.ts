@@ -87,16 +87,18 @@ export class ReportFoundPage implements OnInit {
   }
 
   handleCancel(): void {
-    this.router.navigate(['/app/found-items']);
+    this.router.navigate([AppRoutePaths.REPORT_FOUND]);
   }
 
   onModalClose(): void {
     this.showReferenceModal.set(false);
-    this.router.navigate(['/app/found-items']);
+    this.router.navigate([AppRoutePaths.BROWSE],
+                         { queryParams: { type: 'found' } }
+    );
   }
 
   onViewReport(): void {
     this.showReferenceModal.set(false);
-    this.router.navigate(['/app/profile']);
+    this.router.navigate([AppRoutePaths.MY_REPORTS]);
   }
 }

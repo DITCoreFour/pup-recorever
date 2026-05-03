@@ -75,15 +75,17 @@ export class ReportLostPage implements OnInit {
 
   onViewReport(): void {
     this.showSuccessModal.set(false);
-    this.router.navigate(['/app/profile']);
+    this.router.navigate([AppRoutePaths.MY_REPORTS]);
   }
 
   onSearchItems(): void {
     this.showSuccessModal.set(false);
-    this.router.navigate(['/app/found-items']);
+    this.router.navigate([AppRoutePaths.BROWSE],
+                         { queryParams: { type: 'found' } }
+    );
   }
 
   handleCancel(): void {
-    this.router.navigate(['/app/lost-items']);
+    this.router.navigate([AppRoutePaths.REPORT_LOST]);
   }
 }
