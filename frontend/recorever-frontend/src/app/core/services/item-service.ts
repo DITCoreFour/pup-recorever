@@ -126,10 +126,6 @@ export class ItemService {
       formData.append('date_lost_found', report.date_lost_found);
     }
 
-    if (report.surrendered_location_id) {
-      formData.append('surrendered_location_id', report.surrendered_location_id.toString());
-    }
-
     if (files && files.length > 0) {
       files.forEach((file: File) => {
         formData.append('files', file, file.name);
