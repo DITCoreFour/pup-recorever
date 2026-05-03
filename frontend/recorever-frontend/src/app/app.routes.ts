@@ -17,9 +17,12 @@ export const AppRoutePaths = {
   LOST_ITEMS: '/app/lost-items',
   FOUND_ITEMS: '/app/found-items',
   PROFILE: '/app/profile',
+  MY_REPORTS: '/app/my-reports',
   USER_PROFILE: (id: number | string) => `/app/profile/${id}`,
   ABOUT_US: '/app/about-us',
+
   REPORT_STATUS_MANAGEMENT: '/admin/report-status',
+  FOUND_ITEM_MANAGEMENT: '/admin/claim-status-items',
   ADMIN_MY_REPORTS: '/admin/my-reports',
   ADMIN_REPORT_LOST: '/admin/report-lost',
   ADMIN_REPORT_FOUND: '/admin/report-found',

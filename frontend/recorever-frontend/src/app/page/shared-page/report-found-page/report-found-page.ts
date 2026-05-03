@@ -12,6 +12,7 @@ import {
 } from '../../../models/item-model';
 import { ItemService } from '../../../core/services/item-service';
 import { CodesModal } from '../../../modal/codes-modal/codes-modal';
+import { AppRoutePaths } from '../../../app.routes';
 
 @Component({
   selector: 'app-report-found-page',
@@ -34,6 +35,12 @@ export class ReportFoundPage implements OnInit {
   protected pageTitle = signal<string>('Report Found Item');
   protected initialData = signal<Report | null>(null);
   protected isAdminMode = false;
+
+  private get postEditRoute(): string {
+      return this.isAdminMode
+        ? AppRoutePaths.FOUND_ITEM_MANAGEMENT
+        : AppRoutePaths.MY_REPORTS;
+    }
 
   ngOnInit(): void {
     const state = history.state;
@@ -58,17 +65,17 @@ export class ReportFoundPage implements OnInit {
     request$.pipe(
       tap((response: Report) => {
         if (this.isEditMode()) {
-          this.router.navigate(['/app/found-items']);
+          this.router.navigate([this.postEditRoute]);
           return;
         }
-        
+
         this.submittedReportId.set(response.report_id);
         if (response?.surrender_code) {
           this.referenceCode.set(response.surrender_code);
           this.submissionDate.set(new Date().toLocaleString());
           this.showReferenceModal.set(true);
         } else {
-          this.router.navigate(['/app/found-items']);
+          this.router.navigate([this.postEditRoute]);
         }
       }),
       catchError((err: HttpErrorResponse) => {
