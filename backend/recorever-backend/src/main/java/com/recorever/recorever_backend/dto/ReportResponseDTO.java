@@ -19,18 +19,31 @@ public class ReportResponseDTO {
     private String reporter_email;
     private String reporter_phone;
     private String type;
-    private String category_name;
     private String item_name;
     private String location;
-    private String surrendered_location_name;
     private String date_lost_found;
     private String date_reported;
     private String date_resolved;
     private String description;
 
+    private CategoryResponse category;
     private StatusResponse status;
-
+    private SurrenderLocationResponse surrendered_location;
     private ReportDetailResponse reporter_details;
+
+    @Data
+    @AllArgsConstructor
+    public static class CategoryResponse {
+        private Integer category_id;
+        private String category_name;
+    }
+
+    @Data
+    @AllArgsConstructor
+    public static class SurrenderLocationResponse {
+        private Integer surrendered_location_id;
+        private String surrendered_location_name;
+    }
 
     @Data
     @AllArgsConstructor

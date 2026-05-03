@@ -116,11 +116,23 @@ public class ReportController {
         dto.setStatus(status);
 
         if (report.getCategory() != null) {
-            dto.setCategory_name(report.getCategory().getCategoryName());
+            ReportResponseDTO.CategoryResponse category =
+                new ReportResponseDTO.CategoryResponse(
+                    report.getCategory().getCategoryId(),
+                    report.getCategory().getCategoryName()
+                );
+
+            dto.setCategory(category);
         }
 
         if (report.getSurrenderedLocation() != null) {
-            dto.setSurrendered_location_name(report.getSurrenderedLocation().getSurrenderedLocationName());
+            ReportResponseDTO.SurrenderLocationResponse surrenderedLocation =
+                new ReportResponseDTO.SurrenderLocationResponse(
+                    report.getSurrenderedLocation().getSurrenderedLocationId(),
+                    report.getSurrenderedLocation().getSurrenderedLocationName()
+                );
+
+            dto.setSurrendered_location(surrenderedLocation);
         }
 
         dto.setSurrender_code(report.getSurrenderCode());
