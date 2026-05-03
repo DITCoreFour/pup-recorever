@@ -5,7 +5,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import type { Report } from '../../models/item-model';
+import { Report, ReportStatusEnum } from '../../models/item-model';
 import { ItemStatus } from '../../share-ui-blocks/status-badge/status-badge';
 import { StatusBadge } from '../../share-ui-blocks/status-badge/status-badge';
 import { TimeAgoPipe } from '../../pipes/time-ago.pipe';
@@ -48,23 +48,24 @@ export class ItemDetailModal {
   @Output() deleteClicked = new EventEmitter<void>();
   @Output() viewCodeClicked = new EventEmitter<void>();
   @Output() unarchiveClicked = new EventEmitter<void>();
-  @Output() statusChanged = new EventEmitter<string>();
+  @Output() statusChanged = new EventEmitter<ReportStatusEnum>();
 
   public isDropdownOpen = signal<boolean>(false);
   public isZoomed = signal<boolean>(false);
   showClaimModal = false;
 
+  protected readonly REPORT_STATUS = ReportStatusEnum;
+
   protected readonly STATUS_OPTIONS = [
-    { value: 'pending', label: 'Pending' },
-    { value: 'approved', label: 'Verified' },
-    { value: 'rejected', label: 'Rejected' }
+    { value: ReportStatusEnum.PENDING, label: 'Pending' },
+    { value: ReportStatusEnum.APPROVED, label: 'Verified' },
+    { value: ReportStatusEnum.REJECTED, label: 'Rejected' }
   ];
 
   protected currentImageIndex = signal<number>(0);
 
   isEditable = computed((): boolean => {
-    const status = this.item().status;
-    return status === 'pending';
+    return this.item().status.status_id === ReportStatusEnum.PENDING;
   });
 
   isRemovable = computed((): boolean => {
@@ -112,13 +113,14 @@ export class ItemDetailModal {
 
   displayStatus = computed((): ItemStatus => {
     const s = this.item().status;
-    if (s === 'approved' || s === 'matched') {
+    if (s.status_id === ReportStatusEnum.APPROVED ||
+        s.status_id === ReportStatusEnum.MATCHED) {
       return 'Verified';
     }
-    if (s === 'resolved') {
+    if (s.status_id === ReportStatusEnum.RESOLVED) {
       return 'Resolved';
     }
-    return (s.charAt(0).toUpperCase() + s.slice(1)) as ItemStatus;
+    return s.status_name as ItemStatus;
   });
 
   isOwner = computed((): boolean => {
@@ -230,22 +232,35 @@ export class ItemDetailModal {
     this.isDropdownOpen.set(false);
   }
 
-  protected onStatusOptionClick(status: string): void {
+  protected onStatusOptionClick(statusId: ReportStatusEnum): void {
     if (this.isArchiveView()) return;
 
-    this.statusChanged.emit(status);
+    this.statusChanged.emit(statusId);
     this.closeDropdown();
   }
 
   canShowUnarchive = computed((): boolean => {
-    return this.isArchiveView() && this.item().status !== 'resolved';
+    return this.isArchiveView() &&
+           this.item().status.status_id !== ReportStatusEnum.RESOLVED;
   });
 
-  protected isStatusDisabled(status: string): boolean {
+  protected isStatusDisabled(status: ReportStatusEnum): boolean {
     return false;
   }
 
-  protected getOptionTooltip(status: string): string {
+  protected getOptionTooltip(status: ReportStatusEnum): string {
     return '';
   }
+
+  categoryName = computed((): string => {
+    return (this.item() as any).category_name || 'Uncategorized';
+  });
+
+  surrenderedLocationName = computed((): string | null => {
+    const r = this.item() as any;
+    if (r.type === 'found' && r.surrendered_location_name) {
+      return r.surrendered_location_name;
+    }
+    return null;
+  });
 }

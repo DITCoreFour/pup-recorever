@@ -30,8 +30,10 @@ import { ItemService } from '../../../core/services/item-service';
 import { AuthService } from '../../../core/auth/auth-service';
 import { ClaimService } from '../../../core/services/claim-service';
 
-import type {
-  PaginatedResponse, Report, ReportFilters
+import { ReportStatusEnum,
+         PaginatedResponse,
+         Report,
+         ReportFilters
 } from '../../../models/item-model';
 
 // Modals
@@ -95,18 +97,18 @@ export class UserItemListPage implements OnInit, AfterViewInit, OnDestroy {
     return this.itemType() === 'found';
   }
 
-  public showResolved = signal<boolean>(false);
   public searchSuggestions = signal<string[]>([]);
-
   public showDeleteModal = signal<boolean>(false);
   public itemToDelete = signal<Report | null>(null);
   public viewCodeItem = signal<Report | null>(null);
   public selectedItem = signal<Report | null>(null);
 
-
   public currentSort = signal<'newest' | 'oldest'>('newest');
   public currentDateFilter = signal<Date | null>(null);
   public currentLocationFilter = signal<string>('');
+  
+  public currentStatusFilter = signal<string>('unresolved');
+  public currentCategoryFilter = signal<string[]>([]);
 
   protected locations = computed(() => {
     const locs = this.allReports()
@@ -121,13 +123,14 @@ export class UserItemListPage implements OnInit, AfterViewInit, OnDestroy {
 
   public filters = signal<ReportFilters>({
       type: 'found',
-      status: 'approved',
+      status_id: ReportStatusEnum.APPROVED,
   });
 
   public visibleReports = computed((): Report[] => {
     let reports = [...this.allReports()];
     const dateFilter = this.currentDateFilter();
     const locationFilter = this.currentLocationFilter();
+    const categoryFilter = this.currentCategoryFilter();
     const sort = this.currentSort();
 
     if (dateFilter) {
@@ -145,6 +148,15 @@ export class UserItemListPage implements OnInit, AfterViewInit, OnDestroy {
       );
     }
 
+
+    if (categoryFilter && categoryFilter.length > 0) {
+      reports = reports.filter(r => {
+        const catName = ((r as any).category_name || r.category?.category_name
+            || '').toLowerCase().trim();
+        return categoryFilter.some(cat => cat.toLowerCase().trim() === catName);
+      });
+    }
+
     reports.sort((a, b) => {
         const dateA = new Date(a.date_reported).getTime();
         const dateB = new Date(b.date_reported).getTime();
@@ -153,7 +165,6 @@ export class UserItemListPage implements OnInit, AfterViewInit, OnDestroy {
 
     return reports;
   });
-
   public codeModalTitle = computed((): string => {
     const item = this.viewCodeItem();
     if (!item) return '';
@@ -171,17 +182,16 @@ export class UserItemListPage implements OnInit, AfterViewInit, OnDestroy {
   });
 
   public ngOnInit(): void {
-    this.route.data
+    this.route.queryParams
       .pipe(
-        map((data) => data['itemType'] as ItemType),
+        map((params) => (params['type'] as ItemType) || 'lost'),
         takeUntil(this.destroy$)
       )
       .subscribe((type: ItemType) => {
         this.itemType.set(type);
-        this.filters.set({ type, status: 'approved' });
+        this.filters.set({ type, status_id: ReportStatusEnum.APPROVED });
         this.resetPagination();
       });
-
     this.refreshTrigger$.pipe(
       tap(() => this.isLoading.set(true)),
       switchMap(() => {
@@ -238,18 +248,40 @@ export class UserItemListPage implements OnInit, AfterViewInit, OnDestroy {
     this.currentDateFilter.set(state.date);
     this.currentLocationFilter.set(state.location);
 
+    if (state.category !== undefined) {
+      this.currentCategoryFilter.set(state.category);
+    }
+
+    if (state.status !== undefined) {
+      this.currentStatusFilter.set(state.status);
+      this.applyStatusFilter(state.status, this.itemType());
+    } else {
+      this.resetPagination();
+    }
+  }
+
+  private applyStatusFilter(statusVal: string, type: ItemType): void {
+    const isResolved = statusVal === 'resolved';
+    let apiStatusId: ReportStatusEnum;
+
+    if (type === 'found') {
+      apiStatusId = isResolved ?
+                    ReportStatusEnum.CLAIMED : ReportStatusEnum.APPROVED;
+    } else {
+      apiStatusId = isResolved ?
+                    ReportStatusEnum.RESOLVED : ReportStatusEnum.APPROVED;
+    }
+
+    this.filters.update(curr => ({ ...curr, status_id: apiStatusId }));
     this.resetPagination();
   }
 
-  public toggleStatus(showResolved: boolean): void {
-    this.showResolved.set(showResolved);
-    const type = this.itemType();
-    const statusFilter = type === 'found'
-      ? (showResolved ? 'claimed' : 'approved')
-      : (showResolved ? 'resolved' : 'approved');
-
-    this.filters.update(curr => ({ ...curr, status: statusFilter as any }));
-    this.resetPagination();
+  public toggleItemType(type: 'lost' | 'found'): void {
+    if (this.itemType() !== type) {
+      this.itemType.set(type);
+      this.filters.update(curr => ({ ...curr, type }));
+      this.applyStatusFilter(this.currentStatusFilter(), type);
+    }
   }
 
   public onQueryChange(query: string): void {

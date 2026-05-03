@@ -10,7 +10,12 @@ import {
   ValidationErrors,
 } from '@angular/forms';
 
-import type { User, ChangePasswordRequest, UniqueCheckResponse } from '../../models/user-model';
+import type { 
+  User, 
+  ChangePasswordRequest, 
+  UniqueCheckResponse 
+} from '../../models/user-model';
+import { MessageResponse, VerificationResponse } from '../../models/auth-model';
 
 @Injectable({
   providedIn: 'root',
@@ -24,11 +29,25 @@ export class UserService {
 
   currentUser$ = this.authService.currentUser$;
 
+  sendNewVerificationCode(
+    userId: number,
+    email: string
+  ): Observable<MessageResponse> {
+    const url = `${this.API_BASE_URL}/resend-verification`;
+    return this.http.post<MessageResponse>(url, { email });
+  }
+
+  verifyUserEmail(token: string): Observable<VerificationResponse> {
+    const url = `${this.API_BASE_URL}/verify-email`;
+    const params = new HttpParams().set('token', token);
+    return this.http.get<VerificationResponse>(url, { params });
+  }
+
   getProfile(): Observable<User> {
     return this.http
       .get<User>(`${this.API_BASE_URL}/get-user-data`)
       .pipe(
-        tap((user) => {
+        tap((user: User) => {
           this.authService.updateCurrentUser(user);
         })
       );
@@ -49,7 +68,7 @@ export class UserService {
   }
 
   checkUniqueness(
-    field: 'email' | 'phone_number' | 'name',
+    field: 'email' | 'name',
     value: string
   ): Observable<boolean> {
     const key = `${field}:${value}`;
@@ -65,7 +84,7 @@ export class UserService {
         params,
       })
       .pipe(
-        map((response) => response.isUnique),
+        map((response: UniqueCheckResponse) => response.isUnique),
         catchError(() => of(true)),
         shareReplay(1)
       );
@@ -76,7 +95,7 @@ export class UserService {
   }
 
   uniqueValidator(
-    field: 'email' | 'phone_number' | 'name',
+    field: 'email' | 'name',
     initialValue: string
   ): AsyncValidatorFn {
     return (control: AbstractControl): Observable<ValidationErrors | null> => {
@@ -86,16 +105,30 @@ export class UserService {
 
       return timer(500).pipe(
         switchMap(() => this.checkUniqueness(field, control.value)),
-        map((isUnique) => (isUnique ? null : { notUnique: true }))
+        map((isUnique: boolean) => (isUnique ? null : 
+              { not_unique: 'Value is already taken' }))
       );
     };
   }
 
   updateProfile(user: User, file: File | null): Observable<User> {
     const formData = new FormData();
-    formData.append('name', user.name);
-    formData.append('phone_number', user.phone_number);
+    if (user.first_name && user.last_name) {
+      formData.append('name', `${user.first_name} ${user.last_name}`);
+    }
     formData.append('email', user.email);
+
+    if (user.program_id !== undefined && user.program_id !== null) {
+      formData.append('programId', user.program_id.toString());
+    } else {
+      formData.append('programId', '');
+    }
+
+    if (user.year_level !== undefined && user.year_level !== null) {
+      formData.append('year', user.year_level.toString());
+    } else {
+      formData.append('year', '');
+    }
 
     if (file) {
       formData.append('profile_picture_file', file);
@@ -104,7 +137,7 @@ export class UserService {
     return this.http
       .put<User>(`${this.API_BASE_URL}/update-user-data`, formData)
       .pipe(
-        tap((updatedUser) => {
+        tap((updatedUser: User) => {
           this.authService.updateCurrentUser(updatedUser);
         })
       );
@@ -119,5 +152,11 @@ export class UserService {
 
   deleteAccount(): Observable<void> {
     return this.http.delete<void>(`${this.API_BASE_URL}/delete-account`);
+  }
+
+  cancelRegistration(email: string): Observable<MessageResponse> {
+    const url = `${this.API_BASE_URL}/cancel-registration`;
+    const params = new HttpParams().set('email', email);
+    return this.http.delete<MessageResponse>(url, { params });
   }
 }

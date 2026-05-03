@@ -9,6 +9,7 @@ import { HeaderNFooterOnly
 import { HeaderOnly } from './layout/header-only/header-only';
 import { UserLayout } from './layout/user-layout/user-layout';
 import { AdminLayout } from './layout/admin-layout/admin-layout';
+import { SuperadminLayout } from './layout/superadmin-layout/superadmin-layout';
 
 export const AppRoutePaths = {
   REPORT_LOST: '/app/report-lost',
@@ -19,6 +20,9 @@ export const AppRoutePaths = {
   USER_PROFILE: (id: number | string) => `/app/profile/${id}`,
   ABOUT_US: '/app/about-us',
   REPORT_STATUS_MANAGEMENT: '/admin/report-status',
+  ADMIN_MY_REPORTS: '/admin/my-reports',
+  ADMIN_REPORT_LOST: '/admin/report-lost',
+  ADMIN_REPORT_FOUND: '/admin/report-found',
   HELP_PAGE: '/help-page',
 };
 
@@ -70,34 +74,36 @@ export const routes: Routes = [
     path: 'app',
     component: UserLayout,
     children: [
-      { path: 'lost-items',
+      {
+        path: 'browse',
         loadComponent: () =>
           import('./page/user/user-item-list-page/user-item-list-page')
-            .then(m => m.UserItemListPage),
-        data: { itemType: 'lost' }
-      },
-      { path: 'found-items',
-        loadComponent: () =>
-          import('./page/user/user-item-list-page/user-item-list-page')
-            .then(m => m.UserItemListPage),
-        data: { itemType: 'found' }
+              .then((m) => m.UserItemListPage),
+        title: 'Browse Items - Recorever',
+        data: { itemType: 'lost' } 
       },
       { path: 'report-lost',
         canActivate: [authGuard],
         loadComponent: () =>
-          import('./page/user/report-lost-page/report-lost-page')
+          import('./page/shared-page/report-lost-page/report-lost-page')
             .then(m => m.ReportLostPage)
       },
       { path: 'report-found',
         canActivate: [authGuard],
         loadComponent: () =>
-          import('./page/user/report-found-page/report-found-page')
+          import('./page/shared-page/report-found-page/report-found-page')
             .then(m => m.ReportFoundPage)
       },
       { path: 'profile',
         canActivate: [authGuard],
         loadComponent: () => import('./page/user/profile-page/profile-page')
           .then(m => m.ProfilePage)
+      },
+      {
+        path: 'my-reports',
+        loadComponent: () => 
+            import('./page/shared-page/my-reports-page/my-reports-page')
+          .then(m => m.MyReportsPage)
       },
       { path: 'profile/:id',
         canActivate: [authGuard],
@@ -132,11 +138,6 @@ export const routes: Routes = [
           import('./page/admin/admin-dashboard-page/admin-dashboard-page')
             .then(m => m.AdminDashboardPage)
       },
-      { path: 'manage-items',
-        loadComponent: () =>
-          import('./page/admin/manage-items-page/manage-items-page')
-            .then(m => m.ManageItemsPage)
-      },
       { path: 'lost-items',
         loadComponent: () =>
           import('./page/admin/admin-item-list-page/admin-item-list-page')
@@ -170,6 +171,39 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./page/admin/found-status-page/claim-status-page')
             .then(m => m.ClaimStatusPage)
+      },
+      { path: 'my-reports',
+        loadComponent: () =>
+            import('./page/shared-page/my-reports-page/my-reports-page')
+          .then(m => m.MyReportsPage)
+      },
+      {
+        path: 'report-lost',
+        loadComponent: () => import('./page/shared-page/report-lost-page/report-lost-page')
+          .then(m => m.ReportLostPage)
+      },
+      {
+        path: 'report-found',
+        loadComponent: () => import('./page/shared-page/report-found-page/report-found-page')
+          .then(m => m.ReportFoundPage)
+      },
+      { path: 'notifications',
+        loadComponent: () => import(
+          './page/shared-page/notification-page/notification-page'
+        ).then(m => m.NotificationPage)
+      },
+      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+    ],
+  },
+  {
+    path: 'superadmin',
+    component: SuperadminLayout,
+    canActivate: [authGuard, adminGuard],
+    children: [
+      { path: 'dashboard',
+        loadComponent: () =>
+          import('./page/admin/admin-dashboard-page/admin-dashboard-page')
+            .then(m => m.AdminDashboardPage)
       },
       { path: 'notifications',
         loadComponent: () => import(

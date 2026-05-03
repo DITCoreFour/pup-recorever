@@ -1,0 +1,30 @@
+.report-page-container {
+  max-width: 1150px;
+  margin: 0 auto;
+  background-color: #ffffff;
+  padding: 20px;
+  border-radius: 5px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.page-title {
+  font-size: 3rem;
+  font-weight: 300;
+  color: var(--red);
+  margin: 0;
+  flex-shrink: 0;
+  display: block;
+  margin-block-start: 0.67em;
+  margin-block-end: 0.67em;
+  margin-inline-start: 0px;
+  margin-inline-end: 0px;
+  unicode-bidi: isolate;
+  font-family: var(--font-family-sans-serif);
+  text-align: center;
+
+  @media (max-width: 768px) {
+    font-size: 2rem;
+    text-align: center;
+    margin: 2rem 0 0 0;
+  }
+}

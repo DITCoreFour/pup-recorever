@@ -1,16 +1,41 @@
-<main class="login-page-container">
-  <section class="login-page-graphic">
-    <div class="graphic-placeholder">
-      <img src="assets/log-in.jpg" alt="Login Page Graphic">
-    </div>
-  </section>
+<div class="login-background">
+  <div class="login-card">
 
-  <section class="login-page-form">
-    <app-login-form
-        [loginError]="hasLoginError"
-        [isSubmitting]="isLoading"
-        (loginSubmit)="onLogin($event)"
-        (clearError)="onClearError()">
-    </app-login-form>
-  </section>
-</main>
+    <div class="branding-panel">
+      <div class="branding-content">
+        <img 
+            src="../../../../../assets/logo_w-bg.png"
+            alt="PUP Recover Logo" 
+            class="logo" />
+        <h1 class="branding-title">
+          PUP Recover
+        </h1>
+        <h2 class="branding-subtitle">
+          Welcome again
+        </h2>
+        <p class="branding-desc">
+          Your campus hub for lost and found items.
+        </p>
+      </div>
+      <div class="branding-footer">
+        <p>Don't have an account?</p>
+        <button
+            type="button"
+            class="register-btn"
+            routerLink="/register">
+          Register
+        </button>
+      </div>
+    </div>
+
+    <div class="form-panel">
+      <app-login-form
+          [loginErrorMessage]="loginErrorMessage"
+          [isSubmitting]="isLoading"
+          (loginSubmit)="onLogin($event)"
+          (clearError)="onClearError()">
+      </app-login-form>
+    </div>
+
+  </div>
+</div>

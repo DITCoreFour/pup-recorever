@@ -13,7 +13,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDividerModule } from '@angular/material/divider';
-import type { Report } from '../../../models/item-model';
+import { Report, ReportStatusEnum } from '../../../models/item-model';
 import { ItemStatus } from '../../status-badge/status-badge';
 import { StatusBadge } from '../../status-badge/status-badge';
 import { TimeAgoPipe } from '../../../pipes/time-ago.pipe';
@@ -51,6 +51,8 @@ export class ReportItemCard {
 
   private router = inject(Router);
 
+  protected readonly ReportStatusEnum = ReportStatusEnum;
+
   @Output() cardClicked = new EventEmitter<void>();
   @Output() ticketClicked = new EventEmitter<void>();
   @Output() editClicked = new EventEmitter<void>();
@@ -77,7 +79,8 @@ export class ReportItemCard {
   protected currentImageIndex = signal<number>(0);
 
   canShowUnarchive = computed((): boolean => {
-    return this.isArchiveView() && this.report().status !== 'resolved';
+    return this.isArchiveView() &&
+           this.report().status.status_id !== ReportStatusEnum.RESOLVED;
   });
 
   isRemovable = computed((): boolean => {
@@ -130,14 +133,17 @@ export class ReportItemCard {
 
   displayStatus = computed((): ItemStatus => {
     const s = this.report().status;
-    if (s === 'approved' || s === 'matched') {
+    const id = s.status_id;
+
+    if (id === ReportStatusEnum.APPROVED || id === ReportStatusEnum.MATCHED) {
       return 'Verified';
     }
 
-    if (s === 'resolved') {
+    if (id === ReportStatusEnum.RESOLVED) {
       return 'Resolved';
     }
-    return (s.charAt(0).toUpperCase() + s.slice(1)) as ItemStatus;
+    const name = s.status_name || 'Pending';
+    return (name.charAt(0).toUpperCase() + name.slice(1)) as ItemStatus;
   });
 
   userName = computed((): string => {
@@ -154,7 +160,7 @@ export class ReportItemCard {
 
   isEditable = computed((): boolean => {
     const status = this.report().status;
-    return status === 'pending';
+    return this.report().status.status_id === ReportStatusEnum.PENDING;
   });
 
   public getCodeButtonLabel(): string {
@@ -223,4 +229,16 @@ export class ReportItemCard {
   public onCloseModal(): void {
     this.activeModalMode.set(null);
   }
+
+  categoryName = computed((): string => {
+    return (this.report() as any).category_name || 'Uncategorized';
+  });
+
+  surrenderedLocationName = computed((): string | null => {
+    const r = this.report() as any;
+    if (r.type === 'found' && r.surrendered_location_name) {
+      return r.surrendered_location_name;
+    }
+    return null;
+  });
 }

@@ -8,6 +8,7 @@ import {
 } from '@angular/core';
 import {
   FormBuilder,
+  FormGroup,
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
@@ -22,47 +23,52 @@ import { LoginRequest } from '../../../../models/auth-model';
     RouterLink,
   ],
   templateUrl: './login-form.html',
-  styleUrl: './login-form.scss',
+  styleUrls: ['./login-form.scss'],
 })
 export class LoginForm implements OnInit {
-  private fb = inject(FormBuilder);
+  private fb: FormBuilder = inject(FormBuilder);
 
-  @Input() loginError = false;
-  @Input() isSubmitting = false;
-  @Output() loginSubmit = new EventEmitter<LoginRequest>();
-  @Output() clearError = new EventEmitter<void>();
+  @Input() public loginErrorMessage: string | null = null;
+  @Input() public isSubmitting: boolean = false;
+  @Output() public loginSubmit = new EventEmitter<LoginRequest>();
+  @Output() public clearError = new EventEmitter<void>();
 
-  isPasswordVisible = false;
+  public isPasswordVisible: boolean = false;
+  public loginForm!: FormGroup;
 
-  loginForm = this.fb.group({
-    email: ['', {
-      validators: [Validators.required, Validators.email],
-      updateOn: 'change'
-    }],
-    password: ['', {
-      validators: [Validators.required],
-      updateOn: 'change'
-    }],
-  });
-
-  ngOnInit(): void {
-    this.loginForm.valueChanges.subscribe(() => {
-      if (this.loginError) {
+  public ngOnInit(): void {
+    this.initForm();
+    
+    this.loginForm.valueChanges.subscribe((): void => {
+      if (this.loginErrorMessage) {
         this.clearError.emit();
       }
     });
   }
 
-  get emailControl() {
+  private initForm(): void {
+    this.loginForm = this.fb.group({
+      email: ['', {
+        validators: [Validators.required, Validators.email],
+        updateOn: 'change'
+      }],
+      password: ['', {
+        validators: [Validators.required],
+        updateOn: 'change'
+      }],
+    });
+  }
+
+  public get emailControl() {
     return this.loginForm.get('email');
   }
 
-  get passwordControl() {
+  public get passwordControl() {
     return this.loginForm.get('password');
   }
 
-  submitForm(): void {
-    if (this.loginForm.valid) {
+  public submitForm(): void {
+    if (this.loginForm.valid && !this.isSubmitting) {
       this.loginSubmit.emit(
         this.loginForm.getRawValue() as LoginRequest
       );
@@ -71,7 +77,18 @@ export class LoginForm implements OnInit {
     }
   }
 
-  togglePasswordVisibility(): void {
+  public togglePasswordVisibility(): void {
     this.isPasswordVisible = !this.isPasswordVisible;
+  }
+
+  public getPasswordInputType(): string {
+    return this.isPasswordVisible ? 'text' : 'password';
+  }
+
+  public getToggleIconSrc(): string {
+    if (this.isPasswordVisible) {
+      return '../../../../../assets/eye-open.png';
+    }
+    return '../../../../../assets/eye-close.png';
   }
 }

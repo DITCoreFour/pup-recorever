@@ -22,7 +22,7 @@ import { ItemDetailModal } from '../../../modal/item-detail-modal/item-detail-mo
 import { ClaimFormModal } from '../../../modal/claim-form-modal/claim-form-modal';
 import { CodesModal } from '../../../modal/codes-modal/codes-modal'; // Import CodesModal
 import type { UserNotification } from '../../../models/notification-model';
-import type { Report, ReportStatus } from '../../../models/item-model';
+import { Report, ReportStatus, ReportStatusEnum } from '../../../models/item-model';
 import { Subscription, tap, catchError, of, switchMap } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { MatchDetailModal } from '../../../modal/match-detail-modal/match-detail-modal';
@@ -52,6 +52,8 @@ export class NotificationPage implements OnInit, OnDestroy {
 
   private streamSub!: Subscription;
   private notificationSub!: Subscription;
+
+  protected readonly ReportStatusEnum = ReportStatusEnum;
 
   notifications: UserNotification[] = [];
   currentPage = 1;
@@ -202,18 +204,26 @@ export class NotificationPage implements OnInit, OnDestroy {
     this.showCodeModal = true;
   }
 
-  onStatusChange(status: string): void {
+  onStatusChange(statusId: ReportStatusEnum): void {
     const report = this.selectedReport();
     if (!report) return;
 
-    this.adminService.updateReportStatus(report.report_id, status)
+    this.adminService.updateReportStatus(report.report_id, statusId)
       .pipe(
         tap((response) => {
           if (response.success) {
             this.toastService.showSuccess('Status updated successfully');
+            const newLabel = this.getStatusNameById(statusId);
             this.selectedReport.update(current => {
               if (current) {
-                return { ...current, status: status as ReportStatus };
+                return {
+                  ...current,
+                  status: {
+                    ...current.status,
+                    status_id: statusId,
+                    status_name: newLabel
+                  }
+                };
               }
               return null;
             });
@@ -231,5 +241,16 @@ export class NotificationPage implements OnInit, OnDestroy {
         })
       )
       .subscribe();
+  }
+
+  private getStatusNameById(id: ReportStatusEnum): string {
+    const map: Record<number, string> = {
+      [ReportStatusEnum.PENDING]: 'pending',
+      [ReportStatusEnum.APPROVED]: 'approved',
+      [ReportStatusEnum.CLAIMED]: 'claimed',
+      [ReportStatusEnum.MATCHED]: 'matched',
+      [ReportStatusEnum.RESOLVED]: 'resolved'
+    };
+    return map[id] || 'unknown';
   }
 }

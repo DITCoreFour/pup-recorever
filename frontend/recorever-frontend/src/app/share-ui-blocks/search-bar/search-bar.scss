@@ -7,7 +7,6 @@
   position: relative;
   width: 100%;
   display: flex;
-  align-items: center;
 }
 
 .search-input {
@@ -21,7 +20,7 @@
   border: 2px solid transparent;
   background:
     linear-gradient(white, white) padding-box,
-    linear-gradient(to right, #63e6be, #ff7b7b) border-box;
+    lightgray;
   
   z-index: 1;
 

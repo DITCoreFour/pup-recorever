@@ -67,22 +67,68 @@
 
             <div class="details-section">
               <h2 class="item-title">{{ report()?.item_name }}</h2>
-              <div class="detail-row">
-                <mat-icon>tag</mat-icon>
-                <span class="detail-label">Ref Code:</span>
-                <span class="detail-value">{{ referenceCodeValue() }}</span>
+
+              <div class="two-column-row">
+                <div class="detail-row">
+                  <mat-icon>label</mat-icon>
+                  <div class="text-group">
+                    <span class="detail-label">Type</span>
+                    <span class="detail-value">{{ report()?.type ===
+                        'lost' ? 'Lost Item' : 'Found Item' }}</span>
+                  </div>
+                </div>
+
+                <div class="detail-row">
+                  <mat-icon>category</mat-icon>
+                  <div class="text-group">
+                    <span class="detail-label">Category</span>
+                    <span class="detail-value">{{ categoryName() }}</span>
+                  </div>
+                </div>
               </div>
-              <div class="detail-row">
-                <mat-icon>location_on</mat-icon>
-                <span class="detail-label">Location:</span>
-                <span class="detail-value">{{ report()?.location }}</span>
+
+              <div class="two-column-row">
+                <div class="detail-row">
+                  <mat-icon>location_on</mat-icon>
+                  <div class="text-group">
+                    <span class="detail-label">Location {{ report()?.type ===
+                        'lost' ? 'Lost' : 'Found' }}</span>
+                    <span class="detail-value">{{ report()?.location }}</span>
+                  </div>
+                </div>
+
+                @if (surrenderedLocationName()) {
+                  <div class="detail-row">
+                    <mat-icon>storefront</mat-icon>
+                    <div class="text-group">
+                      <span class="detail-label">Surrendered At</span>
+                      <span class="detail-value">{{ surrenderedLocationName()}}
+                      </span>
+                    </div>
+                  </div>
+                }
               </div>
-              <div class="detail-row">
-                <mat-icon>calendar_today</mat-icon>
-                <span class="detail-label">Date Reported:</span>
-                <span class="detail-value">{{
-                    report()?.date_reported | date:'mediumDate' }}</span>
+
+              <div class="two-column-row">
+                <div class="detail-row">
+                  <mat-icon>tag</mat-icon>
+                  <div class="text-group">
+                    <span class="detail-label">Ref Code</span>
+                    <span class="detail-value">{{ referenceCodeValue() }}</span>
+                  </div>
+                </div>
+
+                <div class="detail-row">
+                  <mat-icon>calendar_today</mat-icon>
+                  <div class="text-group">
+                    <span class="detail-label">Date {{ report()?.type ===
+                        'lost' ? 'Lost' : 'Found' }}</span>
+                    <span class="detail-value">{{ (report()?.date_lost_found
+                        || report()?.date_reported) | date:'mediumDate' }}</span>
+                  </div>
+                </div>
               </div>
+
               <div class="description-section">
                 <h3>Description</h3>
                 <p>{{ report()?.description }}</p>
@@ -102,10 +148,11 @@
               } @else {
                 <button
                   class="status-btn"
-                  [ngClass]="(report()?.status || 'pending').toLowerCase()"
+                  [ngClass]="report()?.status?.status_name?.toLowerCase() ||
+                            'pending'"
                   [style.cursor]="isReadOnly ? 'default' : 'pointer'"
                   (click)="toggleDropdown($event)">
-                  
+
                   {{ displayStatus() | titlecase }}
 
                   @if (!isReadOnly) {
@@ -117,7 +164,7 @@
               @if (isDropdownOpen() && !isReadOnly && !isArchive) {
                 <div class="dropdown-content" (click)="$event.stopPropagation()">
                   @for (option of STATUS_OPTIONS; track option.value) {
-                    @if (option.value !== (report()?.status || 'pending').toLowerCase() && 
+                    @if (option.value !== report()?.status?.status_id &&
                         !(option.label === 'Verified' && displayStatus() === 'Verified')) {
                       <div
                         [class.disabled-option]="isStatusDisabled(option.value)"
@@ -173,12 +220,15 @@
                           @if (getUserAvatar(user)) {
                             <img [src]="getUserAvatar(user)" alt="">
                           } @else {
-                            <span class="initial">{{ user.name.charAt(0) }}
-                            </span>
+                            <span class="initial">
+                                {{ user.first_name.charAt(0) }}
+                                </span>
                           }
                         </div>
                         <div class="option-info">
-                          <span class="name">{{ user.name }}</span>
+                          <span class="name">
+                                {{ user.first_name }} {{ user.last_name }}
+                                </span>
                           <span class="email">{{ user.email }}</span>
                         </div>
                       </div>
@@ -279,14 +329,15 @@
               </button>
 
               @if (!isReadOnly) {
-                <span [matTooltip]="(report()?.status === 'pending' ||
-                      report()?.status === 'rejected') ?
+                <span [matTooltip]="
+                      (report()?.status?.status_id === REPORT_STATUS.PENDING ||
+                      report()?.status?.status_id === REPORT_STATUS.REJECTED) ?
                       'Cannot submit claim for Pending/Rejected reports.' : ''"
                       matTooltipPosition="above">
                   <button mat-raised-button color="primary"
                     [disabled]="isSaving() || claimForm.invalid ||
-                    report()?.status === 'pending' ||
-                    report()?.status === 'rejected'"
+                    report()?.status?.status_id === REPORT_STATUS.PENDING ||
+                    report()?.status?.status_id === REPORT_STATUS.REJECTED"
                     (click)="saveItemDetails()">
                     @if (isSaving()) {
                       <mat-spinner diameter="20" class="btn-spinner">

@@ -24,18 +24,19 @@ public interface ReportRepository extends JpaRepository<Report, Integer> {
            "WHERE r.isDeleted = false " +
            "AND (:userId IS NULL OR r.userId = :userId) " +
            "AND (:type IS NULL OR r.type = :type) " +
-           "AND (:status IS NULL OR r.status = :status) " +
-           "AND (:query IS NULL OR LOWER(r.itemName) LIKE " +
-           "LOWER(CONCAT('%',:query,'%')) " +
+           "AND (:statusName IS NULL OR r.status.statusName = :statusName) " +
+           "AND (:categoryName IS NULL OR r.category.categoryName = :categoryName) " +
+           "AND (:query IS NULL OR LOWER(r.itemName) LIKE LOWER(CONCAT('%',:query,'%')) " +
            "OR LOWER(r.description) LIKE LOWER(CONCAT('%',:query,'%')) " +
            "OR LOWER(r.location) LIKE LOWER(CONCAT('%',:query,'%')) " +
-           "OR LOWER(u.name) LIKE LOWER(CONCAT('%',:query,'%')) " +
+           "OR LOWER(CONCAT(u.firstName, ' ', u.lastName)) LIKE LOWER(CONCAT('%', :query, '%')) " +
            "OR LOWER(r.surrenderCode) LIKE LOWER(CONCAT('%',:query,'%'))) " +
            "ORDER BY r.reportId DESC")
     List<Report> searchReports(
             @Param("userId") Integer userId,
             @Param("type") String type,
-            @Param("status") String status,
+            @Param("statusName") String statusName,
+            @Param("categoryName") String categoryName,
             @Param("query") String query,
             Pageable pageable);
 
@@ -44,27 +45,23 @@ public interface ReportRepository extends JpaRepository<Report, Integer> {
            "WHERE r.isDeleted = false " +
            "AND (:userId IS NULL OR r.userId = :userId) " +
            "AND (:type IS NULL OR r.type = :type) " +
-           "AND (:status IS NULL OR r.status = :status) " +
-           "AND (:query IS NULL OR LOWER(r.itemName) LIKE " +
-           "LOWER(CONCAT('%',:query,'%')) " +
+           "AND (:statusName IS NULL OR r.status.statusName = :statusName) " +
+           "AND (:query IS NULL OR LOWER(r.itemName) LIKE LOWER(CONCAT('%',:query,'%')) " +
            "OR LOWER(r.description) LIKE LOWER(CONCAT('%',:query,'%')) " +
            "OR LOWER(r.location) LIKE LOWER(CONCAT('%',:query,'%')) " +
-           "OR LOWER(u.name) LIKE LOWER(CONCAT('%',:query,'%')) " +
+           "OR LOWER(CONCAT(u.firstName, ' ', u.lastName)) LIKE LOWER(CONCAT('%', :query, '%')) " +
            "OR LOWER(r.surrenderCode) LIKE LOWER(CONCAT('%',:query,'%')))")
     int countSearchReports(
             @Param("userId") Integer userId,
             @Param("type") String type,
-            @Param("status") String status,
+            @Param("statusName") String statusName,
             @Param("query") String query);
 
-    List<Report> findByStatusAndIsDeletedFalseOrderByDateReportedDesc(
-            String status);
+    List<Report> findByStatus_StatusNameAndIsDeletedFalseOrderByDateReportedDesc(String statusName);
 
-    List<Report> findByTypeAndIsDeletedFalseOrderByDateReportedDesc(
-            String type);
+    List<Report> findByTypeAndIsDeletedFalseOrderByDateReportedDesc(String type);
 
-    List<Report> findByTypeAndStatusAndIsDeletedFalseOrderByDateReportedDesc(
-            String type, String status);
+    List<Report> findByTypeAndStatus_StatusNameAndIsDeletedFalseOrderByDateReportedDesc(String type, String statusName);
 
     List<Report> findByUserIdAndTypeAndIsDeletedFalse(int userId, String type);
 
@@ -99,7 +96,7 @@ public interface ReportRepository extends JpaRepository<Report, Integer> {
 
     int countByIsDeletedFalse();
 
-    int countByStatusAndIsDeletedFalse(String status);
+    int countByStatus_StatusNameAndIsDeletedFalse(String statusName);
 
     int countByTypeAndIsDeletedFalse(String type);
 

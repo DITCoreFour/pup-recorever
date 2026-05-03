@@ -2,9 +2,11 @@ package com.recorever.recorever_backend.controller;
 
 // Service & Repository Imports
 import com.recorever.recorever_backend.model.Report;
+import com.recorever.recorever_backend.model.ReportStatus;
 import com.recorever.recorever_backend.model.User;
 import com.recorever.recorever_backend.repository.UserRepository;
 import com.recorever.recorever_backend.service.ReportService;
+import com.recorever.recorever_backend.service.StatusService;
 
 // Image Imports
 import com.recorever.recorever_backend.service.ImageService;
@@ -45,6 +47,12 @@ public class ReportController {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private ReportService reportService;
+
+    @Autowired
+    private StatusService statusService;
+
     private ImageResponseDTO convertToImageDto(Image image) {
         if (image == null || image.isDeleted()) return null;
 
@@ -53,7 +61,6 @@ public class ReportController {
         dto.setFileName(image.getFileName());
         dto.setFileType(image.getFileType());
         dto.setReportId(image.getReportId());
-        dto.setClaimId(image.getClaimId());
         dto.setUploadedAt(image.getUploadedAt());
 
         String imageUrl = ServletUriComponentsBuilder.fromCurrentContextPath()
@@ -76,7 +83,46 @@ public class ReportController {
         dto.setDate_reported(report.getDateReported());
         dto.setDate_resolved(report.getDateResolved());
         dto.setDescription(report.getDescription());
-        dto.setStatus(report.getStatus());
+
+        if (report.getDetails() != null) {
+            ReportResponseDTO.ReportDetailResponse detailDto = new ReportResponseDTO.ReportDetailResponse(
+                report.getDetails().getUserId(),
+                report.getDetails().getPersonName(),
+                report.getDetails().getPersonContactEmail(),
+                report.getDetails().getPersonContactPhone(),
+                report.getDetails().getAdminId() != null ? report.getDetails().getAdminId() : 0
+            );
+            dto.setReporter_details(detailDto);
+
+            dto.setUser_id(report.getDetails().getUserId());
+            dto.setReporter_name(report.getDetails().getPersonName());
+            dto.setReporter_email(report.getDetails().getPersonContactEmail());
+            dto.setReporter_phone(report.getDetails().getPersonContactPhone());
+        } else {
+            User reporter = userRepository.findById(report.getUserId()).orElse(null);
+            if (reporter != null) {
+                dto.setReporter_name(reporter.getFullName());
+                dto.setReporter_profile_picture(reporter.getProfilePicture());
+            }
+
+            dto.setReporter_details(null);
+        }
+
+        ReportResponseDTO.StatusResponse status = new ReportResponseDTO.StatusResponse(
+            report.getStatus().getStatusId(),
+            report.getStatus().getStatusName()
+        );
+
+        dto.setStatus(status);
+
+        if (report.getCategory() != null) {
+            dto.setCategory_name(report.getCategory().getCategoryName());
+        }
+
+        if (report.getSurrenderedLocation() != null) {
+            dto.setSurrendered_location_name(report.getSurrenderedLocation().getSurrenderedLocationName());
+        }
+
         dto.setSurrender_code(report.getSurrenderCode());
         dto.setReporter_name(report.getReporterName());
         dto.setExpiry_date(report.getExpiryDate());
@@ -93,8 +139,8 @@ public class ReportController {
             isOwnerOrAdmin = isOwner || isAdmin;
         }
 
-        if (isOwnerOrAdmin && !"resolved"
-            .equalsIgnoreCase(report.getStatus())) {
+        if (isOwnerOrAdmin && !ReportStatus.RESOLVED
+            .equalsIgnoreCase(report.getStatus().getStatusName())) {
             dto.setExpiry_date(report.getExpiryDate());
         } else {
             dto.setExpiry_date(null);
@@ -107,11 +153,6 @@ public class ReportController {
                     .collect(Collectors.toList()));
         }
 
-        User reporter = userRepository.findById(report.getUserId()).orElse(null);
-        if (reporter != null) {
-            dto.setReporter_name(reporter.getName());
-            dto.setReporter_profile_picture(reporter.getProfilePicture());
-        }
         return dto;
     }
 
@@ -125,9 +166,16 @@ public class ReportController {
 
         Map<String, Object> creationResult = service.create(
                 userId,
+                reportDto.getReported_by_user_id(),
+                reportDto.getReported_by(),
+                reportDto.getReporter_email(),
+                reportDto.getReporter_phone(),
+                reportDto.getStatus(),
                 reportDto.getType(),
+                reportDto.getCategory_id(),
                 reportDto.getItem_name(),
                 reportDto.getLocation(),
+                reportDto.getSurrendered_location_id(),
                 reportDto.getDescription(),
                 reportDto.getDate_lost_found()
         );
@@ -157,34 +205,42 @@ public class ReportController {
                 .body(mapToReportResponseDTO(finalReport));
     }
 
-    @PostMapping("/report")
-    public ResponseEntity<?> createReport(
-            Authentication authentication,
-            @Valid @RequestBody ReportCreationDTO reportDto) {
+    // @PostMapping("/report")
+    // public ResponseEntity<?> createReport(
+    //         Authentication authentication,
+    //         @Valid @RequestBody ReportCreationDTO reportDto) {
 
-        User authUser = (User) authentication.getPrincipal();
-        Map<String, Object> result = service.create(
-                authUser.getUserId(),
-                reportDto.getType(),
-                reportDto.getItem_name(),
-                reportDto.getLocation(),
-                reportDto.getDate_lost_found(),
-                reportDto.getDescription()
-        );
-        return ResponseEntity.status(201).body(result);
-    }
+    //     User authUser = (User) authentication.getPrincipal();
+    //     Map<String, Object> result = service.create(
+    //             authUser.getUserId(),
+    //             reportDto.getType(),
+    //             reportDto.getCategory_id(),
+    //             reportDto.getItem_name(),
+    //             reportDto.getLocation(),
+    //             reportDto.getSurrendered_location_id(),
+    //             reportDto.getDescription(),
+    //             reportDto.getDate_lost_found()
+    //     );
+    //     return ResponseEntity.status(201).body(result);
+    // }
 
     @GetMapping("/reports")
     public ResponseEntity<Map<String, Object>> getReports(
             @RequestParam(required = false) String type,
-            @RequestParam(required = false) String status,
+            @RequestParam(required = false) Integer status,
+            @RequestParam(required = false) String category,
             @RequestParam(required = false) Integer user_id,
             @RequestParam(required = false) String query,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size) {
 
+        String statusName = null;
+        if (status != null) {
+            statusName = statusService.getById(status).getStatusName();
+        }
+
         Map<String, Object> serviceResponse = service.searchReports(
-                user_id, type, status, query, page, size);
+                user_id, type, statusName, category, query, page, size);
 
         @SuppressWarnings("unchecked")
         List<Report> reports = (List<Report>) serviceResponse.get("items");
@@ -238,14 +294,16 @@ public class ReportController {
 
         User authUser = (User) authentication.getPrincipal();
         if (report.getUserId() != authUser.getUserId() ||
-                !report.getStatus().equalsIgnoreCase("pending")) {
+                !report.getStatus().getStatusName().equalsIgnoreCase(ReportStatus.PENDING)) {
             return ResponseEntity.status(403).body(null);
         }
 
         service.updateEditableFields(
                 id,
                 reportDto.getItem_name(),
+                reportDto.getCategory_id(),
                 reportDto.getLocation(),
+                reportDto.getSurrendered_location_id(),
                 reportDto.getDescription()
         );
 
@@ -299,16 +357,22 @@ public class ReportController {
 
     @GetMapping("/reports/{reportId}/potential-matches/{claimantId}")
     public ResponseEntity<List<Report>> getPotentialMatches(
-            @PathVariable int reportId, 
+            @PathVariable int reportId,
             @PathVariable int claimantId) {
-        Report foundReport = service.getById(reportId); 
+        Report foundReport = service.getById(reportId);
+
         if (foundReport == null) {
             return ResponseEntity.notFound().build();
         }
 
         List<Report> matches = matchService
             .findPotentialMatchesForUser(foundReport, claimantId);
-        
         return ResponseEntity.ok(matches);
+    }
+    @PostMapping("/reports/{id}/keep-active")
+    public ResponseEntity<?> keepReportActive(@PathVariable int id) {
+        boolean success = reportService.keepReportActive(id);
+        return success ? ResponseEntity.ok().build() 
+            : ResponseEntity.notFound().build();
     }
 }

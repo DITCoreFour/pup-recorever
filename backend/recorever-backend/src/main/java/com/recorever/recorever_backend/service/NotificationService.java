@@ -3,6 +3,8 @@ package com.recorever.recorever_backend.service;
 import com.recorever.recorever_backend.model.Notification;
 import com.recorever.recorever_backend.dto.NotificationResponseDTO;
 import com.recorever.recorever_backend.repository.NotificationRepository;
+import com.recorever.recorever_backend.repository.UserRepository;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -18,6 +20,12 @@ import java.util.stream.Collectors;
 
 @Service
 public class NotificationService {
+
+  @Autowired
+  private UserRepository userRepository;
+
+  @Autowired
+  private EmailService emailService;
 
   @Autowired
   private NotificationRepository repo;
@@ -55,11 +63,12 @@ public class NotificationService {
 
     Notification saved = repo.save(notification);
 
+    String appMessage = message + " Click here to view details.";
     Map<String, Object> data = Map.of(
         "notif_id", saved.getNotif_id(),
         "user_id", userId,
         "report_id", reportId,
-        "message", message,
+        "message", appMessage,
         "status", "unread",
         "created_at", "Just now");
 
@@ -69,7 +78,23 @@ public class NotificationService {
       broadcastToAdmins(data);
     }
 
+    // Replace 'yourdomain.com' with your actual frontend URL
+    //  (e.g., http://localhost:4200/app/my-reports/)
+    String appUrl = "https://recorever.site/app/my-reports/";
+    String emailBody = appMessage + " <br><br><a href='" + appUrl + 
+                       "' style='color: #800000; font-weight: bold;'>" +
+                       "Open the application to view details</a>";
+
+    sendEmailNotification(userId, emailBody);
+
     return data;
+  }
+
+  private void sendEmailNotification(int userId, String message) {
+    userRepository.findById(userId).ifPresent(user -> {
+        emailService.sendGeneralNotification(
+          user.getEmail(), "PUPT Recover Notification", message);
+    });
   }
 
   private void broadcastToAdmins(Map<String, Object> data) {

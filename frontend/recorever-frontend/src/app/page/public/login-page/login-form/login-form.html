@@ -1,79 +1,69 @@
-<form
-    [formGroup]="loginForm"
-    (ngSubmit)="submitForm()"
-    class="login-form-card">
-  <h2>Login</h2>
+<div class="form-container">
+  <h1 class="form-title">Sign In</h1>
 
-  <div class="form-field">
-    <label for="email">Email</label>
-    <input
-        id="email"
-        type="email"
-        formControlName="email"
-        placeholder=""/>
+  <form 
+      [formGroup]="loginForm" 
+      (ngSubmit)="submitForm()" 
+      class="login-form">
 
-    @if (emailControl?.invalid && (emailControl?.touched ||
-      emailControl?.dirty)) {
-      <div class="error-message">
-        @if (emailControl?.hasError('required')) {
-          <span>Email is required.</span>
-        }
-        @if (emailControl?.hasError('email')) {
-          <span>Please enter a valid email address.</span>
-        }
-      </div>
-    }
-  </div>
+    <div class="input-group">
+      <label>Email</label>
+      <input 
+          type="email"
+          formControlName="email"
+          placeholder="example@gmail.com" />
 
-  <div class="form-field">
-    <label for="password">Password</label>
-    <div class="password-wrapper">
-      <input
-        id="password"
-            [type]="isPasswordVisible ? 'text' : 'password'"
+      @if (emailControl?.touched && emailControl?.invalid) {
+        <span class="error-msg">A valid email is required.</span>
+      }
+    </div>
+
+    <div class="input-group">
+      <label>Password</label>
+      <div class="password-wrapper">
+        <input 
+            [type]="getPasswordInputType()"
             formControlName="password"
-            class="password-input"/>
-      <img
-        [src]="isPasswordVisible ? 'assets/eye-open.png' :
-          'assets/eye-close.png'"
-            alt="Toggle password visibility"
-            class="password-eye-icon"
-            (click)="togglePasswordVisibility()"/>
+            placeholder="Enter your password" />
+        <button 
+            type="button" 
+            class="toggle-btn"
+            (click)="togglePasswordVisibility()">
+          <img 
+              [src]="getToggleIconSrc()"
+              alt="Toggle Password" 
+              class="toggle-icon" />
+        </button>
+      </div>
+
+      @if (passwordControl?.touched && passwordControl?.invalid) {
+        <span class="error-msg">Password is required.</span>
+      }
     </div>
 
-    @if (passwordControl?.invalid && (passwordControl?.touched ||
-      passwordControl?.dirty)) {
-      <div class="error-message">
-        @if (passwordControl?.hasError('required')) {
-          <span>Password is required.</span>
-        }
+    <button 
+        type="submit" 
+        class="submit-btn"
+        [disabled]="loginForm.invalid || isSubmitting">
+      
+      @if (isSubmitting) {
+        <div class="btn-content">
+          <span class="spinner"></span> SIGNING IN...
+        </div>
+      } @else {
+        SIGN IN
+      }
+      
+    </button>
+
+    @if (loginErrorMessage) {
+      <div class="error-banner">
+        {{ loginErrorMessage }}
       </div>
     }
-  </div>
 
-  @if (loginError) {
-    <div class="login-error-alert">
-      Invalid email or password. Please try again.
+    <div class="forgot-password">
+      <a routerLink="/forgot-password">Forgot Password?</a>
     </div>
-  }
-
-  <button
-        type="submit"
-        class="btn-sign-in"
-        [disabled]="loginForm.invalid || isSubmitting">
-    @if (isSubmitting) {
-      Signing in...
-    } @else {
-      Sign In
-    }
-  </button>
-
-  <div class="form-footer">
-    <p class="create-account-text">
-      No account yet? <a routerLink="/register">Create one</a>
-    </p>
-    <a routerLink="/forgot-password" class="forgot-password-link">
-      forget Password ?
-    </a>
-  </div>
-</form>
+  </form>
+</div>

@@ -7,7 +7,7 @@ import java.util.List;
 
 public interface ImageRepository extends JpaRepository<Image, Integer> {
     List<Image> findByReportIdAndIsDeletedFalse(Integer reportId);
-    List<Image> findByClaimIdAndIsDeletedFalse(Integer claimId);
+    // List<Image> findByClaimIdAndIsDeletedFalse(Integer claimId);
 
     List<Image> findByReportIdInAndIsDeletedFalse(List<Integer> reportIds);
 }

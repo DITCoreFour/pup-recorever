@@ -1,0 +1,65 @@
+<div class="verification-wrapper">
+  <div class="header-section">
+    <h2 class="title">Enter Verification Code</h2>
+    <p class="subtitle">
+      We sent a 5-digit code to <br>
+      <span class="user-email">{{ email }}</span>
+    </p>
+  </div>
+
+  @if (serverErrorMessage()) {
+    <div class="error-banner">
+      {{ serverErrorMessage() }}
+    </div>
+  }
+
+  <div class="otp-container">
+    @for (digit of digits; track $index) {
+      <input 
+          #otpInput
+          type="text" 
+          class="otp-input" 
+          maxLength="1"
+          [value]="digits[$index]"
+          [class.has-error]="serverErrorMessage() !== null"
+          (input)="onInput($event, $index)"
+          (keydown)="onKeyDown($event, $index)"
+          inputmode="numeric"
+          placeholder="0" />
+    }
+  </div>
+
+  <div class="action-section">
+    
+    <button 
+        type="button" 
+        class="resend-btn" 
+        [disabled]="timeLeft() > 0 || isLoading()"
+        (click)="resendCode()">
+      @if (timeLeft() > 0) {
+        Resend Code in {{ timeLeft() }}s
+      } @else {
+        Resend Verification Code
+      }
+    </button>
+
+    <button 
+        type="button"
+        class="confirm-btn" 
+        [disabled]="isConfirmDisabled()"
+        (click)="confirm()">
+      
+      @if (isLoading()) {
+        <div class="btn-content">
+          <span class="spinner"></span> VERIFYING...
+        </div>
+      } @else {
+        Verify Account
+      }
+    </button>
+
+    <button type="button" class="back-btn" (click)="backToRegistration()">
+      Change Email Address
+    </button>
+  </div>
+</div>

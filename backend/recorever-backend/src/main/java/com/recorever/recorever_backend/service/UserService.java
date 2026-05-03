@@ -1,9 +1,11 @@
 package com.recorever.recorever_backend.service;
 
 import com.recorever.recorever_backend.config.JwtUtil;
+import com.recorever.recorever_backend.model.SecurityCode;
 import com.recorever.recorever_backend.model.User;
 import com.recorever.recorever_backend.repository.UserRepository;
 import com.recorever.recorever_backend.repository.ReportRepository;
+import com.recorever.recorever_backend.repository.SecurityCodeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Service;
@@ -25,7 +27,22 @@ public class UserService {
     @Autowired
     private ReportRepository reportRepo;
 
-    private static final int ADMIN_USER_ID = 1;
+    @Autowired
+    private SecurityCodeRepository securityCodeRepo;
+
+    @Autowired
+    private EmailService emailService;
+
+    private int getAdminUserId() {
+        return repo.findFirstByRoleAndIsDeletedFalse("superadmin")
+                .map(User::getUserId)
+                .orElseGet(() -> 
+                    // Fallback to standard admin if no superadmin is found
+                    repo.findFirstByRoleAndIsDeletedFalse("admin")
+                        .map(User::getUserId)
+                        .orElse(1) // Safety fallback
+                );
+    }
 
     public static class ChangePasswordRequest {
         private String oldPassword;
@@ -38,30 +55,156 @@ public class UserService {
     }
 
     @Transactional
-    public int register(String name, String phone, String email, String pwd) {
-        if (repo.isNameTaken(name, 0)) {
-            throw new IllegalArgumentException("Username is already taken.");
-        }
-
-        if (repo.isPhoneNumberTaken(phone, 0)) {
-            throw new IllegalArgumentException("Phone number is already registered.");
-        }
-
+    public int register(
+        String firstName, 
+        String lastName, 
+        String email, 
+        String pwd, 
+        Integer programId, 
+        Integer year
+    ) {
         if (repo.isEmailTaken(email, 0)) {
-            throw new IllegalArgumentException("Email is already in use.");
+        throw new IllegalArgumentException("Email is already in use.");
         }
+
+        repo.deleteInactiveUserByEmail(email);
 
         User user = new User();
-        user.setName(name);
-        user.setPhoneNumber(phone);
+        user.setFirstName(firstName);
+        user.setLastName(lastName);
         user.setEmail(email);
         user.setPasswordHash(BCrypt.hashpw(pwd, BCrypt.gensalt()));
+        user.setProgramId(programId);
+        user.setYear(year);
         user.setRole("user");
-        user.setDeleted(false);
+        user.setDeleted(true); // Account is inactive until verified
         user.setCreatedAt(LocalDateTime.now().toString());
 
         User savedUser = repo.save(user);
+
+        // Generate and send the 5-digit code
+        sendNewVerificationCode(savedUser.getUserId(), email, false);
+
         return savedUser.getUserId();
+    }
+
+    @Transactional
+    public void sendNewVerificationCode(
+        int userId, 
+        String email, 
+        boolean isResend
+    ) {
+        // Generate a random 5-digit code
+        String code = String.valueOf((int) (Math.random() * 90000) + 10000);
+
+        SecurityCode sc = new SecurityCode();
+        sc.setUserId(userId);
+        sc.setVerificationToken(code);
+        sc.setType("EMAIL_VERIFICATION");
+        sc.setVerified(false);
+        sc.setCreatedAt(LocalDateTime.now());
+
+        LocalDateTime expiryTime = isResend
+                ? LocalDateTime.now().plusSeconds(60)
+                : LocalDateTime.now().plusMinutes(5);
+
+        sc.setExpiresAt(expiryTime);
+        securityCodeRepo.save(sc);
+
+        emailService.sendVerificationCode(email, code, isResend);
+    }
+
+    @Transactional
+    public boolean verifyUserEmail(String token) {
+        SecurityCode code = securityCodeRepo.findByVerificationToken(token)
+                .orElseThrow(() -> new IllegalArgumentException(
+                    "Invalid verification code."));
+
+        if (code.isVerified()) {
+            throw new IllegalArgumentException(
+                "This code has already been used.");
+        }
+
+        if (code.getExpiresAt().isBefore(LocalDateTime.now())) {
+            throw new IllegalArgumentException(
+                "Verification code has expired. Please request a new one.");
+        }
+
+        // Activate User
+        repo.findById(code.getUserId()).ifPresent(user -> {
+            user.setDeleted(false);
+            repo.save(user);
+        });
+
+        code.setVerified(true);
+        securityCodeRepo.save(code);
+        return true;
+    }
+
+    @Transactional
+    public void cancelRegistration(String email) {
+        repo.findByEmail(email).ifPresent(user -> {
+            if (user.isDeleted()) {
+                securityCodeRepo.deleteByUserId(user.getUserId());
+                repo.delete(user);
+            }
+        });
+    }
+
+    @Transactional
+    public void initiatePasswordReset(String email) {
+        User user = repo.findByEmailAndIsDeletedFalse(email)
+                .orElseThrow(() -> new IllegalArgumentException("Email not found."));
+
+        String code = String.valueOf((int) (Math.random() * 90000) + 10000);
+
+        SecurityCode sc = new SecurityCode();
+        sc.setUserId(user.getUserId());
+        sc.setVerificationToken(code);
+        sc.setType("PASSWORD_RESET");
+        sc.setVerified(false);
+        sc.setCreatedAt(LocalDateTime.now());
+        sc.setExpiresAt(LocalDateTime.now().plusMinutes(5));
+        
+        securityCodeRepo.save(sc);
+        emailService.sendPasswordResetCode(email, code);
+    }
+
+    @Transactional
+    public boolean verifyResetCode(String token) {
+        SecurityCode code = securityCodeRepo.findByVerificationToken(token)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid reset code."));
+
+        if (!"PASSWORD_RESET".equals(code.getType())) {
+            throw new IllegalArgumentException("This code is not valid for password resets.");
+        }
+
+        if (code.isVerified() || code.getExpiresAt().isBefore(LocalDateTime.now())) {
+            throw new IllegalArgumentException("Reset code has expired or already been used.");
+        }
+
+        code.setVerified(true);
+        securityCodeRepo.save(code);
+        return true;
+    }
+
+    @Transactional
+    public void completePasswordReset(String email, String token, String newPassword) {
+        SecurityCode code = securityCodeRepo.findByVerificationToken(token)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid token."));
+
+        if (!"PASSWORD_RESET".equals(code.getType()) || !code.isVerified()) {
+            throw new IllegalArgumentException("Token not verified or invalid request.");
+        }
+
+        repo.findByEmailAndIsDeletedFalse(email).ifPresentOrElse(user -> {
+            user.setPasswordHash(BCrypt.hashpw(newPassword, BCrypt.gensalt()));
+            repo.save(user);
+        }, () -> {
+            throw new IllegalArgumentException("User no longer exists.");
+        });
+
+        securityCodeRepo.delete(code);
     }
 
     public Map<String, Object> login(String email, String password) {
@@ -74,7 +217,7 @@ public class UserService {
         }
 
         String accessToken = jwtUtil.generateToken(
-                user.getUserId(), user.getName());
+                user.getUserId(), user.getFullName());
         String refreshToken = UUID.randomUUID().toString();
         
         user.setRefreshToken(refreshToken);
@@ -89,7 +232,7 @@ public class UserService {
 
     @Transactional
     public Map<String, Object> refreshTokens(User user) {
-        String newAT = jwtUtil.generateToken(user.getUserId(), user.getName());
+        String newAT = jwtUtil.generateToken(user.getUserId(), user.getFullName());
         String newRT = UUID.randomUUID().toString();
 
         user.setRefreshToken(newRT);
@@ -103,23 +246,28 @@ public class UserService {
     }
 
     @Transactional
-    public Map<String, Object> updateUserProfile(User user, String name, 
-            String phone, String email, String profilePicture) {
+    public Map<String, Object> updateUserProfile(
+        User user, String name, String email, 
+        Integer programId, Integer year, String profilePicture
+    ) {
         int userId = user.getUserId();
 
-        if (name != null && !name.isEmpty() && !name.equals(user.getName())) {
-            if (repo.isNameTaken(name, userId)) {
-                return Map.of("error", "Username is already taken.");
-            }
-            user.setName(name);
+        // temporary solution: split full name
+        String firstName = null;
+        String lastName = null;
+
+        if (name != null && !name.isEmpty()) {
+            String[] parts = name.split(" ", 2);
+            firstName = parts[0];
+            lastName = parts.length > 1 ? parts[1] : "";
         }
 
-        if (phone != null && !phone.isEmpty() && 
-                !phone.equals(user.getPhoneNumber())) {
-            if (repo.isPhoneNumberTaken(phone, userId)) {
-                return Map.of("error", "Phone number is already in use.");
-            }
-            user.setPhoneNumber(phone);
+        if (firstName != null && !firstName.equals(user.getFirstName())) {
+            user.setFirstName(firstName);
+        }
+
+        if (lastName != null && !lastName.equals(user.getLastName())) {
+            user.setLastName(lastName);
         }
 
         if (email != null && !email.isEmpty() && 
@@ -171,6 +319,6 @@ public class UserService {
     public void deleteAccount(int userId) {
         repo.softDeleteUser(userId);        
         reportRepo.softDeleteLostReportsByUserId(userId);
-        reportRepo.transferFoundReportsToAdmin(userId, ADMIN_USER_ID);
+        reportRepo.transferFoundReportsToAdmin(userId, getAdminUserId());
     }
 }

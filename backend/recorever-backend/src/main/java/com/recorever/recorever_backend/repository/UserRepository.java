@@ -26,29 +26,17 @@ public interface UserRepository extends JpaRepository<User, Integer> {
         @Param("id") int id
     );
 
-    @Query("SELECT u FROM User u WHERE (LOWER(u.name) " +
-           "LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(u.email) " +
-           "LIKE LOWER(CONCAT('%', :query, '%'))) AND u.isDeleted = false")
+    @Query("SELECT u FROM User u WHERE (" +
+           "LOWER(CONCAT(u.firstName, ' ', u.lastName)) LIKE LOWER(CONCAT('%', :query, '%')) " +
+           "OR LOWER(u.email) LIKE LOWER(CONCAT('%', :query, '%'))" +
+           ") AND u.isDeleted = false")
     List<User> searchUsers(
         @Param("query") String query
     );
 
-    @Query("SELECT COUNT(u) > 0 FROM User u WHERE u.name = :name " +
-           "AND u.userId != :userId")
-    boolean isNameTaken(
-        @Param("name") String name, 
-        @Param("userId") int userId
-    );
-
-    @Query("SELECT COUNT(u) > 0 FROM User u WHERE u.phoneNumber = :phoneNumber " +
-           "AND u.userId != :userId")
-    boolean isPhoneNumberTaken(
-        @Param("phoneNumber") String phoneNumber, 
-        @Param("userId") int userId
-    );
-
     @Query("SELECT COUNT(u) > 0 FROM User u WHERE u.email = :email " +
-           "AND u.userId != :userId")
+           "AND u.userId != :userId " +
+           "AND u.isDeleted = false")
     boolean isEmailTaken(
         @Param("email") String email, 
         @Param("userId") int userId
@@ -67,4 +55,17 @@ public interface UserRepository extends JpaRepository<User, Integer> {
     int softDeleteUser(
         @Param("id") int id
     );
+
+    @Modifying
+    @Transactional
+    @Query("DELETE FROM User u WHERE u.email = :email AND u.isDeleted = true")
+    void deleteInactiveUserByEmail(@Param("email") String email);
+
+    Optional<User> findByEmail(String email);
+
+    /**
+     * Used for dynamic admin identification.
+     */
+    @Query("SELECT u FROM User u WHERE u.role = :role AND u.isDeleted = false")
+    Optional<User> findFirstByRoleAndIsDeletedFalse(@Param("role") String role);
 }

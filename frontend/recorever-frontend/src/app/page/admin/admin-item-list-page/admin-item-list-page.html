@@ -1,57 +1,80 @@
-<div class="admin-item-list-page">
-  <header class="page-header">
-    <h1 class="page-title">{{ pageTitle() }}</h1>
-    <div class="search-wrapper">
-      <app-search-bar (search)="onSearch($event)"></app-search-bar>
-    </div>
+<div class="page-container">
+  
+  <header class="breadcrumb-header">
+    <img [src]="headerIcon()" alt="Archive" class="header-icon"
+         (error)="onIconError()"/>
+    <h2 class="breadcrumb-text">
+      <span class="main-path">{{ breadcrumbMain() }}</span>
+      <span class="separator">/</span>
+      <span class="sub-path">{{ breadcrumbSub() }}</span>
+    </h2>
   </header>
 
-  <div class="filter-section">
+  <div class="action-bar">
+    <div class="search-wrapper">
+      <app-search-bar
+          [suggestions]="searchSuggestions()"
+          (queryChange)="onQueryChange($event)"
+          (search)="onSearchSubmit($event)">
+      </app-search-bar>
+    </div>
+  </div>
+
+  <div class="filter-wrapper">
     <app-filter
-      [locations]="locationFilters()"
-      [itemType]="itemType()"
-      (filterChange)="onFilterChange($event)">
+        [locations]="locationFilters()"
+        [itemType]="itemType()"
+        [isAdminPage]="true"
+        [adminStatusOptions]="isArchiveView() ? [] : adminStatuses()"
+        initialAdminStatus="pending"
+        (filterChange)="onFilterChange($event)">
     </app-filter>
   </div>
 
-  <div class="content-section">
-    @if (filteredReports().length > 0) {
+  <div class="reports-content">
+    @if (visibleReports().length > 0) {
       <app-report-item-grid
-        [items]="filteredReports()"
-        [currentUserId]="currentUserId()"
-        [isArchiveView]="isArchiveView()"
-        [highlightId]="highlightId()"
-        [isAdmin]="true"
-        (cardClicked)="onCardClick($event)"
-        (unarchiveClicked)="onUnarchive($event)"
-        (cardTicketClicked)="onTicketClick($event)"
-        (cardEditClicked)="onEditClick($event)"
-        (cardDeleteClicked)="onDeleteClick($event)"
-        (cardViewCodeClicked)="onViewCodeClick($event)">
+          [items]="visibleReports()"
+          [currentUserId]="currentUserId()"
+          [isArchiveView]="isArchiveView()"
+          [highlightId]="highlightId()"
+          [isAdmin]="true"
+          (cardClicked)="onCardClick($event)"
+          (unarchiveClicked)="onUnarchive($event)"
+          (cardTicketClicked)="onTicketClick($event)"
+          (cardEditClicked)="onEditClick($event)"
+          (cardDeleteClicked)="onDeleteClick($event)"
+          (cardViewCodeClicked)="onViewCodeClick($event)">
       </app-report-item-grid>
     }
 
     <div #scrollAnchor class="scroll-anchor">
       @if (isLoading()) {
         <div class="content-message">
-          <div class="spinner"></div>
-          <span>{{ allReports().length === 0 ?
-              'Loading reports...' : 'Loading more items...' }}</span>
+           <div class="spinner"></div>
+           <span>Loading items...</span>
         </div>
       } @else if (error()) {
-        <div class="content-message content-message--error">{{ error() }}</div>
-      } @else if (filteredReports().length === 0 && !isLoading()) {
+        <div class="content-message content-message--error">
+          {{ error() }}
+        </div>
+      } @else if (visibleReports().length === 0 && !isLoading()) {
         <div class="content-message">
           No {{ isArchiveView() ? 'archived' : '' }} items found.
         </div>
       } @else if (currentPage() >= totalPages() && !isLoading()) {
-        <div class="content-message end-of-list">
-          No more items to display.
-        </div>
+        <div class="end-of-list">No more items to display.</div>
       }
     </div>
   </div>
 </div>
+
+@if (showDeleteModal()) {
+  <app-delete-report-modal
+      (confirm)="confirmDelete()"
+      (cancel)="cancelDelete()">
+  </app-delete-report-modal>
+}
 
 @if (viewCodeItem()) {
   <app-codes-modal
@@ -62,33 +85,33 @@
 }
 
 @if (selectedItem(); as item) {
-  @if (isArchiveView() && (item.status === 'claimed')) {
+  @if (isArchiveView() && (item.status.status_id === ReportStatusEnum.CLAIMED)) {
     <app-claim-form-modal
-      [claimData]="item"
-      [isReadOnly]="true"
-      [isArchive]="true"
-      (close)="selectedItem.set(null)"
-      (unarchive)="onModalUnarchive()">
+        [claimData]="item"
+        [isReadOnly]="true"
+        [isArchive]="true"
+        (close)="selectedItem.set(null)"
+        (unarchive)="onModalUnarchive()">
     </app-claim-form-modal>
   } @else {
     <app-item-detail-modal
-      [item]="item"
-      [currentUserId]="currentUserId()"
-      [userProfilePicture]="getUserProfilePicture()"
-      [isArchiveView]="isArchiveView()"
-      [isAdmin]="true"
-      (close)="selectedItem.set(null)"
-      (unarchiveClicked)="onModalUnarchive()"
-      (editClicked)="onModalEdit()"
-      (deleteClicked)="onModalDelete()"
-      (viewCodeClicked)="onModalViewCode()">
+        [item]="item"
+        [currentUserId]="currentUserId()"
+        [userProfilePicture]="getUserProfilePicture()"
+        [isArchiveView]="isArchiveView()"
+        [isAdmin]="true"
+        (close)="selectedItem.set(null)"
+        (unarchiveClicked)="onModalUnarchive()"
+        (editClicked)="onModalEdit()"
+        (deleteClicked)="onModalDelete()"
+        (viewCodeClicked)="onModalViewCode()">
     </app-item-detail-modal>
   }
 }
 
 @if (itemToUnarchive()) {
   <app-unarchive-confirmation-modal
-    (confirm)="processUnarchive()"
-    (cancel)="cancelUnarchive()">
+      (confirm)="processUnarchive()"
+      (cancel)="cancelUnarchive()">
   </app-unarchive-confirmation-modal>
 }

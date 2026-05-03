@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import java.util.List;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 
 @Entity
@@ -21,16 +22,31 @@ public class Report {
     @JsonProperty("report_id")
     private int reportId;
 
+    @OneToOne(mappedBy = "report", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @JsonProperty("details")
+    private ReportDetail details;
+
     @Column(name = "user_id")
     @JsonProperty("user_id")
-    private int userId;
+    private Integer userId;
 
     private String type;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id")
+    @JsonProperty("category")
+    private Category category;
+
+    @Column(name = "item_name")
     @JsonProperty("item_name")
     private String itemName;
 
     private String location;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "surrendered_location_id")
+    @JsonProperty("surrendered_location")
+    private SurrenderedLocation surrenderedLocation;
 
     @Column(name = "date_lost_found")
     @JsonProperty("date_lost_found")
@@ -46,19 +62,30 @@ public class Report {
 
     private String description;
 
-    private String status;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "status_id")
+    @JsonProperty("status_id")
+    private ReportStatus status;
 
     @Column(name = "surrender_code")
     @JsonProperty("surrender_code")
     private String surrenderCode;
 
+    @Column(name = "updated_at")
+    @JsonProperty("updated_at")
+    private LocalDateTime updatedAt;
+
+    @Column(name = "last_updated_by")
+    @JsonProperty("last_updated_by")
+    private Integer lastUpdatedById;
+
+    @Column(name = "is_admin_edit")
+    @JsonProperty("is_admin_edit")
+    private boolean isAdminEdit;
+
     @Column(name = "is_deleted")
     @JsonProperty("is_deleted")
     private boolean isDeleted;
-
-    @Transient
-    @JsonProperty("claim_code")
-    private String claimCode;
 
     @Transient
     @JsonProperty("reporter_name")
@@ -67,7 +94,7 @@ public class Report {
     @Transient
     @JsonProperty("expiry_date")
     private String expiryDate;
-    
+
     @Transient
     @JsonProperty("reporter_profile_picture")
     private String reporterProfilePicture;

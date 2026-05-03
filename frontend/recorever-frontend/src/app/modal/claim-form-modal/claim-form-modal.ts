@@ -42,7 +42,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatRadioModule } from '@angular/material/radio';
 
 import { Claim } from '../../models/claim-model';
-import { Report } from '../../models/item-model';
+import { Report, ReportStatusEnum } from '../../models/item-model';
 import { User } from '../../models/user-model';
 import { ClaimService } from '../../core/services/claim-service';
 import { ItemService } from '../../core/services/item-service';
@@ -96,17 +96,18 @@ export class ClaimFormModal implements OnInit {
   @Input() isArchive: boolean = false;
 
   @Output() close = new EventEmitter<void>();
-  @Output() statusChange = new EventEmitter<string>();
+  @Output() statusChange = new EventEmitter<ReportStatusEnum>();
   @Output() unarchive = new EventEmitter<void>();
 
   protected readonly ClaimStatus = ClaimStatus;
+  protected readonly REPORT_STATUS = ReportStatusEnum;
 
   protected readonly STATUS_OPTIONS = [
-    { value: ClaimStatus.PENDING, label: 'Pending' },
-    { value: ClaimStatus.APPROVED, label: 'Verified' },
-    { value: ClaimStatus.CLAIMED, label: 'Claimed' },
-    { value: ClaimStatus.REJECTED, label: 'Rejected' }
-  ];
+  { value: this.REPORT_STATUS.PENDING, label: 'Pending' },
+  { value: this.REPORT_STATUS.APPROVED, label: 'Verified' },
+  { value: this.REPORT_STATUS.CLAIMED, label: 'Claimed' },
+  { value: this.REPORT_STATUS.REJECTED, label: 'Rejected' }
+];
 
   protected claimForm: FormGroup;
   protected activeClaim = signal<Claim | null>(null);
@@ -137,22 +138,23 @@ export class ClaimFormModal implements OnInit {
   }
 
   protected displayStatus = computed((): ItemStatus => {
-    const currentStatus = this.report()?.status;
-    if (currentStatus === 'claimed') {
+    const currentStatus = this.report()?.status?.status_id;
+    if (currentStatus === this.REPORT_STATUS.CLAIMED) {
       return 'Claimed';
     }
-    if (currentStatus === 'resolved') {
+    if (currentStatus === this.REPORT_STATUS.RESOLVED) {
       return 'Resolved';
     }
 
-    if (currentStatus === 'approved' || currentStatus === 'matched') {
+    if (currentStatus === this.REPORT_STATUS.APPROVED ||
+        currentStatus === this.REPORT_STATUS.MATCHED) {
       return 'Verified';
     }
-    
-    if (currentStatus === 'rejected') {
+
+    if (currentStatus === this.REPORT_STATUS.REJECTED) {
       return 'Rejected';
     }
-    
+
     return 'Pending';
   });
 
@@ -236,7 +238,7 @@ export class ClaimFormModal implements OnInit {
   }
 
   protected displayUserFn(user: User): string {
-    return user && user.name ? user.name : '';
+    return user ? `${user.first_name} ${user.last_name}` : '';
   }
 
   protected onUserSelected(event: MatAutocompleteSelectedEvent): void {
@@ -244,7 +246,7 @@ export class ClaimFormModal implements OnInit {
 
     this.claimForm.patchValue({
       contactEmail: user.email,
-      contactPhone: user.phone_number
+      contactPhone: '' // Phone removed from system; leave empty
     });
 
     this.fetchMatchingLostReports(user.user_id);
@@ -289,7 +291,8 @@ export class ClaimFormModal implements OnInit {
       const todayStr = this.datePipe.transform(new Date(), 'mediumDate');
       this.claimForm.patchValue({ claimDate: todayStr });
 
-      if (this.isArchive && report.status === 'claimed') {
+      if (this.isArchive &&
+          report.status?.status_id === this.REPORT_STATUS.CLAIMED) {
         this.claimService.getClaimByReportId(report.report_id).pipe(
           tap((claim: Claim) => {
             if (claim) {
@@ -301,7 +304,8 @@ export class ClaimFormModal implements OnInit {
           finalize(() => this.isLoading.set(false))
         ).subscribe({
           next: (user) => {
-            this.reportOwnerName.set(user?.name || 'Unknown User');
+            this.reportOwnerName.set(user ? `${user.first_name} 
+                    ${user.last_name}` : 'Unknown User');
             this.reportOwnerPicture.set(user?.profile_picture || null); 
           },
           error: () => this.isLoading.set(false)
@@ -311,8 +315,9 @@ export class ClaimFormModal implements OnInit {
           finalize(() => this.isLoading.set(false))
         ).subscribe({
           next: (user) => {
-            this.reportOwnerName.set(user?.name || 'Unknown User');
-            this.reportOwnerPicture.set(user?.profile_picture || null); 
+            this.reportOwnerName.set(user ? `${user.first_name} 
+                    {user.last_name}` : 'Unknown User');
+            this.reportOwnerPicture.set(user?.profile_picture || null);
           },
           error: (err) => console.error('Error loading report owner', err)
         });
@@ -331,7 +336,8 @@ export class ClaimFormModal implements OnInit {
       ).subscribe({
         next: (owner) => {
           if (owner) {
-            this.reportOwnerName.set(owner.name || 'Unknown User');
+            this.reportOwnerName.set(owner ? `${owner.first_name} 
+                    ${owner.last_name}` : 'Unknown User');
             // Capture the reporter's profile picture filename
             this.reportOwnerPicture.set(owner.profile_picture || null);
           }
@@ -373,23 +379,27 @@ export class ClaimFormModal implements OnInit {
     }
   }
 
-  protected onStatusOptionClick(status: string): void {
+  protected onStatusOptionClick(statusId: number): void {
     if (this.isReadOnly) return;
-    if (status === ClaimStatus.CLAIMED) {
+    if (statusId === this.REPORT_STATUS.CLAIMED) {
       this.toastService.showError('Please fill out Claimant Details and click' +
           '"Submit" to mark this item as Claimed.');
       this.closeDropdown();
       return;
     }
-    this.updateStatus(status);
+    this.updateStatusById(statusId);
   }
 
-  protected isStatusDisabled(status: string): boolean {
-    return status === ClaimStatus.CLAIMED || this.isReadOnly;
+  protected updateStatusById(statusId: number): void {
+    this.updateStatus(statusId);
   }
 
-  protected getOptionTooltip(status: string): string {
-    return status === ClaimStatus.CLAIMED
+  protected isStatusDisabled(status: ReportStatusEnum): boolean {
+    return status === ReportStatusEnum.CLAIMED || this.isReadOnly;
+  }
+
+  protected getOptionTooltip(status: ReportStatusEnum): string {
+    return status === ReportStatusEnum.CLAIMED
       ? 'Please fill out Claimant Details and click "Submit"' +
           'to mark this item as Claimed.'
       : '';
@@ -405,19 +415,34 @@ export class ClaimFormModal implements OnInit {
     this.isDropdownOpen.set(false);
   }
 
-  protected updateStatus(newStatus: string): void {
+  protected updateStatus(newStatusId: ReportStatusEnum): void {
     this.isSaving.set(true);
     const reportId = this.report()?.report_id;
     if (reportId) {
-      this.adminService.updateReportStatus(reportId, newStatus).pipe(
+      this.adminService.updateReportStatus(reportId, newStatusId).pipe(
         tap(() => {
-          this.report.update(r => r ? {
-              ...r, status: newStatus as Report['status'] } : null);
+          this.report.update(r => {
+            if (!r) return null;
+
+            const option = this.STATUS_OPTIONS.find(
+              o => o.value === newStatusId
+            );
+            const newLabel = option ? option.label.toLowerCase() : 'pending';
+
+            return {
+              ...r,
+              status: {
+                ...r.status,
+                status_id: newStatusId,
+                status_name: newLabel
+              }
+            };
+          });
         }),
         finalize(() => {
           this.isSaving.set(false);
           this.closeDropdown();
-          this.statusChange.emit(newStatus);
+          this.statusChange.emit(newStatusId);
         })
       ).subscribe();
     } else {
@@ -425,11 +450,25 @@ export class ClaimFormModal implements OnInit {
     }
   }
 
+  private getStatusNameById(statusId: number): string {
+    const map: Record<number, string> = {
+      [this.REPORT_STATUS.PENDING]: 'pending',
+      [this.REPORT_STATUS.APPROVED]: 'approved',
+      [this.REPORT_STATUS.CLAIMED]: 'claimed',
+      [this.REPORT_STATUS.REJECTED]: 'rejected',
+      [this.REPORT_STATUS.RESOLVED]: 'resolved',
+      [this.REPORT_STATUS.MATCHED]: 'matched'
+    };
+
+    return map[statusId] || 'pending';
+  }
+
   protected saveItemDetails(): void {
     if (this.isReadOnly) return;
-    const currentStatus = this.report()?.status.toLowerCase();
+    const currentStatus = this.report()?.status?.status_id;
 
-    if (currentStatus === 'pending' || currentStatus === 'rejected') {
+    if (currentStatus === ReportStatusEnum.PENDING ||
+        currentStatus === ReportStatusEnum.REJECTED) {
       this.toastService.showError(
         'Cannot submit a claim for reports that are Pending or Rejected.'
       );
@@ -461,12 +500,18 @@ export class ClaimFormModal implements OnInit {
 
       this.claimService.createManualClaim(payload).pipe(
         tap(() => {
-          this.report.update(r => r ? { ...r, status: ClaimStatus.CLAIMED }
-              : null);
+          this.report.update(r => r ? {
+            ...r,
+            status: {
+              ...r.status,
+              status_id: ReportStatusEnum.CLAIMED,
+              status_name: 'claimed'
+            }
+          } : null);
         }),
         finalize(() => {
           this.isSaving.set(false);
-          this.statusChange.emit(ClaimStatus.CLAIMED);
+          this.statusChange.emit(ReportStatusEnum.CLAIMED);
           this.onClose();
         })
       ).subscribe();
@@ -503,4 +548,16 @@ export class ClaimFormModal implements OnInit {
   onClose(): void {
     this.close.emit();
   }
+
+  protected categoryName = computed((): string => {
+    return (this.report() as any)?.category_name || 'Uncategorized';
+  });
+
+  protected surrenderedLocationName = computed((): string | null => {
+    const r = this.report() as any;
+    if (r?.type === 'found' && r?.surrendered_location_name) {
+      return r.surrendered_location_name;
+    }
+    return null;
+  });
 }

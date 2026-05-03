@@ -1,13 +1,20 @@
+export interface AuthActionResponse {
+  success: boolean;
+  message: string;
+}
+
 export type LoginRequest = {
   email: string;
   password: string;
 };
 
 export type RegisterRequest = {
-  name: string;
-  phone_number: string;
+  firstName: string;
+  lastName: string;
   email: string;
   password: string;
+  programId: number | null;
+  year: number | null;
 };
 
 export type LoginResponse = {
@@ -22,4 +29,18 @@ export type LoginResponse = {
 export type LogoutResponse = {
   success: boolean;
   message: string;
+}
+
+export interface MessageResponse {
+  message: string;
+}
+
+export interface ErrorResponse {
+  error: string;
+}
+
+export interface VerificationResponse {
+  success: boolean;
+  message: string;
+  error?: string;
 }
