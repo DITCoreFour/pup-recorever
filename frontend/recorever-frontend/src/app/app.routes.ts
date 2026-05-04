@@ -82,7 +82,7 @@ export const routes: Routes = [
           import('./page/user/user-item-list-page/user-item-list-page')
               .then((m) => m.UserItemListPage),
         title: 'Browse Items - Recorever',
-        data: { itemType: 'lost' } 
+        data: { itemType: 'found' } 
       },
       { path: 'report-lost',
         canActivate: [authGuard],
