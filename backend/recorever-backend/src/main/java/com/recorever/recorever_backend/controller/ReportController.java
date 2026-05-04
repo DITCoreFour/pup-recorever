@@ -340,12 +340,15 @@ public class ReportController {
     public ResponseEntity<?> deleteReport(
             Authentication authentication,
             @PathVariable int id) {
-
         Report report = service.getById(id);
         if (report == null) return ResponseEntity.status(404).body("Not found");
 
         User authUser = (User) authentication.getPrincipal();
-        if (report.getUserId() != authUser.getUserId()) {
+
+        boolean isOwner = report.getUserId() == authUser.getUserId();
+        boolean isAdmin = authUser.getRole().equalsIgnoreCase("ADMIN");
+
+        if (!isOwner && !isAdmin) {
             return ResponseEntity.status(403).body("Not authorized");
         }
 
