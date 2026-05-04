@@ -84,7 +84,7 @@ export class ReportItemCard {
   });
 
   isRemovable = computed((): boolean => {
-    return this.report().type === 'lost';
+    return this.report().type === 'lost' || this.isAdmin();
   });
 
   removeTooltip = computed((): string => {
@@ -159,8 +159,8 @@ export class ReportItemCard {
   });
 
   isEditable = computed((): boolean => {
-    const status = this.report().status;
-    return this.report().status.status_id === ReportStatusEnum.PENDING;
+    return this.report().status.status_id === ReportStatusEnum.PENDING
+      || this.isAdmin();
   });
 
   public getCodeButtonLabel(): string {
@@ -197,11 +197,11 @@ export class ReportItemCard {
   }
 
   public onEdit(event: Event): void {
-
-    const reportData = this.report();
-    const path = reportData.type === 'lost'
-      ? '/app/report-lost'
-      : '/app/report-found';
+    const reportData: Report = this.report();
+    const basePath: string = this.isAdmin() ? '/admin' : '/app';
+    const path: string = reportData.type === 'lost'
+      ? `${basePath}/report-lost`
+      : `${basePath}/report-found`;
 
     this.router.navigate([path], {
       state: {
@@ -209,7 +209,6 @@ export class ReportItemCard {
         mode: 'EDIT'
       }
     });
-
     this.editClicked.emit();
   }
 

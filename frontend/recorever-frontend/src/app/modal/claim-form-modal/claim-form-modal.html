@@ -32,7 +32,35 @@
                       displayDate | date:'mediumDate' }}</span>
                 </div>
               </div>
-              <app-status-badge [status]="displayStatus()"></app-status-badge>
+              
+              <div class="header-actions">
+                <app-status-badge [status]="displayStatus()"></app-status-badge>
+
+                <button
+                        mat-icon-button
+                        [matMenuTriggerFor]="claimModalMenu"
+                        class="modal-menu-trigger">
+                  <mat-icon>more_vert</mat-icon>
+                </button>
+                
+                <mat-menu #claimModalMenu="matMenu" xPosition="before">
+                  <button
+                          mat-menu-item
+                          (click)="onEdit()">
+                    <mat-icon>edit_square</mat-icon>
+                    <span>Edit Report</span>
+                  </button>
+                  <mat-divider></mat-divider>
+                  <button
+                          mat-menu-item
+                          (click)="onDelete()"
+                          class="delete-option">
+                    <mat-icon color="warn">auto_delete</mat-icon>
+                    <span class="text-danger"
+                        style="color: #ff3b30;">Remove</span>
+                  </button>
+                </mat-menu>
+              </div>
             </div>
 
             <div class="image-section">

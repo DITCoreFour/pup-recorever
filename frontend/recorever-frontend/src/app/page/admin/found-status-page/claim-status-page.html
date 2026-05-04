@@ -26,10 +26,11 @@
   <div class="reports-content">
     @if (reports().length > 0) {
       <app-report-item-grid
-            [items]="filteredReports()"
-            [isAdmin]="isAdmin()"
-            [highlightId]="highlightId()"
-            (cardClicked)="onViewDetails($event.report_id)">
+              [items]="filteredReports()"
+              [isAdmin]="isAdmin()"
+              [highlightId]="highlightId()"
+              (cardClicked)="onViewDetails($event.report_id)"
+              (cardDeleteClicked)="onDeleteClick($event)">
       </app-report-item-grid>
     }
 
@@ -49,9 +50,17 @@
 
   @if (selectedReport()) {
     <app-claim-form-modal
-        [claimData]="selectedReport()!"
-        (close)="onCloseModal()"
-        (statusChange)="onStatusChanged($event)">
+            [claimData]="selectedReport()!"
+            (close)="onCloseModal()"
+            (statusChange)="onStatusChanged($event)"
+            (deleteClicked)="onModalDelete()">
     </app-claim-form-modal>
+  }
+
+  @if (showDeleteModal()) {
+    <app-delete-report-modal
+            (confirm)="confirmDelete()"
+            (cancel)="cancelDelete()">
+    </app-delete-report-modal>
   }
 </div>

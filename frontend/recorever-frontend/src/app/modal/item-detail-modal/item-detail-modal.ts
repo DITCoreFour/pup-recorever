@@ -65,11 +65,12 @@ export class ItemDetailModal {
   protected currentImageIndex = signal<number>(0);
 
   isEditable = computed((): boolean => {
-    return this.item().status.status_id === ReportStatusEnum.PENDING;
+  return this.item().status.status_id === ReportStatusEnum.PENDING
+      || this.isAdmin();
   });
 
   isRemovable = computed((): boolean => {
-    return this.item().type === 'lost';
+  return this.item().type === 'lost' || this.isAdmin();
   });
 
   removeTooltip = computed((): string => {
