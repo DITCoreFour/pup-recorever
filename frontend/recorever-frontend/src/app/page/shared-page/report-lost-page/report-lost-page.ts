@@ -10,6 +10,7 @@ import { ItemService } from '../../../core/services/item-service';
 import {
   SuccessLostModal
 } from '../../../modal/success-lost-modal/success-lost-modal';
+import { AppRoutePaths } from '../../../app.routes';
 
 @Component({
   selector: 'app-report-lost-page',
@@ -29,6 +30,12 @@ export class ReportLostPage implements OnInit {
   protected pageTitle = signal<string>('Report Lost Item');
   protected initialData = signal<Report | null>(null);
   protected isAdminMode = false;
+
+  private get postEditRoute(): string {
+    return this.isAdminMode
+      ? AppRoutePaths.REPORT_STATUS_MANAGEMENT
+      : AppRoutePaths.MY_REPORTS;
+  }
 
   ngOnInit(): void {
     const state = history.state;
@@ -51,9 +58,9 @@ export class ReportLostPage implements OnInit {
       : this.itemService.submitFullReport(data, files);
 
     request$.pipe(
-      tap((response: Report) => {
+      tap(() => {
         if (this.isEditMode()) {
-          this.router.navigate(['/app/lost-items']);
+          this.router.navigate([this.postEditRoute]);
           return;
         }
         this.showSuccessModal.set(true);
@@ -68,15 +75,17 @@ export class ReportLostPage implements OnInit {
 
   onViewReport(): void {
     this.showSuccessModal.set(false);
-    this.router.navigate(['/app/profile']);
+    this.router.navigate([AppRoutePaths.MY_REPORTS]);
   }
 
   onSearchItems(): void {
     this.showSuccessModal.set(false);
-    this.router.navigate(['/app/found-items']);
+    this.router.navigate([AppRoutePaths.BROWSE],
+                         { queryParams: { type: 'found' } }
+    );
   }
 
   handleCancel(): void {
-    this.router.navigate(['/app/lost-items']);
+    this.router.navigate([AppRoutePaths.REPORT_LOST]);
   }
 }

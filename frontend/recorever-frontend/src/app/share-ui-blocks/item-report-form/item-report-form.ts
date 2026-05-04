@@ -1,4 +1,11 @@
-import { Component, Input, Output, EventEmitter, OnInit, inject } from '@angular/core';
+import {
+  Component,
+  Input,
+  Output,
+  EventEmitter,
+  OnInit, inject,
+  ChangeDetectorRef
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { 
   ReactiveFormsModule,
@@ -99,6 +106,7 @@ export class ItemReportForm implements OnInit {
   private toastService = inject(ToastService);
   private itemService = inject(ItemService);
   private userService = inject(UserService);
+  private cdr = inject(ChangeDetectorRef);
 
   readonly placeholderText =
       'Please include brand, color, or unique markings '
@@ -235,6 +243,14 @@ export class ItemReportForm implements OnInit {
     this.itemService.getCategories().subscribe({
       next: (data) => {
         this.categories = data;
+        console.log('Fetched categories:', data);
+        if (this.initialData) {
+          this.reportForm.patchValue({
+            category: this.initialData.category?.category_id
+          });
+
+          this.cdr.detectChanges();
+        }
       },
       error: (err) => {
         console.error('Failed to fetch categories:', err);
@@ -247,6 +263,14 @@ export class ItemReportForm implements OnInit {
         next: (data) => {
           this.surrenderOptions = data;
           console.log('Fetched surrender locations:', data);
+          if (this.initialData) {
+            this.reportForm.patchValue({
+              surrendered_location:
+                this.initialData.surrendered_location?.surrendered_location_id
+            });
+
+            this.cdr.detectChanges();
+          }
         },
         error: (err) => {
           console.error('Failed to fetch surrender locations:', err);

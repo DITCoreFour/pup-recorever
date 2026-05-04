@@ -231,13 +231,15 @@ export class ReportItemCard {
   }
 
   categoryName = computed((): string => {
-    return (this.report() as any).category_name || 'Uncategorized';
+    return (this.report() as any).category?.category_name || 'Uncategorized';
   });
 
   surrenderedLocationName = computed((): string | null => {
     const r = this.report() as any;
-    if (r.type === 'found' && r.surrendered_location_name) {
-      return r.surrendered_location_name;
+    if (r.type === 'found' &&
+        r.surrendered_location?.surrendered_location_name
+    ) {
+      return r.surrendered_location.surrendered_location_name;
     }
     return null;
   });
