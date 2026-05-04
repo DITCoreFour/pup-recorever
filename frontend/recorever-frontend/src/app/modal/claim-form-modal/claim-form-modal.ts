@@ -550,7 +550,7 @@ export class ClaimFormModal implements OnInit {
   }
 
   protected categoryName = computed((): string => {
-    return (this.report() as any)?.category_name || 'Uncategorized';
+    return (this.report() as any)?.category?.category_name || 'Uncategorized';
   });
 
   protected surrenderedLocationName = computed((): string | null => {

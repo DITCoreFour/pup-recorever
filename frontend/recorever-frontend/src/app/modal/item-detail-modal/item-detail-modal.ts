@@ -253,7 +253,7 @@ export class ItemDetailModal {
   }
 
   categoryName = computed((): string => {
-    return (this.item() as any).category_name || 'Uncategorized';
+    return (this.item() as any)?.category?.category_name || 'Uncategorized';
   });
 
   surrenderedLocationName = computed((): string | null => {
