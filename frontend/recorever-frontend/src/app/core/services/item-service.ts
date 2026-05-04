@@ -86,10 +86,41 @@ export class ItemService {
   ): Observable<Report> {
     const formData = new FormData();
 
+    if (report.reported_by) {
+      formData.append('reported_by', String(report.reported_by));
+    }
+
+    if (report.reporter_email) {
+      formData.append('reporter_email', report.reporter_email);
+    }
+
+    if (report.reporter_phone) {
+      formData.append('reporter_phone', report.reporter_phone);
+    }
+
+    if (report.reported_by_user_id) {
+      formData.append(
+        'reported_by_user_id',
+        report.reported_by_user_id.toString()
+      );
+    }
+
     formData.append('type', report.type);
     formData.append('item_name', report.item_name);
+    formData.append('category_id', report.category_id.toString());
     formData.append('location', report.location);
     formData.append('description', report.description);
+
+    if (report.status) {
+      formData.append('status', report.status.toString());
+    }
+
+    if (report.surrendered_location_id) {
+      formData.append(
+        'surrendered_location_id',
+        report.surrendered_location_id.toString()
+      );
+    }
 
     if (report.date_lost_found) {
       formData.append('date_lost_found', report.date_lost_found);
