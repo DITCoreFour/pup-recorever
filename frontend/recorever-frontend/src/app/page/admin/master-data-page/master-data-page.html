@@ -1,0 +1,84 @@
+<div class="page-container">
+  <header class="breadcrumb-header">
+    <mat-icon class="header-icon">table_rows</mat-icon>
+    <h2 class="breadcrumb-text">
+      <span class="main-path">Master Data</span>
+    </h2>
+  </header>
+
+  <div class="master-data-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <h3 class="sidebar-title">Table List</h3>
+      <ul class="sidebar-list">
+        <li class="sidebar-item active">Item Categories</li>
+      </ul>
+    </aside>
+
+    <div class="table-panel">
+
+      <div class="panel-header">
+        <form [formGroup]="searchForm" class="search-wrapper">
+          <mat-icon class="search-icon">search</mat-icon>
+          <input
+            class="search-input"
+            type="text"
+            formControlName="query"
+            placeholder="Search category..." />
+        </form>
+      </div>
+
+      <div class="table-title-row">
+        <div class="table-title-left">
+          <mat-icon class="title-icon">category</mat-icon>
+          <span class="title-label">Item Categories</span>
+        </div>
+        <button class="add-btn" (click)="openAddModal()">
+          <mat-icon>add</mat-icon> Add Category
+        </button>
+      </div>
+
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th class="col-name">
+                Category Name
+                <mat-icon class="sort-icon">unfold_more</mat-icon>
+              </th>
+              <th class="col-actions">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @if (filteredItems().length > 0) {
+              @for (item of filteredItems(); track item.id) {
+                <tr class="table-row">
+                  <td class="col-name">{{ item.name }}</td>
+                  <td class="col-actions">
+                    <button class="action-btn edit"
+                            (click)="openEditModal(item)">Edit</button>
+                    <button class="action-btn delete"
+                            (click)="deleteItem(item.id)">Delete</button>
+                  </td>
+                </tr>
+              }
+            } @else {
+              <tr>
+                <td colspan="2" class="empty-row">No categories found.</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  @if (showModal()) {
+    <app-category-modal
+        [editItem]="selectedItem()"
+        (close)="closeModal()"
+        (save)="onSaveCategory($event)"
+        (update)="onUpdateCategory($event)">
+    </app-category-modal>
+  }
+</div>
