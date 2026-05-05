@@ -13,10 +13,11 @@ import { ItemService } from '../../../core/services/item-service';
 import { AuthService } from '../../../core/auth/auth-service';
 import { ClaimService } from '../../../core/services/claim-service';
 
-import { Report,
-         PaginatedResponse,
-         ReportFilters,
-         ReportStatusEnum
+import { 
+  Report,
+  PaginatedResponse,
+  ReportFilters,
+  ReportStatusEnum
 } from '../../../models/item-model';
 
 import { User } from '../../../models/user-model';
@@ -37,7 +38,11 @@ import {
 } from "../../../modal/delete-report-modal/delete-report-modal";
 
 type ItemType = 'all' | 'lost' | 'found';
-type ReportStatus = 'all' | 'unresolved' | 'resolved';
+
+export type MyReportStatusFilter = {
+  label: string;
+  value: number | null; 
+};
 
 @Component({
   selector: 'app-my-reports-page',
@@ -58,7 +63,6 @@ export class MyReportsPage implements OnInit, AfterViewInit, OnDestroy {
   private itemService: ItemService = inject(ItemService);
   private authService: AuthService = inject(AuthService);
   private claimService: ClaimService = inject(ClaimService);
-  private datePipe: DatePipe = inject(DatePipe);
 
   private destroy$ = new Subject<void>();
   private refreshTrigger$ = new BehaviorSubject<void>(undefined);
@@ -79,7 +83,6 @@ export class MyReportsPage implements OnInit, AfterViewInit, OnDestroy {
   public error = signal<string | null>(null);
 
   public itemType = signal<ItemType>('all');
-  public currentStatus = signal<ReportStatus>('all');
   public isStatusOpen = signal(false);
   public searchQuery = signal('');
   
@@ -92,6 +95,19 @@ export class MyReportsPage implements OnInit, AfterViewInit, OnDestroy {
   public viewCodeItem = signal<Report | null>(null);
   public selectedItem = signal<Report | null>(null);
 
+  public readonly availableStatuses: MyReportStatusFilter[] = [
+    { label: 'All Status', value: null },
+    { label: 'Pending', value: ReportStatusEnum.PENDING },
+    { label: 'Verified', value: ReportStatusEnum.APPROVED },
+    { label: 'Matched', value: ReportStatusEnum.MATCHED },
+    { label: 'Claimed', value: ReportStatusEnum.CLAIMED },
+    { label: 'Rejected', value: ReportStatusEnum.REJECTED }
+  ];
+
+  public currentStatus = signal<MyReportStatusFilter>(
+      this.availableStatuses[0]
+  );
+
   public visibleReports = computed((): Report[] => {
     let reports = [...this.allReports()];
     const type = this.itemType();
@@ -102,14 +118,10 @@ export class MyReportsPage implements OnInit, AfterViewInit, OnDestroy {
       reports = reports.filter((r: Report) => r.type === type);
     }
 
-    if (status !== 'all') {
-      reports = reports.filter((r: Report) => {
-        const isResolved =
-          r.status.status_id === ReportStatusEnum.RESOLVED ||
-          r.status.status_id === ReportStatusEnum.CLAIMED;
-
-          return statusFilter === 'resolved' ? isResolved : !isResolved;
-      });
+    if (statusFilter.value !== null) {
+      reports = reports.filter((r: Report) => 
+          r.status.status_id === statusFilter.value
+      );
     }
 
     if (query) {
@@ -125,13 +137,6 @@ export class MyReportsPage implements OnInit, AfterViewInit, OnDestroy {
     });
 
     return reports;
-  });
-
-  public displayStatus = computed((): string => {
-    const status = this.currentStatus();
-    if (status === 'unresolved') return 'Unresolved';
-    if (status === 'resolved') return 'Resolved';
-    return 'Status';
   });
 
   public codeModalTitle = computed((): string => {
@@ -197,14 +202,16 @@ export class MyReportsPage implements OnInit, AfterViewInit, OnDestroy {
 
   public ngAfterViewInit(): void {
     if (this.scrollAnchor) {
-      this.observer = new IntersectionObserver
-          (([entry]: IntersectionObserverEntry[]) => {
-        if (entry.isIntersecting && !this.isLoading() &&
-            this.currentPage() < this.totalPages()) {
-          this.currentPage.update((p: number) => p + 1);
-          this.refreshTrigger$.next();
-        }
-      }, { rootMargin: '150px' });
+      this.observer = new IntersectionObserver(
+        ([entry]: IntersectionObserverEntry[]) => {
+          if (entry.isIntersecting && !this.isLoading() &&
+              this.currentPage() < this.totalPages()) {
+            this.currentPage.update((p: number) => p + 1);
+            this.refreshTrigger$.next();
+          }
+        }, 
+        { rootMargin: '150px' }
+      );
       this.observer.observe(this.scrollAnchor.nativeElement);
     }
   }
@@ -226,8 +233,8 @@ export class MyReportsPage implements OnInit, AfterViewInit, OnDestroy {
     this.isStatusOpen.update((v: boolean) => !v);
   }
 
-  public setStatus(status: ReportStatus): void {
-    this.currentStatus.set(status);
+  public setStatus(statusObj: MyReportStatusFilter): void {
+    this.currentStatus.set(statusObj);
     this.isStatusOpen.set(false);
   }
 

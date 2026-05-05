@@ -111,6 +111,12 @@
         background-color: #f3f4f6;
         color: #b91c1c;
       }
+      
+      &.active {
+        font-weight: 600;
+        background-color: #fef2f2;
+        color: #b91c1c;
+      }
     }
   }
 }
@@ -190,4 +196,8 @@
   color: #999;
   font-size: 0.9rem;
   font-style: italic;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }

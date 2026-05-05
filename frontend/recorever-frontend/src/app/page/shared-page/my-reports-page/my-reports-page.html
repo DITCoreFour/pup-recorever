@@ -1,6 +1,6 @@
 <div class="page-container">
   <div class="page-header">
-    <img src="assets/my_reports.png" class="header-icon"/>
+    <img src="assets/my_reports.png" class="header-icon" alt="My Reports"/>
     <h1 class="page-title">My Reports</h1>
   </div>
 
@@ -20,20 +20,18 @@
             type="button" 
             class="status-btn" 
             (click)="toggleStatusDropdown($event)">
-          {{ displayStatus() }} ▾
+          {{ currentStatus().label }} ▾
         </button>
         
         @if (isStatusOpen()) {
           <div class="dropdown-menu">
-            <div class="dropdown-item" (click)="setStatus('all')">
-              All Status
-            </div>
-            <div class="dropdown-item" (click)="setStatus('unresolved')">
-              Unresolved
-            </div>
-            <div class="dropdown-item" (click)="setStatus('resolved')">
-              Resolved
-            </div>
+            @for (status of availableStatuses; track status.value) {
+              <div class="dropdown-item" 
+                   [class.active]="currentStatus().value === status.value"
+                   (click)="setStatus(status)">
+                {{ status.label }}
+              </div>
+            }
           </div>
         }
       </div>
