@@ -5,9 +5,7 @@
       <span class="main-path">Master Data</span>
     </h2>
   </header>
-
   <div class="master-data-layout">
-    <!-- Sidebar -->
     <aside class="sidebar">
       <h3 class="sidebar-title">Table List</h3>
       <ul class="sidebar-list">
@@ -16,7 +14,6 @@
     </aside>
 
     <div class="table-panel">
-
       <div class="panel-header">
         <form [formGroup]="searchForm" class="search-wrapper">
           <mat-icon class="search-icon">search</mat-icon>
@@ -27,7 +24,7 @@
             placeholder="Search category..." />
         </form>
       </div>
-
+      
       <div class="table-title-row">
         <div class="table-title-left">
           <mat-icon class="title-icon">category</mat-icon>
@@ -37,7 +34,7 @@
           <mat-icon>add</mat-icon> Add Category
         </button>
       </div>
-
+      
       <div class="table-wrapper">
         <table class="data-table">
           <thead>
@@ -50,7 +47,13 @@
             </tr>
           </thead>
           <tbody>
-            @if (filteredItems().length > 0) {
+            @if (isLoading()) {
+              <tr>
+                <td colspan="2" class="empty-row">
+                  Loading categories...
+                </td>
+              </tr>
+            } @else if (filteredItems().length > 0) {
               @for (item of filteredItems(); track item.id) {
                 <tr class="table-row">
                   <td class="col-name">{{ item.name }}</td>
@@ -72,7 +75,7 @@
       </div>
     </div>
   </div>
-
+  
   @if (showModal()) {
     <app-category-modal
         [editItem]="selectedItem()"

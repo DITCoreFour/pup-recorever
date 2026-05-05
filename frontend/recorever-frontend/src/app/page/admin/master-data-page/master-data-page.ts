@@ -4,22 +4,24 @@ import {
   computed,
   ChangeDetectionStrategy,
   OnInit,
-  OnDestroy
+  OnDestroy,
+  inject
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
-import { Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
-
+import { Subject, BehaviorSubject, of } from 'rxjs';
+import { takeUntil, switchMap, tap, catchError, finalize } from 'rxjs/operators';
 import { CategoryModal } from '../../../modal/category-modal/category-modal';
+import { CategoryService, CategoryModel, CategoryPayload } from '../../../core/services/category-service';
+import { ToastService } from '../../../core/services/toast-service';
 
-type MasterDataItem = {
+export type MasterDataItem = {
   id: number;
   name: string;
 };
 
-type UpdatePayload = {
+export type UpdatePayload = {
   id: number;
   name: string;
 };
@@ -38,34 +40,31 @@ type UpdatePayload = {
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class MasterDataPage implements OnInit, OnDestroy {
-
   private readonly destroy$ = new Subject<void>();
-  private nextId = 100;
+  private readonly refreshTrigger$ = new BehaviorSubject<void>(undefined);
+  
+  private readonly fb = inject(FormBuilder);
+  private readonly categoryService = inject(CategoryService);
+  private readonly toastService = inject(ToastService);
 
-  private readonly items = signal<MasterDataItem[]>([
-    { id: 1, name: 'Electronics' },
-    { id: 2, name: 'Documents' },
-    { id: 3, name: 'Clothing' },
-    { id: 4, name: 'Accessories' },
-    { id: 5, name: 'Books' },
-    { id: 6, name: 'Tumblers' },
-    { id: 7, name: 'Others' }
-  ]);
-
-  public showModal = signal(false);
+  public isLoading = signal<boolean>(false);
+  public showModal = signal<boolean>(false);
   public selectedItem = signal<MasterDataItem | null>(null);
-
+  
+  private readonly items = signal<MasterDataItem[]>([]);
   public searchForm!: FormGroup;
 
   public filteredItems = computed((): MasterDataItem[] => {
     const q = (this.searchForm?.get('query')?.value ?? '').toLowerCase().trim();
-    if (!q) return this.items();
+    
+    if (!q) {
+      return this.items();
+    }
+
     return this.items().filter((item: MasterDataItem) =>
       item.name.toLowerCase().includes(q)
     );
   });
-
-  constructor(private readonly fb: FormBuilder) {}
 
   public ngOnInit(): void {
     this.searchForm = this.fb.group({
@@ -77,6 +76,26 @@ export class MasterDataPage implements OnInit, OnDestroy {
       .subscribe((): void => {
         this.items.update((v: MasterDataItem[]) => [...v]);
       });
+
+    this.refreshTrigger$.pipe(
+      tap((): void => this.isLoading.set(true)),
+      switchMap(() => {
+        return this.categoryService.getCategories().pipe(
+          catchError(() => {
+            this.toastService.showError('Failed to load categories');
+            return of([]);
+          }),
+          finalize((): void => this.isLoading.set(false))
+        );
+      }),
+      takeUntil(this.destroy$)
+    ).subscribe((categories: CategoryModel[]): void => {
+       const mappedItems: MasterDataItem[] = categories.map((cat: CategoryModel) => ({
+         id: cat.category_id,
+         name: cat.category_name
+       }));
+       this.items.set(mappedItems);
+    });
   }
 
   public ngOnDestroy(): void {
@@ -100,23 +119,44 @@ export class MasterDataPage implements OnInit, OnDestroy {
   }
 
   public onSaveCategory(name: string): void {
-    const newItem: MasterDataItem = { id: ++this.nextId, name };
-    this.items.update((current: MasterDataItem[]) => [...current, newItem]);
-    this.closeModal();
+    const payload: CategoryPayload = { category_name: name };
+    
+    this.categoryService.createCategory(payload).subscribe({
+      next: (): void => {
+        this.toastService.showSuccess('Category created successfully');
+        this.closeModal();
+        this.refreshTrigger$.next();
+      },
+      error: (): void => {
+        this.toastService.showError('Failed to create category');
+      }
+    });
   }
 
   public onUpdateCategory(payload: UpdatePayload): void {
-    this.items.update((current: MasterDataItem[]) =>
-      current.map((item: MasterDataItem) =>
-        item.id === payload.id ? { ...item, name: payload.name } : item
-      )
-    );
-    this.closeModal();
+    const updateData: CategoryPayload = { category_name: payload.name };
+    
+    this.categoryService.updateCategory(payload.id, updateData).subscribe({
+      next: (): void => {
+        this.toastService.showSuccess('Category updated successfully');
+        this.closeModal();
+        this.refreshTrigger$.next();
+      },
+      error: (): void => {
+        this.toastService.showError('Failed to update category');
+      }
+    });
   }
 
   public deleteItem(id: number): void {
-    this.items.update((current: MasterDataItem[]) =>
-      current.filter((item: MasterDataItem) => item.id !== id)
-    );
+    this.categoryService.deleteCategory(id).subscribe({
+      next: (): void => {
+        this.toastService.showSuccess('Category deleted successfully');
+        this.refreshTrigger$.next();
+      },
+      error: (): void => {
+        this.toastService.showError('Failed to delete category');
+      }
+    });
   }
 }
