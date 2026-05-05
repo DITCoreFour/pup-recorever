@@ -13,6 +13,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { Subject, BehaviorSubject, of } from 'rxjs';
 import { takeUntil, switchMap, tap, catchError, finalize } from 'rxjs/operators';
 import { CategoryModal } from '../../../modal/category-modal/category-modal';
+import { ConfirmationModal } from '../../../modal/confirmation-modal/confirmation-modal';
 import { CategoryService, CategoryModel, CategoryPayload } from '../../../core/services/category-service';
 import { ToastService } from '../../../core/services/toast-service';
 
@@ -33,7 +34,8 @@ export type UpdatePayload = {
     CommonModule,
     ReactiveFormsModule,
     MatIconModule,
-    CategoryModal
+    CategoryModal,
+    ConfirmationModal
   ],
   templateUrl: './master-data-page.html',
   styleUrl: './master-data-page.scss',
@@ -47,9 +49,18 @@ export class MasterDataPage implements OnInit, OnDestroy {
   private readonly categoryService = inject(CategoryService);
   private readonly toastService = inject(ToastService);
 
-  public isLoading = signal<boolean>(false);
-  public showModal = signal<boolean>(false);
+  public isLoading = signal(false); 
+  public showModal = signal(false);
+  public showDeleteConfirmModal = signal(false);
+
   public selectedItem = signal<MasterDataItem | null>(null);
+  public itemToDelete = signal<MasterDataItem | null>(null);
+  
+  public deleteConfirmMessage = computed((): string => {
+    const item = this.itemToDelete();
+    return item ? `Are you sure you want to delete the category '${item.name}'?`
+        : 'Are you sure you want to delete this category?';
+  });
   
   private readonly items = signal<MasterDataItem[]>([]);
   public searchForm!: FormGroup;
@@ -67,8 +78,9 @@ export class MasterDataPage implements OnInit, OnDestroy {
   });
 
   public ngOnInit(): void {
+
     this.searchForm = this.fb.group({
-      query: ['']
+      query: ['', { updateOn: 'change' }] 
     });
 
     this.searchForm.get('query')?.valueChanges
@@ -90,7 +102,8 @@ export class MasterDataPage implements OnInit, OnDestroy {
       }),
       takeUntil(this.destroy$)
     ).subscribe((categories: CategoryModel[]): void => {
-       const mappedItems: MasterDataItem[] = categories.map((cat: CategoryModel) => ({
+       const mappedItems: MasterDataItem[] =
+         categories.map((cat: CategoryModel) => ({
          id: cat.category_id,
          name: cat.category_name
        }));
@@ -148,15 +161,32 @@ export class MasterDataPage implements OnInit, OnDestroy {
     });
   }
 
-  public deleteItem(id: number): void {
-    this.categoryService.deleteCategory(id).subscribe({
+  public confirmDelete(item: MasterDataItem): void {
+    this.itemToDelete.set(item);
+    this.showDeleteConfirmModal.set(true);
+  }
+
+  public proceedWithDeletion(): void {
+    const item = this.itemToDelete();
+    if (!item) return;
+
+    this.categoryService.deleteCategory(item.id).subscribe({
       next: (): void => {
         this.toastService.showSuccess('Category deleted successfully');
+        this.showDeleteConfirmModal.set(false);
+        this.itemToDelete.set(null);
         this.refreshTrigger$.next();
       },
       error: (): void => {
         this.toastService.showError('Failed to delete category');
+        this.showDeleteConfirmModal.set(false);
+        this.itemToDelete.set(null);
       }
     });
+  }
+
+  public cancelDelete(): void {
+    this.showDeleteConfirmModal.set(false);
+    this.itemToDelete.set(null);
   }
 }

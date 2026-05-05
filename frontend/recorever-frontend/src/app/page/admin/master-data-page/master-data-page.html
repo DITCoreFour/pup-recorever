@@ -60,8 +60,9 @@
                   <td class="col-actions">
                     <button class="action-btn edit"
                             (click)="openEditModal(item)">Edit</button>
+
                     <button class="action-btn delete"
-                            (click)="deleteItem(item.id)">Delete</button>
+                            (click)="confirmDelete(item)">Delete</button>
                   </td>
                 </tr>
               }
@@ -83,5 +84,16 @@
         (save)="onSaveCategory($event)"
         (update)="onUpdateCategory($event)">
     </app-category-modal>
+  }
+
+  @if (showDeleteConfirmModal()) {
+    <app-confirmation-modal
+        title="Confirm Deletion"
+        [message]="deleteConfirmMessage()"
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        (confirm)="proceedWithDeletion()"
+        (cancel)="cancelDelete()">
+    </app-confirmation-modal>
   }
 </div>
