@@ -7,6 +7,7 @@ import {
   inject,
   signal,
 } from '@angular/core';
+import { AppRoutePaths } from '../../../app.routes';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
@@ -198,10 +199,14 @@ export class ReportItemCard {
 
   public onEdit(event: Event): void {
     const reportData: Report = this.report();
-    const basePath: string = this.isAdmin() ? '/admin' : '/app';
-    const path: string = reportData.type === 'lost'
-      ? `${basePath}/report-lost`
-      : `${basePath}/report-found`;
+    
+    const path: string = this.isAdmin()
+      ? (reportData.type === 'lost' 
+          ? AppRoutePaths.ADMIN_REPORT_LOST 
+          : AppRoutePaths.ADMIN_REPORT_FOUND)
+      : (reportData.type === 'lost' 
+          ? AppRoutePaths.REPORT_LOST 
+          : AppRoutePaths.REPORT_FOUND);
 
     this.router.navigate([path], {
       state: {

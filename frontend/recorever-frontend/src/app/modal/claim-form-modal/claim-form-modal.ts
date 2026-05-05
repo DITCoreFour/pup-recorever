@@ -569,12 +569,14 @@ export class ClaimFormModal implements OnInit {
     return null;
   });
 
-  onEdit(): void {
-    const reportData = this.report();
+  public onEdit(): void {
+    const reportData: Report | null = this.report();
     if (!reportData) return;
     
-    const path = reportData.type === 'lost' ?
-        '/app/report-lost' : '/app/report-found';
+    const path: string = reportData.type === 'lost'
+      ? '/admin/report-lost'
+      : '/admin/report-found';
+    
     this.router.navigate([path], {
       state: { data: reportData, mode: 'EDIT' }
     });
@@ -583,7 +585,7 @@ export class ClaimFormModal implements OnInit {
     this.onClose();
   }
 
-  onDelete(): void {
+  public onDelete(): void {
     this.deleteClicked.emit();
     this.onClose();
   }
