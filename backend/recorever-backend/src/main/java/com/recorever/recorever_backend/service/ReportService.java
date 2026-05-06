@@ -351,7 +351,8 @@ public class ReportService {
     public boolean updateEditableFields(int id, int updatedById,
             boolean isAdmin, String itemName, Integer categoryId,
             String location, Integer surrenderedLocationId,
-            String description) {
+            String description, String reporterName, String email, String phone,
+            Integer reporterUserId) {
         return repo.findByReportIdAndIsDeletedFalse(id).map(report -> {
             if (itemName != null) report.setItemName(itemName);
             if (location != null) report.setLocation(location);
@@ -372,6 +373,22 @@ public class ReportService {
             report.setUpdatedAt(java.time.LocalDateTime.now());
             report.setLastUpdatedById(updatedById);
             report.setAdminEdit(isAdmin);
+
+            if (isAdmin) {
+                ReportDetail details = reportDetailRepo.findByReportReportId(id)
+                        .orElse(new ReportDetail());
+
+                details.setReport(report);
+                details.setPersonName(reporterName);
+                details.setPersonContactEmail(email);
+                details.setPersonContactPhone(phone);
+
+                details.setUserId(reporterUserId); 
+
+                details.setAdminId(updatedById);
+
+                reportDetailRepo.save(details);
+            }
 
             repo.save(report);
             return true;

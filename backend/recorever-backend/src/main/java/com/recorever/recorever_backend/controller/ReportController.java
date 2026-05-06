@@ -330,7 +330,11 @@ public class ReportController {
                 reportDto.getCategory_id(),
                 reportDto.getLocation(),
                 reportDto.getSurrendered_location_id(),
-                reportDto.getDescription()
+                reportDto.getDescription(),
+                reportDto.getReported_by(),
+                reportDto.getReporter_email(),
+                reportDto.getReporter_phone(),
+                reportDto.getReported_by_user_id()
         );
 
         List<MultipartFile> files = reportDto.getFiles();
