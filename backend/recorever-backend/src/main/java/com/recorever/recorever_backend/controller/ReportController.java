@@ -95,7 +95,8 @@ public class ReportController {
             );
             dto.setReporter_details(detailDto);
 
-            dto.setReporter_name(report.getDetails().getPersonName());
+            // NOTE: the string here is just for admin-made reports indication (temporary)
+            dto.setReporter_name(report.getDetails().getPersonName() + " (Admin)");
             dto.setReporter_email(report.getDetails().getPersonContactEmail());
             dto.setReporter_phone(report.getDetails().getPersonContactPhone());
         } else {
@@ -141,7 +142,7 @@ public class ReportController {
         }
 
         dto.setSurrender_code(report.getSurrenderCode());
-        dto.setReporter_name(report.getReporterName());
+        // dto.setReporter_name(report.getReporterName());
         dto.setExpiry_date(report.getExpiryDate());
 
         Authentication auth = SecurityContextHolder
