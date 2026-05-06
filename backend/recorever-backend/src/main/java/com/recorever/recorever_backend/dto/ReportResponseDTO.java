@@ -66,7 +66,7 @@ public class ReportResponseDTO {
     private String surrender_code;
     private String reporter_profile_picture;
 
-    private LocalDateTime updatedAt;
-    private boolean isAdminEdit;
+    private LocalDateTime updated_at;
+    private boolean is_admin_edit;
     private List<ImageResponseDTO> images;
 }
