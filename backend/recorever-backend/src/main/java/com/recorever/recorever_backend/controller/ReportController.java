@@ -84,6 +84,11 @@ public class ReportController {
         dto.setDate_resolved(report.getDateResolved());
         dto.setDescription(report.getDescription());
         dto.setUpdated_at(report.getUpdatedAt());
+        dto.set_admin_edit(report.isAdminEdit());
+
+        dto.setLast_updated_by_id(
+            report.getLastUpdatedById() != null ?
+            report.getLastUpdatedById() : 0);
 
         if (report.getDetails() != null) {
             ReportResponseDTO.ReportDetailResponse detailDto = new ReportResponseDTO.ReportDetailResponse(
@@ -108,11 +113,6 @@ public class ReportController {
 
             dto.setReporter_details(null);
         }
-
-        dto.set_admin_edit(
-            report.getDetails() != null &&
-            report.getDetails().getAdminId() != null
-        );
 
         ReportResponseDTO.StatusResponse status = new ReportResponseDTO.StatusResponse(
             report.getStatus().getStatusId(),
@@ -324,6 +324,8 @@ public class ReportController {
 
         service.updateEditableFields(
                 id,
+                authUser.getUserId(),
+                isAdmin,
                 reportDto.getItem_name(),
                 reportDto.getCategory_id(),
                 reportDto.getLocation(),
