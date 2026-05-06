@@ -67,6 +67,7 @@ public class ReportResponseDTO {
     private String reporter_profile_picture;
 
     private LocalDateTime updated_at;
+    private Integer last_updated_by_id;
     private boolean is_admin_edit;
     private List<ImageResponseDTO> images;
 }
