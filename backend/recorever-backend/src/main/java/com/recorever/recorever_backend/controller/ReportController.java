@@ -83,6 +83,7 @@ public class ReportController {
         dto.setDate_reported(report.getDateReported());
         dto.setDate_resolved(report.getDateResolved());
         dto.setDescription(report.getDescription());
+        dto.setUpdated_at(report.getUpdatedAt());
 
         if (report.getDetails() != null) {
             ReportResponseDTO.ReportDetailResponse detailDto = new ReportResponseDTO.ReportDetailResponse(
@@ -94,7 +95,6 @@ public class ReportController {
             );
             dto.setReporter_details(detailDto);
 
-            dto.setUser_id(report.getDetails().getUserId());
             dto.setReporter_name(report.getDetails().getPersonName());
             dto.setReporter_email(report.getDetails().getPersonContactEmail());
             dto.setReporter_phone(report.getDetails().getPersonContactPhone());
@@ -107,6 +107,11 @@ public class ReportController {
 
             dto.setReporter_details(null);
         }
+
+        dto.set_admin_edit(
+            report.getDetails() != null &&
+            report.getDetails().getAdminId() != null
+        );
 
         ReportResponseDTO.StatusResponse status = new ReportResponseDTO.StatusResponse(
             report.getStatus().getStatusId(),
@@ -305,8 +310,14 @@ public class ReportController {
         if (report == null) return ResponseEntity.status(404).body(null);
 
         User authUser = (User) authentication.getPrincipal();
-        if (report.getUserId() != authUser.getUserId() ||
-                !report.getStatus().getStatusName().equalsIgnoreCase(ReportStatus.PENDING)) {
+
+        boolean isOwner = report.getUserId() == authUser.getUserId();
+        boolean isAdmin = authUser.getRole().equalsIgnoreCase("ADMIN");
+
+        boolean isPending = report.getStatus().getStatusName()
+                .equalsIgnoreCase(ReportStatus.PENDING);
+
+        if (!isAdmin && (!isOwner || !isPending)) {
             return ResponseEntity.status(403).body(null);
         }
 
