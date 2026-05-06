@@ -20,7 +20,7 @@ import { AuthService } from '../../core/auth/auth-service';
 import { ToastService } from '../../core/services/toast-service';
 import type { ChangePasswordRequest } from '../../models/user-model';
 
-type SettingsView = 'MENU' | 'CHANGE_PASSWORD' | 'DELETE_ACCOUNT' | 
+type SettingsView = 'MENU' | 'BACKUP_RESTORE' | 'CHANGE_PASSWORD' | 'DELETE_ACCOUNT' | 
                     'PASSWORD_CHANGE_SUCCESS';
 type PasswordStrength = 'none' | 'weak' | 'medium' | 'strong';
 
@@ -97,6 +97,9 @@ export class SettingsModal {
   protected readonly hideOldPassword = signal(true);
   protected readonly hideNewPassword = signal(true);
   protected readonly hideConfirmPassword = signal(true);
+  protected readonly userRole = signal<string | null>(
+    this.authService.currentUserValue?.role?.toUpperCase() || null
+  );
   
   protected passwordStrength = signal<PasswordStrength>('none');
   protected errorMessage = signal<string | null>(null);
@@ -138,6 +141,21 @@ export class SettingsModal {
   protected toggleView(view: SettingsView): void {
     this.errorMessage.set(null);
     this.currentView.set(view);
+  }
+
+  protected onExportBackup(): void {
+    // Backup logic here
+    console.log('Exporting backup...');
+    this.toastService.showSuccess('Database backup initiated');
+  }
+
+  protected onFileSelected(event: Event): void {
+    const element = event.currentTarget as HTMLInputElement;
+    let fileList: FileList | null = element.files;
+    if (fileList) {
+      console.log('Restoring from:', fileList[0].name);
+      // Restore logic here
+    }
   }
 
   protected togglePasswordVisibility(field: 'old' | 'new' | 'confirm'): void {
