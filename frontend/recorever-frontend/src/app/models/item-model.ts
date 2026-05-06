@@ -51,6 +51,8 @@ export type Report = {
     person_phone: string;
     admin_id: number | null;
   };
+  updated_at?: string;
+  is_admin_edit?: boolean;
 };
 
 export type ReportFilters = {
