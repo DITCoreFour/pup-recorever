@@ -127,8 +127,10 @@ public class ReportService {
         Report savedReport = repo.save(report);
         int id = savedReport.getReportId();
 
-        if (reporterUserId != null || reporterName != null ||
-            reporterEmail != null || reporterPhone != null) {
+        if (reporterUserId != null ||
+            reporterName != null && !reporterName.isBlank() ||
+            reporterEmail != null && !reporterEmail.isBlank() ||
+            reporterPhone != null && !reporterPhone.isBlank()) {
 
             ReportDetail details = new ReportDetail();
             details.setReport(savedReport);
