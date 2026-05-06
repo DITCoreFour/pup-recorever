@@ -311,14 +311,19 @@ export class ItemReportForm implements OnInit {
           reporter_phone: details.person_phone
         });
 
-        this.selectedUser = {
-          user_id: details.reported_by_user_id!,
-          first_name: fullName.split(' ')[0],
-          last_name: fullName.split(' ').slice(1).join(' '),
-          email: details.person_email
-        } as User;
+        if (details.reported_by_user_id) {
+          this.selectedUser = {
+            user_id: details.reported_by_user_id!,
+            first_name: fullName.split(' ')[0],
+            last_name: fullName.split(' ').slice(1).join(' '),
+            email: details.person_email
+          } as User;
 
-        this.reportForm.controls.reporter_email.disable();
+          this.reportForm.controls.reporter_email.disable();
+        } else {
+          this.selectedUser = null;
+          this.reportForm.controls.reporter_email.enable();
+        }
       } else {
         this.reportForm.patchValue({
           reported_by: this.initialData.reporter_name,
