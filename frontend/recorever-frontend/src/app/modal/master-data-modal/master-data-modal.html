@@ -1,0 +1,62 @@
+<div class="modal-overlay" (click)="onOverlayClick($event)">
+  <div class="modal-box" role="dialog" aria-modal="true">
+
+    <button mat-icon-button class="close-btn" (click)="onClose()"
+            aria-label="Close dialog">
+      <mat-icon>close</mat-icon>
+    </button>
+
+    <h2 class="modal-title">
+      @if (isEditMode()) {
+        Edit {{ context === 'category' ? 'Category' : 'Program' }}
+      } @else {
+        Add New {{ context === 'category' ? 'Category' : 'Program' }}
+      }
+    </h2>
+
+    <form [formGroup]="dataForm" class="modal-form">
+      
+      @if (context === 'program') {
+        <div class="form-group">
+          <label class="form-label" for="itemCode">Program Code</label>
+          <input
+              id="itemCode"
+              class="form-input"
+              type="text"
+              formControlName="code"
+              placeholder="e.g., BSIT, BSCS..."
+              (keyup.enter)="onSave()" />
+          
+          @if (getControl('code').invalid && getControl('code').touched) {
+            <span class="error-text">Program code cannot be empty.</span>
+          }
+        </div>
+      }
+
+      <div class="form-group">
+        <label class="form-label" for="itemName">
+          {{ context === 'category' ? 'Category Name' : 'Program Name' }}
+        </label>
+        <input
+            id="itemName"
+            class="form-input"
+            type="text"
+            formControlName="name"
+            [placeholder]="context === 'category' ? 
+                'e.g., Electronics, Documents...' : 
+                'e.g., Bachelor of Science in Information Technology'"
+            (keyup.enter)="onSave()" />
+        
+        @if (getControl('name').invalid && getControl('name').touched) {
+          <span class="error-text">
+            {{ context === 'category' ? 'Category' : 'Program' }} name 
+            cannot be empty.
+          </span>
+        }
+      </div>
+
+      <button class="save-btn" type="button" (click)="onSave()">SAVE</button>
+    </form>
+
+  </div>
+</div>
