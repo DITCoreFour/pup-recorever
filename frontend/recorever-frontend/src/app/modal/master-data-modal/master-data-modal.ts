@@ -16,27 +16,29 @@ import {
   FormBuilder,
   FormGroup,
   Validators,
-  AbstractControl
+  AbstractControl,
+  ValidatorFn,
+  ValidationErrors
 } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
+import { 
+  MasterDataItem, 
+  SavePayload, 
+  UpdatePayload 
+} from '../../models/master-data-model';
 
-export type MasterDataItem = {
-  id: number;
-  name: string;
-  code?: string;
-};
-
-export type SavePayload = {
-  name: string;
-  code?: string;
-};
-
-export type UpdatePayload = {
-  id: number;
-  name: string;
-  code?: string;
-};
+function noWhitespaceValidator(): ValidatorFn {
+  return (control: AbstractControl): ValidationErrors | null => {
+    const val = control.value;
+    if (!val || val.length === 0) return null;
+    
+    const isWhitespace = val.trim().length === 0;
+    return !isWhitespace 
+      ? null 
+      : { whitespace: 'Cannot contain only spaces' };
+  };
+}
 
 @Component({
   selector: 'app-master-data-modal',
@@ -53,7 +55,6 @@ export type UpdatePayload = {
 })
 export class MasterDataModal implements OnInit, OnChanges {
   @Input() public editItem: MasterDataItem | null = null;
-  
   @Input() public context: 'category' | 'program' = 'category';
 
   @Output() public close = new EventEmitter<void>();
@@ -86,11 +87,13 @@ export class MasterDataModal implements OnInit, OnChanges {
     
     this.dataForm = this.fb.group({
       name: ['', {
-        validators: [Validators.required],
+        validators: [Validators.required, noWhitespaceValidator()],
         updateOn: 'change'
       }],
       code: ['', {
-        validators: isProgram ? [Validators.required] : [],
+        validators: isProgram 
+            ? [Validators.required, noWhitespaceValidator()] 
+            : [],
         updateOn: 'change'
       }]
     });
@@ -109,13 +112,14 @@ export class MasterDataModal implements OnInit, OnChanges {
   }
 
   public onSave(): void {
-    this.dataForm.markAllAsTouched();
-    if (this.dataForm.invalid) return;
+    this.dataForm.markAllAsTouched(); 
+    
+    if (this.dataForm.invalid) {
+      return; 
+    }
 
     const nameVal = (this.getControl('name').value as string).trim();
     const codeVal = (this.getControl('code').value as string)?.trim();
-
-    if (!nameVal) return;
 
     const current = this.editItemSignal();
     
@@ -137,9 +141,7 @@ export class MasterDataModal implements OnInit, OnChanges {
     this.close.emit();
   }
 
-  public onOverlayClick(event: MouseEvent): void {
-    if ((event.target as HTMLElement).classList.contains('modal-overlay')) {
-      this.onClose();
-    }
+  public onOverlayClick(): void {
+    this.onClose();
   }
 }

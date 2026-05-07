@@ -1,5 +1,6 @@
-<div class="modal-overlay" (click)="onOverlayClick($event)">
-  <div class="modal-box" role="dialog" aria-modal="true">
+<div class="modal-overlay" (click)="onOverlayClick()">
+  
+  <div class="modal-box" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
 
     <button mat-icon-button class="close-btn" (click)="onClose()"
             aria-label="Close dialog">
@@ -28,7 +29,12 @@
               (keyup.enter)="onSave()" />
           
           @if (getControl('code').invalid && getControl('code').touched) {
-            <span class="error-text">Program code cannot be empty.</span>
+            @if (getControl('code').hasError('required')) {
+              <span class="error-text">Program code cannot be empty.</span>
+            }
+            @if (getControl('code').hasError('whitespace')) {
+              <span class="error-text">Cannot contain only spaces.</span>
+            }
           }
         </div>
       }
@@ -48,10 +54,15 @@
             (keyup.enter)="onSave()" />
         
         @if (getControl('name').invalid && getControl('name').touched) {
-          <span class="error-text">
-            {{ context === 'category' ? 'Category' : 'Program' }} name 
-            cannot be empty.
-          </span>
+          @if (getControl('name').hasError('required')) {
+            <span class="error-text">
+              {{ context === 'category' ? 'Category' : 'Program' }} name 
+              cannot be empty.
+            </span>
+          }
+          @if (getControl('name').hasError('whitespace')) {
+            <span class="error-text">Cannot contain only spaces.</span>
+          }
         }
       </div>
 
