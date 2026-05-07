@@ -40,6 +40,8 @@ import {
   Filter,
   FilterState
 } from '../../../share-ui-blocks/filter/filter';
+import { DeleteReportModal } 
+    from "../../../modal/delete-report-modal/delete-report-modal";
 
 type StatusFilter = 'All Statuses' | 'pending' | 'approved' | 'rejected';
 
@@ -52,7 +54,8 @@ type StatusFilter = 'All Statuses' | 'pending' | 'approved' | 'rejected';
     SearchBarComponent,
     ClaimFormModal,
     ReportItemGrid,
-    Filter
+    Filter,
+    DeleteReportModal
   ],
   templateUrl: './claim-status-page.html',
   styleUrl: './claim-status-page.scss',
@@ -84,6 +87,8 @@ export class ClaimStatusPage implements OnInit, AfterViewInit, OnDestroy {
   public currentStatusFilter = signal<StatusFilter>('All Statuses');
   public highlightId = signal<number | null>(null);
   public currentSurrenderedLocationFilter = signal('');
+  public showDeleteModal = signal<boolean>(false);
+  public itemToDelete = signal<Report | null>(null);
 
   public currentFilter = signal<FilterState>({
     sort: 'newest',
@@ -304,5 +309,43 @@ export class ClaimStatusPage implements OnInit, AfterViewInit, OnDestroy {
     }
 
     this.toast.showSuccess(message, actionLabel, actionRoute, queryParams);
+  }
+
+  public onDeleteClick(item: Report): void {
+    this.itemToDelete.set(item);
+    this.showDeleteModal.set(true);
+  }
+
+  public onModalDelete(): void {
+    const item: Report | null = this.selectedReport();
+    if (item) {
+      this.selectedReport.set(null);
+      this.onDeleteClick(item);
+    }
+  }
+
+  public cancelDelete(): void {
+    this.showDeleteModal.set(false);
+    this.itemToDelete.set(null);
+  }
+
+  public confirmDelete(): void {
+    const item: Report | null = this.itemToDelete();
+    if (!item) return;
+
+    this.itemService.deleteReport(item.report_id).subscribe({
+      next: (): void => {
+        this.reports.update((items: Report[]) =>
+          items.filter((r: Report) => r.report_id !== item.report_id)
+        );
+        this.showDeleteModal.set(false);
+        this.itemToDelete.set(null);
+        this.toast.showSuccess('Report removed successfully.');
+      },
+      error: (): void => {
+        this.toast.showError('Failed to remove report. Please try again.');
+        this.showDeleteModal.set(false);
+      }
+    });
   }
 }

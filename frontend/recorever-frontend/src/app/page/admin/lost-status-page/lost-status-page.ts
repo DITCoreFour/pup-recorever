@@ -44,6 +44,8 @@ import { environment } from '../../../../environments/environment';
 import {
   ItemDetailModal
 } from "../../../modal/item-detail-modal/item-detail-modal";
+import { DeleteReportModal }
+    from "../../../modal/delete-report-modal/delete-report-modal";
 
 type LostReportStatusFilter = 'All Statuses' | 'pending'
       | 'approved' | 'matched' | 'rejected';
@@ -56,6 +58,7 @@ type LostReportStatusFilter = 'All Statuses' | 'pending'
     ReportItemGrid,
     SearchBarComponent,
     ItemDetailModal,
+    DeleteReportModal,
     Filter
   ],
   templateUrl: './lost-status-page.html',
@@ -95,6 +98,8 @@ export class LostStatusPage implements OnInit, AfterViewInit, OnDestroy {
   public highlightId = signal<number | null>(null);
   public currentSurrenderedLocationFilter = signal('');
   public currentCategoryFilter = signal<string[]>([]);
+  public showDeleteModal = signal<boolean>(false);
+  public itemToDelete = signal<Report | null>(null);
 
   public readonly statusFilters: LostReportStatusFilter[] = [
     'All Statuses', 'pending', 'approved', 'rejected'
@@ -330,5 +335,43 @@ export class LostStatusPage implements OnInit, AfterViewInit, OnDestroy {
     this.reportCache.clear();
     this.resetAndReload();
     this.onCloseDetailView();
+  }
+
+  public onDeleteClick(item: Report): void {
+    this.itemToDelete.set(item);
+    this.showDeleteModal.set(true);
+  }
+
+  public onModalDelete(): void {
+    const item: Report | null = this.selectedReport();
+    if (item) {
+      this.selectedReport.set(null);
+      this.onDeleteClick(item);
+    }
+  }
+
+  public cancelDelete(): void {
+    this.showDeleteModal.set(false);
+    this.itemToDelete.set(null);
+  }
+
+  public confirmDelete(): void {
+    const item: Report | null = this.itemToDelete();
+    if (!item) return;
+
+    this.itemService.deleteReport(item.report_id).subscribe({
+      next: (): void => {
+        this.reports.update((items: Report[]) =>
+          items.filter((r: Report) => r.report_id !== item.report_id)
+        );
+        this.showDeleteModal.set(false);
+        this.itemToDelete.set(null);
+        this.toastService.showSuccess('Report removed successfully.');
+      },
+      error: (): void => {
+        this.toastService.showError('Failed to remove report. Please try again.');
+        this.showDeleteModal.set(false);
+      }
+    });
   }
 }

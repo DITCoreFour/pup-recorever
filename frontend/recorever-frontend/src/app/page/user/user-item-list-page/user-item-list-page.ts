@@ -85,9 +85,9 @@ export class UserItemListPage implements OnInit, AfterViewInit, OnDestroy {
   public currentUserId = computed((): number |
       null => this.currentUser()?.user_id ?? null);
 
-  public itemType = signal<ItemType>('lost');
+  public itemType = signal<ItemType>('found');
   public pageTitle = computed((): string =>
-    this.itemType() === 'lost' ? 'Lost Items' : 'Found Items'
+    this.itemType() === 'found' ? 'Found Items' : 'Lost Items'
   );
 
   @HostBinding('class.theme-lost') get isLost(): boolean {
@@ -184,7 +184,7 @@ export class UserItemListPage implements OnInit, AfterViewInit, OnDestroy {
   public ngOnInit(): void {
     this.route.queryParams
       .pipe(
-        map((params) => (params['type'] as ItemType) || 'lost'),
+        map((params) => (params['type'] as ItemType) || 'found'),
         takeUntil(this.destroy$)
       )
       .subscribe((type: ItemType) => {
