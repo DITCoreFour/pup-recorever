@@ -1,29 +1,35 @@
 <button
-  type="button"
-  mat-stroked-button
-  class="mobile-toggle-btn"
-  (click)="toggleFilter()">
+    type="button"
+    mat-stroked-button
+    class="mobile-toggle-btn"
+    (click)="toggleFilter()">
   <mat-icon>filter_list</mat-icon>
   {{ isFilterVisible() ? 'Hide Filters' : 'Show Filters' }}
 </button>
 
 <div
-  [formGroup]="filterForm"
-  class="filter-bar-container"
-  [class.mobile-hidden]="!isFilterVisible()">
+    [formGroup]="filterForm"
+    class="filter-bar-container"
+    [class.mobile-hidden]="!isFilterVisible()">
 
   @if (isAdminPage()) {
     @if (adminStatusOptions().length > 0) {
       <mat-form-field appearance="outline" class="filter-field fixed-size">
         <mat-label>Status</mat-label>
         <mat-select formControlName="status">
+          
+          <mat-option value="All Statuses">All Statuses</mat-option>
+          
           @for (status of adminStatusOptions(); track status) {
-            <mat-option [value]="status">
-              {{ status === 'approved' ? 'Verified' : (status | titlecase) }}
-            </mat-option>
+            @if (status !== 'All Statuses' && status !== 'all statuses') {
+              <mat-option [value]="status">
+                {{ status === 'approved' ? 'Verified' : (status | titlecase) }}
+              </mat-option>
+            }
           }
         </mat-select>
       </mat-form-field>
+      <div class="vertical-divider"></div>
     }
   }
 
@@ -31,30 +37,26 @@
     <mat-form-field appearance="outline" class="filter-field fixed-size">
       <mat-label>Status</mat-label>
       <mat-select formControlName="status">
-        <mat-option value="unresolved">{{ itemType() === 
-        'found' ? 'Unclaimed Items' : 'Unresolved Items' }}</mat-option>
-        <mat-option value="resolved">{{ itemType() === 
-        'found' ? 'Claimed Items' : 'Resolved Items' }}</mat-option>
+        <mat-option value="unresolved">
+          {{ itemType() === 'found' ? 'Unclaimed Items' : 'Unresolved Items' }}
+        </mat-option>
+        <mat-option value="resolved">
+          {{ itemType() === 'found' ? 'Claimed Items' : 'Resolved Items' }}
+        </mat-option>
       </mat-select>
     </mat-form-field>
+    <div class="vertical-divider"></div>
   }
-
-  <div class="vertical-divider"></div>
-
-  <div
-  [formGroup]="filterForm"
-  class="filter-bar-container"
-  [class.mobile-hidden]="!isFilterVisible()">
 
   @if (isDefaultState()) {
     <button mat-flat-button type="button"
         (click)="resetFilters()" class="all-btn active-all-btn">
-      All
+      Clear Filters
     </button>
   } @else {
     <button mat-stroked-button type="button"
         (click)="resetFilters()" class="all-btn">
-      All
+      Clear Filters
     </button>
   }
 
@@ -79,21 +81,21 @@
     <mat-icon matPrefix>place</mat-icon>
 
     <input type="text"
-           placeholder="Select or Type..."
-           matInput
-           formControlName="location"
-           [matAutocomplete]="auto">
+        placeholder="Select or Type..."
+        matInput
+        formControlName="location"
+        [matAutocomplete]="auto">
 
     @if (filterForm.get('location')?.value) {
       <button mat-icon-button matSuffix type="button"
-            (click)="clearLocation($event)">
+          (click)="clearLocation($event)">
         <mat-icon>close</mat-icon>
       </button>
     }
 
     <mat-autocomplete #auto="matAutocomplete"
-                      (opened)="onLocationPanelOpened()"
-                      (closed)="onLocationPanelClosed()">
+        (opened)="onLocationPanelOpened()"
+        (closed)="onLocationPanelClosed()">
       @for (loc of filteredLocations$ | async; track loc) {
         <mat-option [value]="loc">
           {{ loc }}
