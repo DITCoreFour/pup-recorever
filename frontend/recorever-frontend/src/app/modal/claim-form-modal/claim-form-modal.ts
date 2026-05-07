@@ -27,8 +27,11 @@ import {
   filter
 } from 'rxjs/operators';
 import { of } from 'rxjs';
+import { Router } from '@angular/router';
 
 // Material Imports
+import { MatMenuModule } from '@angular/material/menu';
+import { MatDividerModule } from '@angular/material/divider';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -75,7 +78,9 @@ export enum ClaimStatus {
     MatAutocompleteModule,
     MatTooltipModule,
     MatRadioModule,
-    StatusBadge
+    StatusBadge,
+    MatMenuModule,
+    MatDividerModule
   ],
   providers: [DatePipe],
   templateUrl: './claim-form-modal.html',
@@ -90,6 +95,7 @@ export class ClaimFormModal implements OnInit {
   private fb = inject(FormBuilder);
   private datePipe = inject(DatePipe);
   private toastService = inject(ToastService);
+  private router = inject(Router);
 
   @Input({ required: true }) claimData!: Claim | Report;
   @Input() isReadOnly: boolean = false;
@@ -98,6 +104,8 @@ export class ClaimFormModal implements OnInit {
   @Output() close = new EventEmitter<void>();
   @Output() statusChange = new EventEmitter<ReportStatusEnum>();
   @Output() unarchive = new EventEmitter<void>();
+  @Output() editClicked = new EventEmitter<void>();
+  @Output() deleteClicked = new EventEmitter<void>();
 
   protected readonly ClaimStatus = ClaimStatus;
   protected readonly REPORT_STATUS = ReportStatusEnum;
@@ -550,7 +558,7 @@ export class ClaimFormModal implements OnInit {
   }
 
   protected categoryName = computed((): string => {
-    return (this.report() as any)?.category_name || 'Uncategorized';
+    return (this.report() as any)?.category?.category_name || 'Uncategorized';
   });
 
   protected surrenderedLocationName = computed((): string | null => {
@@ -560,4 +568,25 @@ export class ClaimFormModal implements OnInit {
     }
     return null;
   });
+
+  public onEdit(): void {
+    const reportData: Report | null = this.report();
+    if (!reportData) return;
+    
+    const path: string = reportData.type === 'lost'
+      ? '/admin/report-lost'
+      : '/admin/report-found';
+    
+    this.router.navigate([path], {
+      state: { data: reportData, mode: 'EDIT' }
+    });
+    
+    this.editClicked.emit();
+    this.onClose();
+  }
+
+  public onDelete(): void {
+    this.deleteClicked.emit();
+    this.onClose();
+  }
 }

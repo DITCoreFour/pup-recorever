@@ -83,6 +83,12 @@ public class ReportController {
         dto.setDate_reported(report.getDateReported());
         dto.setDate_resolved(report.getDateResolved());
         dto.setDescription(report.getDescription());
+        dto.setUpdated_at(report.getUpdatedAt());
+        dto.set_admin_edit(report.isAdminEdit());
+
+        dto.setLast_updated_by_id(
+            report.getLastUpdatedById() != null ?
+            report.getLastUpdatedById() : 0);
 
         if (report.getDetails() != null) {
             ReportResponseDTO.ReportDetailResponse detailDto = new ReportResponseDTO.ReportDetailResponse(
@@ -94,8 +100,8 @@ public class ReportController {
             );
             dto.setReporter_details(detailDto);
 
-            dto.setUser_id(report.getDetails().getUserId());
-            dto.setReporter_name(report.getDetails().getPersonName());
+            // NOTE: the string here is just for admin-made reports indication (temporary)
+            dto.setReporter_name(report.getDetails().getPersonName() + " (Admin)");
             dto.setReporter_email(report.getDetails().getPersonContactEmail());
             dto.setReporter_phone(report.getDetails().getPersonContactPhone());
         } else {
@@ -136,7 +142,7 @@ public class ReportController {
         }
 
         dto.setSurrender_code(report.getSurrenderCode());
-        dto.setReporter_name(report.getReporterName());
+        // dto.setReporter_name(report.getReporterName());
         dto.setExpiry_date(report.getExpiryDate());
 
         Authentication auth = SecurityContextHolder
@@ -305,18 +311,30 @@ public class ReportController {
         if (report == null) return ResponseEntity.status(404).body(null);
 
         User authUser = (User) authentication.getPrincipal();
-        if (report.getUserId() != authUser.getUserId() ||
-                !report.getStatus().getStatusName().equalsIgnoreCase(ReportStatus.PENDING)) {
+
+        boolean isOwner = report.getUserId() == authUser.getUserId();
+        boolean isAdmin = authUser.getRole().equalsIgnoreCase("ADMIN");
+
+        boolean isPending = report.getStatus().getStatusName()
+                .equalsIgnoreCase(ReportStatus.PENDING);
+
+        if (!isAdmin && (!isOwner || !isPending)) {
             return ResponseEntity.status(403).body(null);
         }
 
         service.updateEditableFields(
                 id,
+                authUser.getUserId(),
+                isAdmin,
                 reportDto.getItem_name(),
                 reportDto.getCategory_id(),
                 reportDto.getLocation(),
                 reportDto.getSurrendered_location_id(),
-                reportDto.getDescription()
+                reportDto.getDescription(),
+                reportDto.getReported_by(),
+                reportDto.getReporter_email(),
+                reportDto.getReporter_phone(),
+                reportDto.getReported_by_user_id()
         );
 
         List<MultipartFile> files = reportDto.getFiles();
@@ -340,12 +358,15 @@ public class ReportController {
     public ResponseEntity<?> deleteReport(
             Authentication authentication,
             @PathVariable int id) {
-
         Report report = service.getById(id);
         if (report == null) return ResponseEntity.status(404).body("Not found");
 
         User authUser = (User) authentication.getPrincipal();
-        if (report.getUserId() != authUser.getUserId()) {
+
+        boolean isOwner = report.getUserId() == authUser.getUserId();
+        boolean isAdmin = authUser.getRole().equalsIgnoreCase("ADMIN");
+
+        if (!isOwner && !isAdmin) {
             return ResponseEntity.status(403).body("Not authorized");
         }
 

@@ -41,39 +41,42 @@
       <span class="category-badge">{{ categoryName() }}</span>
     </div>
 
-    @if (isOwner() || report().claim_code) {
-      <button mat-mini-fab
+    @if (isOwner() || report().claim_code || isAdmin()) {
+      <button
+              mat-mini-fab
               class="floating-menu-trigger"
               [matMenuTriggerFor]="cardMenu"
               (click)="$event.stopPropagation()">
         <mat-icon>more_horiz</mat-icon>
       </button>
       <mat-menu #cardMenu="matMenu" xPosition="before">
-        @if (report().type !== 'lost' || report().claim_code) {
-          <button mat-menu-item (click)="onViewCode($event)">
+        @if (!isAdmin() && (report().type !== 'lost' || report().claim_code)) {
+          <button
+                  mat-menu-item
+                  (click)="onViewCode($event)">
             <mat-icon>tag</mat-icon>
             <span>{{ getCodeButtonLabel() }}</span>
           </button>
         }
-        @if (isOwner()) {
+        @if (isOwner() || isAdmin()) {
           <button
-            mat-menu-item
-            (click)="onEdit($event)"
-            [disabled]="!isEditable()"
-            [matTooltip]="!isEditable()
-                ? 'Verified reports are locked and cannot be edited' : ''"
-            matTooltipPosition="left">
+                  mat-menu-item
+                  (click)="onEdit($event)"
+                  [disabled]="!isEditable()"
+                  [matTooltip]="!isEditable()
+                      ? 'Verified reports are locked and cannot be edited' : ''"
+                  matTooltipPosition="left">
             <mat-icon>edit_square</mat-icon>
             <span>Edit Report</span>
           </button>
           <mat-divider></mat-divider>
           <button
-            mat-menu-item
-            (click)="onDelete($event)"
-            [disabled]="!isRemovable()"
-            [matTooltip]="removeTooltip()"
-            matTooltipPosition="left"
-            class="delete-option">
+                  mat-menu-item
+                  (click)="onDelete($event)"
+                  [disabled]="!isRemovable()"
+                  [matTooltip]="removeTooltip()"
+                  matTooltipPosition="left"
+                  class="delete-option">
             <mat-icon color="warn">auto_delete</mat-icon>
             <span class="text-danger">Remove</span>
           </button>

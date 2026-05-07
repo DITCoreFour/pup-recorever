@@ -2,7 +2,7 @@
   <div class="modal-container"
        (click)="$event.stopPropagation(); closeDropdown()">
 
-    @if (isArchiveView() || isAdmin()) {
+    @if (isArchiveView()) {
       <button class="close-btn" (click)="onClose()">
         <mat-icon>close</mat-icon>
       </button>
@@ -24,11 +24,10 @@
           </div>
         </div>
         <div class="header-actions">
-          <app-status-badge [status]="displayStatus()"></app-status-badge>
+  <app-status-badge [status]="displayStatus()"></app-status-badge>
 
-          @if (!isMatchView() && (isOwner() || item().claim_code)) {
-            @if (isAdmin() ||
-                 item().status.status_id !== REPORT_STATUS.MATCHED) {
+          @if (!isMatchView() && (isOwner() || item().claim_code || isAdmin())) {
+            @if (isAdmin() || item().status.status_id !== REPORT_STATUS.MATCHED) {
               <button mat-icon-button
                       [matMenuTriggerFor]="modalMenu"
                       class="modal-menu-trigger">
@@ -41,14 +40,13 @@
                     <span>{{ getCodeButtonLabel() }}</span>
                   </button>
                 }
-                @if (isOwner()) {
+                @if (isOwner() || isAdmin()) {
                   <button
                     mat-menu-item
                     (click)="onEdit()"
                     [disabled]="!isEditable()"
                     [matTooltip]="!isEditable()
-                        ? 'Verified reports are locked and cannot be edited' :
-                            ''"
+                      ? 'Verified reports are locked and cannot be edited' : ''"
                     matTooltipPosition="left">
                     <mat-icon>edit_square</mat-icon>
                     <span>Edit Report</span>

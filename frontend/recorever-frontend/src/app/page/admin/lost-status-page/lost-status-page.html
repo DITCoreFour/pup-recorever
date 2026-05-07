@@ -26,9 +26,11 @@
   <div class="reports-content">
     @if (reports().length > 0) {
       <app-report-item-grid
-          [items]="sortedReports()"
-          [highlightId]="highlightId()"
-          (cardClicked)="onViewDetails($event)">
+              [items]="sortedReports()"
+              [highlightId]="highlightId()"
+              [isAdmin]="true"
+              (cardClicked)="onViewDetails($event)"
+              (cardDeleteClicked)="onDeleteClick($event)">
       </app-report-item-grid>
     }
 
@@ -52,12 +54,20 @@
 
   @if (selectedReport(); as report) {
     <app-item-detail-modal
-        [item]="report"
-        [currentUserId]="currentUserId()"
-        [userProfilePicture]="getUserProfilePicture()"
-        [isAdmin]="true"
-        (statusChanged)="onStatusUpdate($event)"
-        (close)="onCloseDetailView()">
+            [item]="report"
+            [currentUserId]="currentUserId()"
+            [userProfilePicture]="getUserProfilePicture()"
+            [isAdmin]="true"
+            (statusChanged)="onStatusUpdate($event)"
+            (deleteClicked)="onModalDelete()"
+            (close)="onCloseDetailView()">
     </app-item-detail-modal>
+  }
+
+  @if (showDeleteModal()) {
+    <app-delete-report-modal
+            (confirm)="confirmDelete()"
+            (cancel)="cancelDelete()">
+    </app-delete-report-modal>
   }
 </div>

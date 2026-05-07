@@ -243,7 +243,6 @@ export class ItemReportForm implements OnInit {
     this.itemService.getCategories().subscribe({
       next: (data) => {
         this.categories = data;
-        console.log('Fetched categories:', data);
         if (this.initialData) {
           this.reportForm.patchValue({
             category: this.initialData.category?.category_id
@@ -262,7 +261,6 @@ export class ItemReportForm implements OnInit {
       this.itemService.getSurrenderLocations().subscribe({
         next: (data) => {
           this.surrenderOptions = data;
-          console.log('Fetched surrender locations:', data);
           if (this.initialData) {
             this.reportForm.patchValue({
               surrendered_location:
@@ -298,10 +296,41 @@ export class ItemReportForm implements OnInit {
     });
 
     if (this.initialData) {
+      const details = this.initialData.reporter_details;
       const rawDate = this.initialData.date_lost_found
         || this.initialData.date_reported;
       const formattedDate = rawDate ? new Date(rawDate)
         .toISOString().split('T')[0] : '';
+
+      if (details) {
+        const fullName = details.person_name;
+
+        this.reportForm.patchValue({
+          reported_by: fullName,
+          reporter_email: details.person_email,
+          reporter_phone: details.person_phone
+        });
+
+        if (details.reported_by_user_id) {
+          this.selectedUser = {
+            user_id: details.reported_by_user_id!,
+            first_name: fullName.split(' ')[0],
+            last_name: fullName.split(' ').slice(1).join(' '),
+            email: details.person_email
+          } as User;
+
+          this.reportForm.controls.reporter_email.disable();
+        } else {
+          this.selectedUser = null;
+          this.reportForm.controls.reporter_email.enable();
+        }
+      } else {
+        this.reportForm.patchValue({
+          reported_by: this.initialData.reporter_name,
+          reporter_email: '',
+          reporter_phone: ''
+        });
+      }
 
       this.reportForm.patchValue({
         item_name: this.initialData.item_name,

@@ -65,11 +65,12 @@ export class ItemDetailModal {
   protected currentImageIndex = signal<number>(0);
 
   isEditable = computed((): boolean => {
-    return this.item().status.status_id === ReportStatusEnum.PENDING;
+  return this.item().status.status_id === ReportStatusEnum.PENDING
+      || this.isAdmin();
   });
 
   isRemovable = computed((): boolean => {
-    return this.item().type === 'lost';
+  return this.item().type === 'lost' || this.isAdmin();
   });
 
   removeTooltip = computed((): string => {
@@ -253,7 +254,7 @@ export class ItemDetailModal {
   }
 
   categoryName = computed((): string => {
-    return (this.item() as any).category_name || 'Uncategorized';
+    return (this.item() as any)?.category?.category_name || 'Uncategorized';
   });
 
   surrenderedLocationName = computed((): string | null => {

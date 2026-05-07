@@ -21,7 +21,7 @@ export const AppRoutePaths = {
   ABOUT_US: '/app/about-us',
 
   REPORT_STATUS_MANAGEMENT: '/admin/report-status',
-  FOUND_ITEM_MANAGEMENT: '/admin/claim-status-items',
+  FOUND_ITEM_MANAGEMENT: '/admin/claim-status',
   ADMIN_MY_REPORTS: '/admin/my-reports',
   ADMIN_REPORT_LOST: '/admin/report-lost',
   ADMIN_REPORT_FOUND: '/admin/report-found',
@@ -82,7 +82,7 @@ export const routes: Routes = [
           import('./page/user/user-item-list-page/user-item-list-page')
               .then((m) => m.UserItemListPage),
         title: 'Browse Items - Recorever',
-        data: { itemType: 'lost' } 
+        data: { itemType: 'found' } 
       },
       { path: 'report-lost',
         canActivate: [authGuard],
@@ -206,6 +206,13 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./page/admin/admin-dashboard-page/admin-dashboard-page')
             .then(m => m.AdminDashboardPage)
+      },
+      { 
+        path: 'master-data',
+        loadComponent: () =>
+          import('./page/admin/master-data-page/master-data-page')
+            .then(m => m.MasterDataPage),
+        title: 'Master Data Management'
       },
       { path: 'notifications',
         loadComponent: () => import(

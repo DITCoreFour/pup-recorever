@@ -127,26 +127,22 @@ public class ReportService {
         Report savedReport = repo.save(report);
         int id = savedReport.getReportId();
 
-        if (reporterUserId != null || reporterName != null ||
-            reporterEmail != null || reporterPhone != null) {
+        ReportDetail details = new ReportDetail();
+        details.setReport(savedReport);
 
-            ReportDetail details = new ReportDetail();
-            details.setReport(savedReport);
-
-            Integer finalUserId = (reporterUserId != null) ?
-                                   reporterUserId : userId;
-
-            details.setUserId(finalUserId);
-            details.setPersonName(reporterName);
-            details.setPersonContactEmail(reporterEmail);
-            details.setPersonContactPhone(reporterPhone);
-
-            if (reporterUserId != null) {
-                details.setAdminId(userId);
-            }
-
-            reportDetailRepo.save(details);
+        if (reporterUserId != null) {
+            details.setUserId(reporterUserId);
+            details.setAdminId(userId);
+        } else {
+            details.setUserId(null);
+            details.setAdminId(userId);
         }
+
+        details.setPersonName(reporterName);
+        details.setPersonContactEmail(reporterEmail);
+        details.setPersonContactPhone(reporterPhone);
+
+        reportDetailRepo.save(details);
 
         if ("lost".equalsIgnoreCase(type)) {
             LocalDate postDate = LocalDate.now();
@@ -352,8 +348,11 @@ public class ReportService {
     }
 
     @Transactional
-    public boolean updateEditableFields(int id, String itemName, Integer categoryId,
-            String location, Integer surrenderedLocationId, String description) {
+    public boolean updateEditableFields(int id, int updatedById,
+            boolean isAdmin, String itemName, Integer categoryId,
+            String location, Integer surrenderedLocationId,
+            String description, String reporterName, String email, String phone,
+            Integer reporterUserId) {
         return repo.findByReportIdAndIsDeletedFalse(id).map(report -> {
             if (itemName != null) report.setItemName(itemName);
             if (location != null) report.setLocation(location);
@@ -369,6 +368,26 @@ public class ReportService {
                 SurrenderedLocation surrLoc = surrenderedLocationRepo.findById(surrenderedLocationId)
                     .orElseThrow(() -> new RuntimeException("Location not found with ID: " + surrenderedLocationId));
                 report.setSurrenderedLocation(surrLoc);
+            }
+
+            report.setUpdatedAt(java.time.LocalDateTime.now());
+            report.setLastUpdatedById(updatedById);
+            report.setAdminEdit(isAdmin);
+
+            if (isAdmin) {
+                ReportDetail details = reportDetailRepo.findByReportReportId(id)
+                        .orElse(new ReportDetail());
+
+                details.setReport(report);
+                details.setPersonName(reporterName);
+                details.setPersonContactEmail(email);
+                details.setPersonContactPhone(phone);
+
+                details.setUserId(reporterUserId); 
+
+                details.setAdminId(updatedById);
+
+                reportDetailRepo.save(details);
             }
 
             repo.save(report);
