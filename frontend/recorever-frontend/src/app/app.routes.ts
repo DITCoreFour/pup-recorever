@@ -207,6 +207,13 @@ export const routes: Routes = [
           import('./page/admin/admin-dashboard-page/admin-dashboard-page')
             .then(m => m.AdminDashboardPage)
       },
+      { 
+        path: 'master-data',
+        loadComponent: () =>
+          import('./page/admin/master-data-page/master-data-page')
+            .then(m => m.MasterDataPage),
+        title: 'Master Data Management'
+      },
       { path: 'notifications',
         loadComponent: () => import(
           './page/shared-page/notification-page/notification-page'
