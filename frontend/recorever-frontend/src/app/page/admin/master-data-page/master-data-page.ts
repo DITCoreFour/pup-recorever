@@ -10,7 +10,6 @@ import {
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
-import { ActivatedRoute, Router } from '@angular/router';
 import { Subject, BehaviorSubject, of, Observable } from 'rxjs';
 import { 
   takeUntil, switchMap, tap, catchError, finalize, map 
@@ -35,13 +34,12 @@ import {
 } from '../../../core/services/program-service';
 import { ToastService } from '../../../core/services/toast-service';
 
-export type MasterDataTab = 'categories' | 'programs';
-
-export type MasterDataItem = {
-  id: number;
-  name: string;
-  code?: string; 
-};
+import { 
+  MasterDataTab, 
+  MasterDataItem, 
+  SortColumn, 
+  SortDirection 
+} from '../../../models/master-data-model';
 
 @Component({
   selector: 'app-master-data-page',
@@ -65,15 +63,15 @@ export class MasterDataPage implements OnInit, OnDestroy {
   private readonly categoryService = inject(CategoryService);
   private readonly programService = inject(ProgramService);
   private readonly toastService = inject(ToastService);
-  
-  private readonly router = inject(Router);
-  private readonly route = inject(ActivatedRoute);
 
   public isLoading = signal(false); 
   public showModal = signal(false);
   public showDeleteConfirmModal = signal(false);
 
   public activeTab = signal<MasterDataTab>('categories');
+
+  public sortColumn = signal<SortColumn>(null);
+  public sortDirection = signal<SortDirection>('asc');
 
   public selectedItem = signal<MasterDataItem | null>(null);
   public itemToDelete = signal<MasterDataItem | null>(null);
@@ -93,21 +91,34 @@ export class MasterDataPage implements OnInit, OnDestroy {
     const q = (this.searchForm?.get('query')?.value ?? '')
         .toLowerCase().trim();
     
-    if (!q) return this.items();
+    let result = this.items();
 
-    return this.items().filter((item: MasterDataItem) => {
-      const matchName = item.name.toLowerCase().includes(q);
-      const matchCode = item.code?.toLowerCase().includes(q) ?? false;
-      return matchName || matchCode;
-    });
+    if (q) {
+      result = result.filter((item: MasterDataItem) => {
+        const matchName = item.name.toLowerCase().includes(q);
+        const matchCode = item.code?.toLowerCase().includes(q) ?? false;
+        return matchName || matchCode;
+      });
+    }
+
+    const column = this.sortColumn();
+    const direction = this.sortDirection();
+
+    if (column) {
+      result = [...result].sort((a: MasterDataItem, b: MasterDataItem) => {
+        const valA = (a[column] ?? '').toLowerCase();
+        const valB = (b[column] ?? '').toLowerCase();
+        
+        if (valA < valB) return direction === 'asc' ? -1 : 1;
+        if (valA > valB) return direction === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
+
+    return result;
   });
 
   public ngOnInit(): void {
-    const initialTab = this.route.snapshot.queryParamMap.get('tab');
-    if (initialTab === 'programs' || initialTab === 'categories') {
-      this.activeTab.set(initialTab as MasterDataTab);
-    }
-
     this.searchForm = this.fb.group({
       query: ['', { updateOn: 'change' }] 
     });
@@ -131,7 +142,7 @@ export class MasterDataPage implements OnInit, OnDestroy {
         } else {
           return this.programService.getPrograms().pipe(
             map((progs: ProgramResponse[]) => 
-                  progs.map((p: ProgramResponse) => ({
+                progs.map((p: ProgramResponse) => ({
               id: p.programId,
               code: p.programCode,
               name: p.programName
@@ -155,17 +166,23 @@ export class MasterDataPage implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
+  public toggleSort(column: SortColumn): void {
+    if (this.sortColumn() === column) {
+      this.sortDirection.update((d: SortDirection) => 
+          d === 'asc' ? 'desc' : 'asc');
+    } else {
+      this.sortColumn.set(column);
+      this.sortDirection.set('asc');
+    }
+  }
+
   public switchTab(tab: MasterDataTab): void {
     if (this.activeTab() === tab) return;
-    
     this.activeTab.set(tab);
     this.searchForm.get('query')?.setValue('');
     
-    this.router.navigate([], {
-      relativeTo: this.route,
-      queryParams: { tab: tab },
-      queryParamsHandling: 'merge'
-    });
+    this.sortColumn.set(null);
+    this.sortDirection.set('asc');
 
     this.refreshTrigger$.next();
   }
