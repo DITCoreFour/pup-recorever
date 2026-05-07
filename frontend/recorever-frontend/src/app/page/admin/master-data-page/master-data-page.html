@@ -11,13 +11,17 @@
       <h3 class="sidebar-title">Table List</h3>
       <ul class="sidebar-list">
         <li class="sidebar-item" 
+            tabindex="0"
             [class.active]="activeTab() === 'categories'"
-            (click)="switchTab('categories')">
+            (click)="switchTab('categories')"
+            (keydown.enter)="switchTab('categories')">
           Item Categories
         </li>
         <li class="sidebar-item" 
+            tabindex="0"
             [class.active]="activeTab() === 'programs'"
-            (click)="switchTab('programs')">
+            (click)="switchTab('programs')"
+            (keydown.enter)="switchTab('programs')">
           Academic Programs
         </li>
       </ul>
@@ -25,7 +29,8 @@
 
     <div class="table-panel">
       <div class="panel-header">
-        <form [formGroup]="searchForm" class="search-wrapper">
+        <form [formGroup]="searchForm" class="search-wrapper" 
+                (ngSubmit)="$event.preventDefault()">
           <mat-icon class="search-icon">search</mat-icon>
           <input
             class="search-input"
@@ -57,14 +62,26 @@
           <thead>
             <tr>
               @if (activeTab() === 'programs') {
-                <th class="col-code">
+                <th class="col-code sortable-header" 
+                    (click)="toggleSort('code')">
                   Code
-                  <mat-icon class="sort-icon">unfold_more</mat-icon>
+                  <mat-icon class="sort-icon">
+                    {{ sortColumn() === 'code' 
+                        ? (sortDirection() === 
+                                'asc' ? 'arrow_upward' : 'arrow_downward') 
+                        : 'unfold_more' }}
+                  </mat-icon>
                 </th>
               }
-              <th class="col-name">
+              <th class="col-name sortable-header" 
+                  (click)="toggleSort('name')">
                 {{ activeTab() === 'categories' ? 'Category Name' : 'Name' }}
-                <mat-icon class="sort-icon">unfold_more</mat-icon>
+                <mat-icon class="sort-icon">
+                  {{ sortColumn() === 'name' 
+                      ? (sortDirection() === 
+                            'asc' ? 'arrow_upward' : 'arrow_downward') 
+                      : 'unfold_more' }}
+                </mat-icon>
               </th>
               <th class="col-actions">Actions</th>
             </tr>
@@ -72,7 +89,8 @@
           <tbody>
             @if (isLoading()) {
               <tr>
-                <td colspan="3" class="empty-row">
+                <td [attr.colspan]="activeTab() === 
+                        'programs' ? 3 : 2" class="empty-row">
                   Loading data...
                 </td>
               </tr>
@@ -93,7 +111,10 @@
               }
             } @else {
               <tr>
-                <td colspan="3" class="empty-row">No records found.</td>
+                <td [attr.colspan]="activeTab() === 
+                        'programs' ? 3 : 2" class="empty-row">
+                  No records found.
+                </td>
               </tr>
             }
           </tbody>
@@ -105,7 +126,8 @@
   @if (showModal()) {
     <app-master-data-modal
         [editItem]="selectedItem()"
-        [context]="activeTab() === 'categories' ? 'category' : 'program'"
+        [context]="activeTab() === 
+                'categories' ? 'category' : 'program'"
         (close)="closeModal()"
         (save)="onSaveItem($event)"
         (update)="onUpdateItem($event)">
