@@ -10,18 +10,17 @@ import {
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Subject, BehaviorSubject, of, Observable } from 'rxjs';
 import { 
-  takeUntil, switchMap, tap, catchError, finalize, map 
+  takeUntil, switchMap, tap, catchError, map, debounceTime, distinctUntilChanged
 } from 'rxjs/operators';
 
 import { 
   ConfirmationModal 
 } from '../../../modal/confirmation-modal/confirmation-modal';
 import { 
-  MasterDataModal, 
-  SavePayload, 
-  UpdatePayload 
+  MasterDataModal
 } from '../../../modal/master-data-modal/master-data-modal';
 
 import { 
@@ -38,7 +37,9 @@ import {
   MasterDataTab, 
   MasterDataItem, 
   SortColumn, 
-  SortDirection 
+  SortDirection,
+  SavePayload,
+  UpdatePayload
 } from '../../../models/master-data-model';
 
 @Component({
@@ -63,6 +64,9 @@ export class MasterDataPage implements OnInit, OnDestroy {
   private readonly categoryService = inject(CategoryService);
   private readonly programService = inject(ProgramService);
   private readonly toastService = inject(ToastService);
+  
+  private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
 
   public isLoading = signal(false); 
   public showModal = signal(false);
@@ -76,6 +80,11 @@ export class MasterDataPage implements OnInit, OnDestroy {
   public selectedItem = signal<MasterDataItem | null>(null);
   public itemToDelete = signal<MasterDataItem | null>(null);
   
+  public currentSearchQuery = signal('');
+  
+  private readonly items = signal<MasterDataItem[]>([]);
+  public searchForm!: FormGroup;
+
   public deleteConfirmMessage = computed((): string => {
     const item = this.itemToDelete();
     const entity = this.activeTab() === 'categories' ? 'category' : 'program';
@@ -83,14 +92,9 @@ export class MasterDataPage implements OnInit, OnDestroy {
         ? `Are you sure you want to delete the ${entity} '${item.name}'?`
         : `Are you sure you want to delete this ${entity}?`;
   });
-  
-  private readonly items = signal<MasterDataItem[]>([]);
-  public searchForm!: FormGroup;
 
   public filteredItems = computed((): MasterDataItem[] => {
-    const q = (this.searchForm?.get('query')?.value ?? '')
-        .toLowerCase().trim();
-    
+    const q = this.currentSearchQuery();
     let result = this.items();
 
     if (q) {
@@ -119,14 +123,23 @@ export class MasterDataPage implements OnInit, OnDestroy {
   });
 
   public ngOnInit(): void {
+    const initialTab = this.route.snapshot.queryParamMap.get('tab');
+    if (initialTab === 'programs' || initialTab === 'categories') {
+      this.activeTab.set(initialTab as MasterDataTab);
+    }
+
     this.searchForm = this.fb.group({
       query: ['', { updateOn: 'change' }] 
     });
 
     this.searchForm.get('query')?.valueChanges
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((): void => {
-        this.items.update((v: MasterDataItem[]) => [...v]);
+      .pipe(
+        debounceTime(300),
+        distinctUntilChanged(),
+        takeUntil(this.destroy$)
+      )
+      .subscribe((val: string): void => {
+        this.currentSearchQuery.set(val.toLowerCase().trim());
       });
 
     this.refreshTrigger$.pipe(
@@ -178,11 +191,19 @@ export class MasterDataPage implements OnInit, OnDestroy {
 
   public switchTab(tab: MasterDataTab): void {
     if (this.activeTab() === tab) return;
+    
     this.activeTab.set(tab);
     this.searchForm.get('query')?.setValue('');
+    this.currentSearchQuery.set('');
     
     this.sortColumn.set(null);
     this.sortDirection.set('asc');
+
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { tab: tab },
+      queryParamsHandling: 'merge'
+    });
 
     this.refreshTrigger$.next();
   }
