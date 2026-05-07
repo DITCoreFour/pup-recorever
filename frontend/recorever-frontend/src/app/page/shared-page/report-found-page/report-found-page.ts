@@ -37,10 +37,28 @@ export class ReportFoundPage implements OnInit {
   protected isAdminMode = false;
 
   private get postEditRoute(): string {
-      return this.isAdminMode
-        ? AppRoutePaths.FOUND_ITEM_MANAGEMENT
-        : AppRoutePaths.MY_REPORTS;
-    }
+    return this.isAdminMode
+      ? AppRoutePaths.FOUND_ITEM_MANAGEMENT
+      : AppRoutePaths.MY_REPORTS;
+  }
+
+  private get cancelRoute(): string {
+    return this.isAdminMode
+      ? AppRoutePaths.ADMIN_REPORT_FOUND
+      : AppRoutePaths.REPORT_FOUND;
+  }
+
+  private get closeRoute(): string {
+    return this.isAdminMode
+      ? AppRoutePaths.FOUND_ITEM_MANAGEMENT
+      : AppRoutePaths.BROWSE;
+  }
+
+  private get viewReportRoute(): string {
+    return this.isAdminMode
+      ? AppRoutePaths.ADMIN_MY_REPORTS
+      : AppRoutePaths.MY_REPORTS;
+  }
 
   ngOnInit(): void {
     const state = history.state;
@@ -87,18 +105,20 @@ export class ReportFoundPage implements OnInit {
   }
 
   handleCancel(): void {
-    this.router.navigate([AppRoutePaths.REPORT_FOUND]);
+    this.router.navigate([this.cancelRoute]);
   }
 
   onModalClose(): void {
     this.showReferenceModal.set(false);
-    this.router.navigate([AppRoutePaths.BROWSE],
-                         { queryParams: { type: 'found' } }
-    );
+    const navigationExtras = this.isAdminMode
+      ? {}
+      : { queryParams: { type: 'found' } };
+
+    this.router.navigate([this.closeRoute], navigationExtras);
   }
 
   onViewReport(): void {
     this.showReferenceModal.set(false);
-    this.router.navigate([AppRoutePaths.MY_REPORTS]);
+    this.router.navigate([this.viewReportRoute]);
   }
 }

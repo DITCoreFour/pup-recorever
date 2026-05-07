@@ -37,6 +37,24 @@ export class ReportLostPage implements OnInit {
       : AppRoutePaths.MY_REPORTS;
   }
 
+  private get cancelRoute(): string {
+    return this.isAdminMode
+      ? AppRoutePaths.ADMIN_REPORT_LOST
+      : AppRoutePaths.REPORT_LOST;
+  }
+
+  private get searchItemRoute(): string {
+    return this.isAdminMode
+      ? AppRoutePaths.FOUND_ITEM_MANAGEMENT
+      : AppRoutePaths.BROWSE;
+  }
+
+  private get viewReportRoute(): string {
+    return this.isAdminMode
+      ? AppRoutePaths.ADMIN_MY_REPORTS
+      : AppRoutePaths.MY_REPORTS;
+  }
+
   ngOnInit(): void {
     const state = history.state;
     if (state && state.mode === 'EDIT' && state.data) {
@@ -75,17 +93,19 @@ export class ReportLostPage implements OnInit {
 
   onViewReport(): void {
     this.showSuccessModal.set(false);
-    this.router.navigate([AppRoutePaths.MY_REPORTS]);
+    this.router.navigate([this.viewReportRoute]);
   }
 
   onSearchItems(): void {
     this.showSuccessModal.set(false);
-    this.router.navigate([AppRoutePaths.BROWSE],
-                         { queryParams: { type: 'found' } }
-    );
+    const navigationExtras = this.isAdminMode
+      ? {}
+      : { queryParams: { type: 'found' } };
+
+    this.router.navigate([this.searchItemRoute], navigationExtras);
   }
 
   handleCancel(): void {
-    this.router.navigate([AppRoutePaths.REPORT_LOST]);
+    this.router.navigate([this.cancelRoute]);
   }
 }
