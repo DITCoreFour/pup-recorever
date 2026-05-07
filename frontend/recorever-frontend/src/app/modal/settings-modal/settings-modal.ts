@@ -19,9 +19,10 @@ import { UserService } from '../../core/services/user-service';
 import { AuthService } from '../../core/auth/auth-service';
 import { ToastService } from '../../core/services/toast-service';
 import type { ChangePasswordRequest } from '../../models/user-model';
+import { AdminService } from '../../core/services/admin-service';
 
-type SettingsView = 'MENU' | 'BACKUP_RESTORE' | 'CHANGE_PASSWORD' | 'DELETE_ACCOUNT' | 
-                    'PASSWORD_CHANGE_SUCCESS';
+type SettingsView = 'MENU' | 'BACKUP_RESTORE' | 'CHANGE_PASSWORD' | 
+                    'DELETE_ACCOUNT' | 'PASSWORD_CHANGE_SUCCESS';
 type PasswordStrength = 'none' | 'weak' | 'medium' | 'strong';
 
 function strongPasswordValidator(): ValidatorFn {
@@ -92,6 +93,7 @@ export class SettingsModal {
   private readonly userService = inject(UserService);
   private readonly authService = inject(AuthService);
   private readonly toastService = inject(ToastService);
+  private readonly adminService = inject(AdminService);
 
   protected readonly currentView = signal<SettingsView>('MENU');
   protected readonly hideOldPassword = signal(true);
@@ -144,17 +146,58 @@ export class SettingsModal {
   }
 
   protected onExportBackup(): void {
-    // Backup logic here
-    console.log('Exporting backup...');
-    this.toastService.showSuccess('Database backup initiated');
+    if (this.isSubmitting()) return;
+    
+    this.isSubmitting.set(true);
+    this.adminService.downloadBackup().pipe(take(1)).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        const timestamp = new Date().toISOString().split('T')[0];
+
+        link.href = url;
+        link.download = `recorever_db_backup_${timestamp}.sql`;
+        link.click();
+
+        window.URL.revokeObjectURL(url);
+        this.toastService.showSuccess('Database backup downloaded');
+        this.isSubmitting.set(false);
+      },
+      error: (err) => {
+        console.error('Export failed', err);
+        this.toastService.showError('Failed to generate backup');
+        this.isSubmitting.set(false);
+      }
+    });
   }
 
   protected onFileSelected(event: Event): void {
     const element = event.currentTarget as HTMLInputElement;
-    let fileList: FileList | null = element.files;
-    if (fileList) {
-      console.log('Restoring from:', fileList[0].name);
-      // Restore logic here
+    const file = element.files?.[0];
+    
+    if (file) {
+      if (!file.name.endsWith('.sql')) {
+        this.toastService.showError('Please select a valid .sql file');
+        return;
+      }
+
+      this.isSubmitting.set(true);
+      this.adminService.restoreDatabase(file).pipe(take(1)).subscribe({
+        next: (response) => {
+          this.toastService.showSuccess(response);
+
+          setTimeout(() => {
+            this.isSubmitting.set(false);
+            window.location.reload();
+          }, 1500);
+        },
+        error: (err) => {
+          console.error('Restore failed', err);
+          this.toastService
+            .showError('Restore failed: ' + (err.error || 'Server error'));
+          this.isSubmitting.set(false);
+        }
+      });
     }
   }
 
