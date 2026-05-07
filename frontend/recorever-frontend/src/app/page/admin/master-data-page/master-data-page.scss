@@ -351,13 +351,19 @@
     }
   }
 
+  .col-code {
+    width: 25%;
+    font-weight: 500;
+  }
+
   .col-name {
-    width: 70%;
+    width: 55%;
   }
 
   .col-actions {
     text-align: right;
     white-space: nowrap;
+    width: 20%;
   }
 
   .empty-row {

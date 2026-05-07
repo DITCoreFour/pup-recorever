@@ -5,11 +5,21 @@
       <span class="main-path">Master Data</span>
     </h2>
   </header>
+  
   <div class="master-data-layout">
     <aside class="sidebar">
       <h3 class="sidebar-title">Table List</h3>
       <ul class="sidebar-list">
-        <li class="sidebar-item active">Item Categories</li>
+        <li class="sidebar-item" 
+            [class.active]="activeTab() === 'categories'"
+            (click)="switchTab('categories')">
+          Item Categories
+        </li>
+        <li class="sidebar-item" 
+            [class.active]="activeTab() === 'programs'"
+            (click)="switchTab('programs')">
+          Academic Programs
+        </li>
       </ul>
     </aside>
 
@@ -21,17 +31,24 @@
             class="search-input"
             type="text"
             formControlName="query"
-            placeholder="Search category..." />
+            placeholder="Search {{ activeTab() === 'categories' ? 
+                'category' : 'program' }}..." />
         </form>
       </div>
       
       <div class="table-title-row">
         <div class="table-title-left">
-          <mat-icon class="title-icon">category</mat-icon>
-          <span class="title-label">Item Categories</span>
+          <mat-icon class="title-icon">
+            {{ activeTab() === 'categories' ? 'category' : 'school' }}
+          </mat-icon>
+          <span class="title-label">
+            {{ activeTab() === 'categories' ? 
+                'Item Categories' : 'Academic Programs' }}
+          </span>
         </div>
         <button class="add-btn" (click)="openAddModal()">
-          <mat-icon>add</mat-icon> Add Category
+          <mat-icon>add</mat-icon> Add 
+          {{ activeTab() === 'categories' ? 'Category' : 'Program' }}
         </button>
       </div>
       
@@ -39,8 +56,14 @@
         <table class="data-table">
           <thead>
             <tr>
+              @if (activeTab() === 'programs') {
+                <th class="col-code">
+                  Code
+                  <mat-icon class="sort-icon">unfold_more</mat-icon>
+                </th>
+              }
               <th class="col-name">
-                Category Name
+                {{ activeTab() === 'categories' ? 'Category Name' : 'Name' }}
                 <mat-icon class="sort-icon">unfold_more</mat-icon>
               </th>
               <th class="col-actions">Actions</th>
@@ -49,18 +72,20 @@
           <tbody>
             @if (isLoading()) {
               <tr>
-                <td colspan="2" class="empty-row">
-                  Loading categories...
+                <td colspan="3" class="empty-row">
+                  Loading data...
                 </td>
               </tr>
             } @else if (filteredItems().length > 0) {
               @for (item of filteredItems(); track item.id) {
                 <tr class="table-row">
+                  @if (activeTab() === 'programs') {
+                    <td class="col-code">{{ item.code }}</td>
+                  }
                   <td class="col-name">{{ item.name }}</td>
                   <td class="col-actions">
                     <button class="action-btn edit"
                             (click)="openEditModal(item)">Edit</button>
-
                     <button class="action-btn delete"
                             (click)="confirmDelete(item)">Delete</button>
                   </td>
@@ -68,7 +93,7 @@
               }
             } @else {
               <tr>
-                <td colspan="2" class="empty-row">No categories found.</td>
+                <td colspan="3" class="empty-row">No records found.</td>
               </tr>
             }
           </tbody>
@@ -78,12 +103,13 @@
   </div>
   
   @if (showModal()) {
-    <app-category-modal
+    <app-master-data-modal
         [editItem]="selectedItem()"
+        [context]="activeTab() === 'categories' ? 'category' : 'program'"
         (close)="closeModal()"
-        (save)="onSaveCategory($event)"
-        (update)="onUpdateCategory($event)">
-    </app-category-modal>
+        (save)="onSaveItem($event)"
+        (update)="onUpdateItem($event)">
+    </app-master-data-modal>
   }
 
   @if (showDeleteConfirmModal()) {
