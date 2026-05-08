@@ -85,15 +85,9 @@
     font-weight: 300;
   }
 
-  .option-lost { left: 0; }
+  .option-found { left: 0; }
   .title-separator { left: 110px; }
-  .option-found { left: 150px; }
-
-  &.swapped {
-    .option-found { left: 0; }
-    .title-separator { left: 115px; } 
-    .option-lost { left: 155px; }
-  }
+  .option-lost { left: 150px; }
 }
 
 .header-divider {
@@ -180,15 +174,9 @@
   .toggleable-title {
     width: 330px;
     font-size: 1.1rem; 
-
-    .option-lost { left: 0; }
+  
+    .option-found { left: 0; }
     .title-separator { left: 110px; }
-    .option-found { left: 150px; }
-
-    &.swapped {
-      .option-found { left: 0; }
-      .title-separator { left: 120px; } 
-      .option-lost { left: 150px; }
-    }
+    .option-lost { left: 150px; }
   }
 }

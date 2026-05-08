@@ -562,9 +562,9 @@ export class ClaimFormModal implements OnInit {
   });
 
   protected surrenderedLocationName = computed((): string | null => {
-    const r = this.report() as any;
-    if (r?.type === 'found' && r?.surrendered_location_name) {
-      return r.surrendered_location_name;
+    const r = this.report();
+    if (r?.type === 'found' && r?.surrendered_location?.surrendered_location_name) {
+      return r.surrendered_location.surrendered_location_name;
     }
     return null;
   });

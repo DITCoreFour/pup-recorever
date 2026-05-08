@@ -258,9 +258,9 @@ export class ItemDetailModal {
   });
 
   surrenderedLocationName = computed((): string | null => {
-    const r = this.item() as any;
-    if (r.type === 'found' && r.surrendered_location_name) {
-      return r.surrendered_location_name;
+    const r = this.item();
+    if (r.type === 'found' && r.surrendered_location?.surrendered_location_name) {
+      return r.surrendered_location.surrendered_location_name;
     }
     return null;
   });
