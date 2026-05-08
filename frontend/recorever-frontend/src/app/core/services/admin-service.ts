@@ -46,6 +46,26 @@ export class AdminService {
     return this.dashboardCache.get(range)!;
   }
 
+  /**
+   * Downloads a full SQL backup of the database
+   */
+  downloadBackup(): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/admin/backup`, {
+      responseType: 'blob',
+      withCredentials: true
+    });
+  }
+
+  restoreDatabase(file: File): Observable<string> {
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    return this.http.post(`${this.apiUrl}/admin/restore`, formData, {
+      responseType: 'text',
+      withCredentials: true
+    });
+  }
+
   clearCache() {
     this.dashboardCache.clear();
   }
