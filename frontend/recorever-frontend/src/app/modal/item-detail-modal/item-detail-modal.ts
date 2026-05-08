@@ -161,10 +161,12 @@ export class ItemDetailModal {
   }
 
   navigateToProfile(): void {
+    if (!this.effectiveAdmin()) return;
+
     const userId = this.item().user_id;
     if (userId) {
       this.onClose();
-      this.router.navigate(['/app/profile', userId]);
+      this.router.navigate(['/admin/profile', userId]); 
     }
   }
 
