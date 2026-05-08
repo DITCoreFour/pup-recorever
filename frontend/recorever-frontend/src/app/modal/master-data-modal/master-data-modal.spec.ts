@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { CategoryModal } from './category-modal';
+import { MasterDataModal } from './master-data-modal';
 
-describe('CategoryModal', () => {
-  let component: CategoryModal;
-  let fixture: ComponentFixture<CategoryModal>;
+describe('MasterDataModal', () => {
+  let component: MasterDataModal;
+  let fixture: ComponentFixture<MasterDataModal>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [CategoryModal]
+      imports: [MasterDataModal]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(CategoryModal);
+    fixture = TestBed.createComponent(MasterDataModal);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });
