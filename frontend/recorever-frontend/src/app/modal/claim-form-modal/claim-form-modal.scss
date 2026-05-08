@@ -403,7 +403,7 @@ $claimed-dark: #333333;
     &:active { transform: scale(0.98); }
 
     &.verified, &.approved, &.matched { background-color: $verified-green; }
-    &.pending { background-color: $pending-yellow; color: black; }
+    &.pending { background-color: $pending-yellow; }
     &.claimed { background-color: $claimed-dark; }
     &.denied, &.rejected { background-color: $denied-red; }
     &.resolved { background-color: $claimed-dark; }

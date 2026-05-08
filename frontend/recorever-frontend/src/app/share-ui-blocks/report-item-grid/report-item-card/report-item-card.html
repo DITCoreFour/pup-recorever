@@ -41,7 +41,7 @@
       <span class="category-badge">{{ categoryName() }}</span>
     </div>
 
-    @if (isOwner() || report().claim_code || isAdmin()) {
+    @if (isOwner() || report().claim_code || effectiveAdmin()) {
       <button
               mat-mini-fab
               class="floating-menu-trigger"
@@ -49,8 +49,10 @@
               (click)="$event.stopPropagation()">
         <mat-icon>more_horiz</mat-icon>
       </button>
+      
       <mat-menu #cardMenu="matMenu" xPosition="before">
-        @if (!isAdmin() && (report().type !== 'lost' || report().claim_code)) {
+        
+        @if (!effectiveAdmin() && (report().type !== 'lost' || report().claim_code)) {
           <button
                   mat-menu-item
                   (click)="onViewCode($event)">
@@ -58,7 +60,8 @@
             <span>{{ getCodeButtonLabel() }}</span>
           </button>
         }
-        @if (isOwner() || isAdmin()) {
+        
+        @if (isOwner() || effectiveAdmin()) {
           <button
                   mat-menu-item
                   (click)="onEdit($event)"
