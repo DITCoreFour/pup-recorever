@@ -50,23 +50,26 @@
 
   @if (isDefaultState()) {
     <button mat-flat-button type="button"
-        (click)="resetFilters()" class="all-btn active-all-btn">
-      Clear Filters
+        (click)="resetFilters()" class="all-btn active-all-btn"
+        title="Clear Filters">
+      <mat-icon>filter_alt_off</mat-icon>
+      <span class="btn-text">All</span>
     </button>
   } @else {
     <button mat-stroked-button type="button"
-        (click)="resetFilters()" class="all-btn">
-      Clear Filters
+        (click)="resetFilters()" class="all-btn" title="Clear Filters">
+      <mat-icon>filter_alt_off</mat-icon>
+      <span class="btn-text">All</span>
     </button>
   }
 
-  <mat-form-field appearance="outline" class="filter-field fixed-size">
+  <mat-form-field appearance="outline" class="filter-field fixed-size" title="Sort Order">
+    <mat-icon matPrefix>sort</mat-icon>
     <mat-label>Sort By</mat-label>
     <mat-select formControlName="sort">
       <mat-option value="newest">New to Oldest</mat-option>
       <mat-option value="oldest">Oldest to Newest</mat-option>
     </mat-select>
-    <mat-icon matPrefix>sort</mat-icon>
   </mat-form-field>
 
   <mat-form-field appearance="outline" class="filter-field fixed-size">
@@ -79,7 +82,6 @@
   <mat-form-field appearance="outline" class="filter-field fixed-size">
     <mat-label>{{ locationLabel() }}</mat-label>
     <mat-icon matPrefix>place</mat-icon>
-
     <input type="text"
         placeholder="Select or Type..."
         matInput
@@ -92,7 +94,6 @@
         <mat-icon>close</mat-icon>
       </button>
     }
-
     <mat-autocomplete #auto="matAutocomplete"
         (opened)="onLocationPanelOpened()"
         (closed)="onLocationPanelClosed()">
