@@ -179,6 +179,14 @@ export const routes: Routes = [
             import('./page/shared-page/my-reports-page/my-reports-page')
           .then(m => m.MyReportsPage)
       },
+      { path: 'profile',
+        loadComponent: () => import('./page/user/profile-page/profile-page')
+          .then(m => m.ProfilePage)
+      },
+      { path: 'profile/:id',
+        loadComponent: () => import('./page/user/profile-page/profile-page')
+          .then(m => m.ProfilePage)
+      },
       {
         path: 'report-lost',
         loadComponent: () => import('./page/shared-page/report-lost-page/report-lost-page')
