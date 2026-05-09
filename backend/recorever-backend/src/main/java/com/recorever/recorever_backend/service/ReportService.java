@@ -127,22 +127,17 @@ public class ReportService {
         Report savedReport = repo.save(report);
         int id = savedReport.getReportId();
 
-        ReportDetail details = new ReportDetail();
-        details.setReport(savedReport);
-
         if (reporterUserId != null) {
+            ReportDetail details = new ReportDetail();
+            details.setReport(savedReport);
             details.setUserId(reporterUserId);
             details.setAdminId(userId);
-        } else {
-            details.setUserId(null);
-            details.setAdminId(userId);
+            details.setPersonName(reporterName);
+            details.setPersonContactEmail(reporterEmail);
+            details.setPersonContactPhone(reporterPhone);
+
+            reportDetailRepo.save(details);
         }
-
-        details.setPersonName(reporterName);
-        details.setPersonContactEmail(reporterEmail);
-        details.setPersonContactPhone(reporterPhone);
-
-        reportDetailRepo.save(details);
 
         if ("lost".equalsIgnoreCase(type)) {
             LocalDate postDate = LocalDate.now();
