@@ -74,15 +74,11 @@ public class ReportService {
     @Autowired
     private SurrenderedLocationRepository surrenderedLocationRepo;
 
-    private int getAdminUserId() {
-        return userRepository.findFirstByRoleAndIsDeletedFalse("superadmin")
+    private List<Integer> getAdminUserIds() {
+        return userRepository.findByRoleAndIsDeletedFalse("admin")
+                .stream()
                 .map(User::getUserId)
-                .orElseGet(() -> 
-                    // Fallback to standard admin if no superadmin is found
-                    userRepository.findFirstByRoleAndIsDeletedFalse("admin")
-                        .map(User::getUserId)
-                        .orElse(1) // Safety fallback
-                );
+                .collect(Collectors.toList());
     }
 
     @Transactional
@@ -106,12 +102,15 @@ public class ReportService {
                 .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
 
         Category category = categoryRepo.findById(categoryId)
-                .orElseThrow(() -> new RuntimeException("Category not found with ID: " + categoryId));
+            .orElseThrow(() -> new RuntimeException(
+                "Category not found with ID: " + categoryId));
         report.setCategory(category);
 
         if (surrenderedLocationId != null) {
-            SurrenderedLocation surrLoc = surrenderedLocationRepo.findById(surrenderedLocationId)
-                    .orElseThrow(() -> new RuntimeException("Location not found with ID: " + surrenderedLocationId));
+            SurrenderedLocation surrLoc = surrenderedLocationRepo
+                .findById(surrenderedLocationId)
+                .orElseThrow(() -> new RuntimeException(
+                    "Location not found with ID: " + surrenderedLocationId));
             report.setSurrenderedLocation(surrLoc);
         }
 
@@ -155,9 +154,18 @@ public class ReportService {
             scheduleRepo.save(schedule);
         }
 
-        notificationService.create(getAdminUserId(), id, String.format(
-                "New PENDING %s report submitted: %s.", type.toUpperCase(), itemName),
-                false);
+        String adminMessage = String.format(
+                "New PENDING %s report submitted: %s.", 
+                type.toUpperCase(), 
+                itemName
+        );
+
+        List<Integer> adminIds = getAdminUserIds();
+
+        for (Integer adminId : adminIds) {
+            notificationService
+                .create(adminId, id, adminMessage, false);
+        }
 
         return Map.of(
             "report_id", id,

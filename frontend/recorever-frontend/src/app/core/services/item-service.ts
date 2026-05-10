@@ -185,8 +185,8 @@ export class ItemService {
     );
   }
 
-  updateMatchStatus(matchId: number, status: string): Observable<any> {
-    return this.http.put(`${this.apiUrl}/match/${matchId}`, { status });
+  updateMatchStatus(matchId: number, statusId: number): Observable<any> {
+    return this.http.put(`${this.apiUrl}/match/${matchId}`, { statusId: statusId });
   }
 
   getMatchForReport(reportId: number): Observable<MatchResponseDTO | undefined> {
