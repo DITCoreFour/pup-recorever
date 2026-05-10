@@ -105,7 +105,8 @@
             type="text"
             matInput
             formControlName="location"
-            [matAutocomplete]="auto" />
+            [matAutocomplete]="auto"
+            #locationTrigger="matAutocompleteTrigger"/>
         <mat-autocomplete #auto="matAutocomplete">
           @for (location of filteredLocations | async; track location) {
             <mat-option [value]="location">{{ location }}</mat-option>

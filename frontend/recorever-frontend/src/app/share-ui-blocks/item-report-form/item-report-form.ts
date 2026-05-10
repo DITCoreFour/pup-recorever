@@ -4,9 +4,12 @@ import {
   Output,
   EventEmitter,
   OnInit, inject,
-  ChangeDetectorRef
+  ChangeDetectorRef,
+  ViewChild,
+  AfterViewInit,
+  DestroyRef
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DOCUMENT } from '@angular/common'; 
 import { 
   ReactiveFormsModule,
   FormBuilder,
@@ -18,7 +21,8 @@ import {
 } from '@angular/forms';
 import {
   MatAutocompleteModule,
-  MatAutocompleteSelectedEvent
+  MatAutocompleteSelectedEvent,
+  MatAutocompleteTrigger 
 } from '@angular/material/autocomplete';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -32,8 +36,10 @@ import {
   debounceTime,
   distinctUntilChanged,
   switchMap,
-  of
+  of,
+  fromEvent 
 } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop'; 
 
 import {
     Report,
@@ -76,7 +82,7 @@ import {
   templateUrl: './item-report-form.html',
   styleUrl: './item-report-form.scss',
 })
-export class ItemReportForm implements OnInit {
+export class ItemReportForm implements OnInit, AfterViewInit { 
 
   @Input() initialData?: Report | null;
   @Input() isEditMode = false;
@@ -85,6 +91,9 @@ export class ItemReportForm implements OnInit {
 
   @Output() formSubmitted = new EventEmitter<ReportSubmissionWithFiles>();
   @Output() formCancelled = new EventEmitter<void>();
+
+  @ViewChild('locationTrigger')
+  public autoTrigger!: MatAutocompleteTrigger;
 
   protected isCustomLocationModalOpen = false;
   protected selectedFiles: File[] = [];
@@ -109,6 +118,8 @@ export class ItemReportForm implements OnInit {
   private itemService = inject(ItemService);
   private userService = inject(UserService);
   private cdr = inject(ChangeDetectorRef);
+  private document = inject(DOCUMENT);
+  private destroyRef = inject(DestroyRef);
 
   readonly placeholderText =
       'Please include brand, color, or unique markings '
@@ -365,6 +376,24 @@ export class ItemReportForm implements OnInit {
         });
       }
     }
+  }
+
+  public ngAfterViewInit(): void {
+    fromEvent(this.document, 'scroll', { capture: true })
+      .pipe(
+        debounceTime(10),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe((): void => {
+        if (this.autoTrigger && this.autoTrigger.panelOpen) {
+          this.autoTrigger.closePanel();
+          
+          const activeEl = this.document.activeElement as HTMLElement;
+          if (activeEl) {
+            activeEl.blur();
+          }
+        }
+      });
   }
 
   onUserSelected(event: MatAutocompleteSelectedEvent): void {
