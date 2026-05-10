@@ -547,7 +547,8 @@ export class ItemReportForm implements OnInit {
   }
 
   public clearPhotos(): void {
-    this.selectedFilesPreview.forEach((p: FilePreview) => URL.revokeObjectURL(p.url));
+    this.selectedFilesPreview
+      .forEach((p: FilePreview) => URL.revokeObjectURL(p.url));
     this.selectedFiles = [];
     this.selectedFilesPreview = [];
     this.photoUrlsFormArray.clear();
