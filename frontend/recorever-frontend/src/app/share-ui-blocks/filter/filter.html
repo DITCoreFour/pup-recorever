@@ -86,7 +86,8 @@
         placeholder="Select or Type..."
         matInput
         formControlName="location"
-        [matAutocomplete]="auto">
+        [matAutocomplete]="auto"
+        #locationTrigger="matAutocompleteTrigger">
 
     @if (filterForm.get('location')?.value) {
       <button mat-icon-button matSuffix type="button"
@@ -94,9 +95,8 @@
         <mat-icon>close</mat-icon>
       </button>
     }
-    <mat-autocomplete #auto="matAutocomplete"
-        (opened)="onLocationPanelOpened()"
-        (closed)="onLocationPanelClosed()">
+    
+    <mat-autocomplete #auto="matAutocomplete">
       @for (loc of filteredLocations$ | async; track loc) {
         <mat-option [value]="loc">
           {{ loc }}
