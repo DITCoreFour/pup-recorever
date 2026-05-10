@@ -34,13 +34,13 @@ import {
   switchMap,
   of
 } from 'rxjs';
+
 import {
     Report,
     ItemReportForm as ItemFormType,
     ReportSubmissionPayload,
     ReportSubmissionWithFiles,
     FilePreview,
-    StandardLocations,
     Category,
     SurrenderLocation,
     ReportStatusEnum
@@ -53,7 +53,9 @@ import { ToastService } from '../../core/services/toast-service';
 import { ItemService } from '../../core/services/item-service';
 import { UserService } from '../../core/services/user-service';
 import { environment } from '../../../environments/environment';
-import { ConfirmationModal } from '../../modal/confirmation-modal/confirmation-modal';
+import { 
+  ConfirmationModal 
+} from '../../modal/confirmation-modal/confirmation-modal';
 
 @Component({
   selector: 'app-item-report-form',
@@ -285,12 +287,11 @@ export class ItemReportForm implements OnInit {
 
     this.itemService.getTopLocations().subscribe({
       next: (locations: string[]) => {
-        const standard = Object.values(StandardLocations);
-        this.allLocations = [...new Set([...locations, ...standard])];
+        this.allLocations = locations || [];
         this.setupFiltering();
       },
       error: () => {
-        this.allLocations = Object.values(StandardLocations);
+        this.allLocations = [];
         this.setupFiltering();
       }
     });
