@@ -245,20 +245,22 @@ public class ReportController {
     @GetMapping("/reports")
     public ResponseEntity<Map<String, Object>> getReports(
             @RequestParam(required = false) String type,
-            @RequestParam(required = false) Integer status,
+            @RequestParam(required = false) List<Integer> status,
             @RequestParam(required = false) String category,
             @RequestParam(required = false) Integer user_id,
             @RequestParam(required = false) String query,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size) {
 
-        String statusName = null;
-        if (status != null) {
-            statusName = statusService.getById(status).getStatusName();
+        List<String> statusNames = null;
+        if (status != null && !status.isEmpty()) {
+            statusNames = status.stream()
+                    .map(id -> statusService.getById(id).getStatusName())
+                    .collect(Collectors.toList());
         }
 
         Map<String, Object> serviceResponse = service.searchReports(
-                user_id, type, statusName, category, query, page, size);
+                user_id, type, statusNames, category, query, page, size);
 
         @SuppressWarnings("unchecked")
         List<Report> reports = (List<Report>) serviceResponse.get("items");

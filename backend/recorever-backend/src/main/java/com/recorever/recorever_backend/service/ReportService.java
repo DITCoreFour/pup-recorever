@@ -208,7 +208,7 @@ public class ReportService {
     }
 
     public Map<String, Object> searchReports(Integer userId, String type,
-                                             String statusName, String categoryName,
+                                             List<String> statusName, String categoryName,
                                              String query, int page, int size) {
         Pageable pageable = PageRequest.of(page - 1, size);
         List<Report> items = repo.searchReports(userId, type, statusName, categoryName, query, pageable);

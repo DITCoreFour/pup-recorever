@@ -57,7 +57,7 @@ export type Report = {
 
 export type ReportFilters = {
   type?: 'lost' | 'found';
-  status_id?: number;
+  status_id?: number | number[];
   location?: string;
   query?: string;
   user_id?: number;
