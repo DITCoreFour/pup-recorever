@@ -288,6 +288,7 @@ $secondary-text: #666;
     justify-content: flex-end;
     gap: 15px;
     margin-top: 30px;
+    width: 90%;
 
     .btn {
       padding: 10px 30px;
@@ -339,4 +340,32 @@ $secondary-text: #666;
       }
     }
   }
+}
+
+::ng-deep .user-search-item {
+  display: flex;
+  align-items: center;
+}
+
+::ng-deep .user-details {
+  display: flex;
+  flex-direction: column;
+}
+
+::ng-deep .user-name {
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+::ng-deep .user-email {
+  color: #666;
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+::ng-deep .mini-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  margin-right: 10px;
 }
