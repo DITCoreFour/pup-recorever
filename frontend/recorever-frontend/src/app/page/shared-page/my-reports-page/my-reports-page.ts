@@ -108,6 +108,10 @@ export class MyReportsPage implements OnInit, AfterViewInit, OnDestroy {
       this.availableStatuses[0]
   );
 
+  public isAllActive = computed((): boolean => {
+    return this.itemType() === 'all' && this.currentStatus().value === null;
+  });
+
   public visibleReports = computed((): Report[] => {
     let reports = [...this.allReports()];
     const type = this.itemType();
@@ -236,6 +240,11 @@ export class MyReportsPage implements OnInit, AfterViewInit, OnDestroy {
   public setStatus(statusObj: MyReportStatusFilter): void {
     this.currentStatus.set(statusObj);
     this.isStatusOpen.set(false);
+  }
+
+  public resetFilters(): void {
+    this.itemType.set('all');
+    this.currentStatus.set(this.availableStatuses[0]);
   }
 
   public toggleType(type: ItemType): void {
