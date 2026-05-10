@@ -180,14 +180,19 @@ public class ReportController {
             @Valid @ModelAttribute ReportCreationDTO reportDto) {
 
         User authenticatedUser = (User) authentication.getPrincipal();
-        int userId = authenticatedUser.getUserId();
+        boolean isAdmin = authenticatedUser.getRole().equalsIgnoreCase("ADMIN");
+
+        String reporterName = isAdmin ? reportDto.getReported_by() : null;
+        Integer reporterUserId = isAdmin ? reportDto.getReported_by_user_id() : null;
+        String reporterEmail = isAdmin ? reportDto.getReporter_email() : null;
+        String reporterPhone = isAdmin ? reportDto.getReporter_phone() : null;
 
         Map<String, Object> creationResult = service.create(
-                userId,
-                reportDto.getReported_by_user_id(),
-                reportDto.getReported_by(),
-                reportDto.getReporter_email(),
-                reportDto.getReporter_phone(),
+                authenticatedUser.getUserId(),
+                reporterUserId,
+                reporterName,
+                reporterEmail,
+                reporterPhone,
                 reportDto.getStatus(),
                 reportDto.getType(),
                 reportDto.getCategory_id(),
