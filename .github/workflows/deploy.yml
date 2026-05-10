@@ -1,14 +1,70 @@
-name: Auto Deploy Main Branch
+name: Auto Deploy
 
 on:
   push:
     branches:
       - main
+      - develop
 
 jobs:
-  deploy:
+  # --- DEVELOPMENT JOB ---
+  deploy-dev:
+    if: github.ref == 'refs/heads/develop'
     runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Build Angular Frontend
+        run: |
+          cd frontend/recorever-frontend
+          npm install
+          npm run build -- --configuration=dev
+
+      - name: Build Spring Boot Backend
+        run: |
+          cd backend/recorever-backend
+          chmod +x mvnw
+          ./mvnw clean package -DskipTests
+
+      - name: Set up SSH key
+        uses: webfactory/ssh-agent@v0.8.0
+        with:
+          ssh-private-key: ${{ secrets.VPS_SSH_KEY }}
+
+      - name: Upload Files to VPS
+        run: |
+          scp -o StrictHostKeyChecking=no -r \
+            frontend/recorever-frontend/dist/recorever-frontend/browser/* \
+            root@72.61.120.30:/var/www/dev/
+          scp -o StrictHostKeyChecking=no \
+            backend/recorever-backend/target/*.jar \
+            root@72.61.120.30:/var/opt/dev-backend/
+
+      - name: Restart Dev Application (Port 8081)
+        run: |
+          ssh -o StrictHostKeyChecking=no root@72.61.120.30 << 'EOF'
+          fuser -k 8081/tcp || true
+          nohup java -jar /var/opt/dev-backend/*.jar \
+            > /root/recorever-dev-backend.log 2>&1 &
+          EOF
+
+  # --- PRODUCTION JOB ---
+  deploy-prod:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -43,19 +99,18 @@ jobs:
           ssh-private-key: ${{ secrets.VPS_SSH_KEY }}
 
       - name: Upload Files to VPS
-        run: >
-          scp -o StrictHostKeyChecking=no -r
-          frontend/recorever-frontend/dist/recorever-frontend/browser/*
-          root@72.61.120.30:/var/www/html/ &&
-          scp -o StrictHostKeyChecking=no
-          backend/recorever-backend/target/recorever-backend-0.0.1-SNAPSHOT.jar
-          root@72.61.120.30:/var/backend-app/
+        run: |
+          scp -o StrictHostKeyChecking=no -r \
+            frontend/recorever-frontend/dist/recorever-frontend/browser/* \
+            root@72.61.120.30:/var/www/html/
+          scp -o StrictHostKeyChecking=no \
+            backend/recorever-backend/target/*.jar \
+            root@72.61.120.30:/var/backend-app/
 
-      - name: Restart Application on VPS
+      - name: Restart Production Application (Port 8080)
         run: |
           ssh -o StrictHostKeyChecking=no root@72.61.120.30 << 'EOF'
           fuser -k 8080/tcp || true
-          nohup java -jar \
-            /var/backend-app/recorever-backend-0.0.1-SNAPSHOT.jar \
+          nohup java -jar /var/backend-app/*.jar \
             > /root/recorever-backend.log 2>&1 &
           EOF
