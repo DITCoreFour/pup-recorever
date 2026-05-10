@@ -33,11 +33,11 @@ import {
   MatAutocompleteTrigger 
 } from '@angular/material/autocomplete';
 
-import { Observable, of, fromEvent } from 'rxjs';
+import { Observable, fromEvent } from 'rxjs';
 import {
   debounceTime,
   distinctUntilChanged,
-  switchMap,
+  map,
   startWith
 } from 'rxjs/operators';
 
@@ -111,9 +111,10 @@ export class Filter implements OnInit, AfterViewInit {
   protected isDefaultState = signal(true);
   protected isFilterVisible = signal(false);
   
-  protected filteredLocations$: Observable<string[]> = of([]);
+  protected filteredLocations$!: Observable<string[]>;
   protected fetchedCategories = signal<string[]>([]);
   protected fetchedSurrenderedLocs = signal<string[]>([]);
+  protected allLocations: string[] = [];
 
   private destroyRef = inject(DestroyRef);
   private itemService = inject(ItemService);
@@ -141,18 +142,34 @@ export class Filter implements OnInit, AfterViewInit {
   }
 
   public ngOnInit(): void {
-    this.itemService.getCategories().subscribe((cats: Category[]): void => {
-      this.fetchedCategories.set(
-          cats.map((c: Category) => c.category_name)
-      );
-    });
+    this.itemService.getTopLocations()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (locations: string[]): void => {
+          this.allLocations = locations || [];
+          this.setupFiltering();
+        },
+        error: (): void => {
+          this.allLocations = [];
+          this.setupFiltering();
+        }
+      });
+
+    this.itemService.getCategories()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((cats: Category[]): void => {
+        this.fetchedCategories.set(
+            cats.map((c: Category) => c.category_name)
+        );
+      });
     
-    this.itemService.getSurrenderLocations().subscribe(
-        (locs: SurrenderLocation[]): void => {
-      this.fetchedSurrenderedLocs.set(
-          locs.map((l: SurrenderLocation) => l.surrendered_location_name)
-      );
-    });
+    this.itemService.getSurrenderLocations()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((locs: SurrenderLocation[]): void => {
+        this.fetchedSurrenderedLocs.set(
+            locs.map((l: SurrenderLocation) => l.surrendered_location_name)
+        );
+      });
 
     if (this.isAdminPage()) {
       const initialStatus = this.adminStatusOptions().length > 0 
@@ -163,27 +180,12 @@ export class Filter implements OnInit, AfterViewInit {
           { emitEvent: false });
     }
 
-    const locControl = this.filterForm.controls.location;
-    if (locControl) {
-      this.filteredLocations$ = locControl.valueChanges.pipe(
-        startWith(locControl.value || ''),
-        debounceTime(300),
-        distinctUntilChanged(),
-        switchMap((value: string | null): Observable<string[]> => {
-          const filterValue = (value || '').trim();
-          if (filterValue.length === 0) {
-            return this.itemService.getTopLocations();
-          }
-          return this.itemService.searchLocations(filterValue);
-        })
-      );
-    }
-
     this.filterForm.valueChanges
       .pipe(
         debounceTime(300),
-        distinctUntilChanged((prev: RawFilterValue, curr: RawFilterValue): 
-            boolean => JSON.stringify(prev) === JSON.stringify(curr))
+        distinctUntilChanged((prev: RawFilterValue, curr: RawFilterValue): boolean => 
+            JSON.stringify(prev) === JSON.stringify(curr)),
+        takeUntilDestroyed(this.destroyRef)
       )
       .subscribe((value: RawFilterValue): void => {
         const mappedState: Partial<FilterState> = {
@@ -208,12 +210,30 @@ export class Filter implements OnInit, AfterViewInit {
       .subscribe((): void => {
         if (this.autoTrigger && this.autoTrigger.panelOpen) {
           this.autoTrigger.closePanel();
-          const activeEl = this.document.activeElement as HTMLElement;
-          if (activeEl) {
-            activeEl.blur();
-          }
         }
       });
+  }
+
+  private setupFiltering(): void {
+    const locControl = this.filterForm.controls.location;
+    if (locControl) {
+      this.filteredLocations$ = locControl.valueChanges.pipe(
+        startWith(locControl.value || ''),
+        map((val: string | null): string[] => this.filterLocations(val || ''))
+      );
+    }
+  }
+
+  private filterLocations(value: string): string[] {
+    const filterValue = value.trim().toLowerCase();
+    
+    if (!filterValue) {
+      return this.allLocations.slice(0, 5);
+    }
+
+    return this.allLocations.filter((option: string): boolean =>
+      option.toLowerCase().includes(filterValue)
+    );
   }
 
   protected resetFilters(): void {
