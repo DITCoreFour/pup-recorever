@@ -140,13 +140,6 @@ export class AdminItemListPage implements OnInit, AfterViewInit, OnDestroy {
   public isLoading = signal(true);
   public error = signal<string | null>(null);
 
-  public locationFilters = computed((): string[] => {
-    const locs = this.allReports()
-      .map((r: Report): string => r.location)
-      .filter((l: string): boolean => !!l);
-    return [...new Set(locs)];
-  });
-
   public visibleReports = computed((): Report[] => {
     let reports = [...this.allReports()];
 
