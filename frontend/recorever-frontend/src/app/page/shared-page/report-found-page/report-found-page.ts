@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, ViewChild } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { catchError, EMPTY, finalize, tap } from 'rxjs';
@@ -11,6 +11,7 @@ import {
   Report
 } from '../../../models/item-model';
 import { ItemService } from '../../../core/services/item-service';
+import { ToastService } from '../../../core/services/toast-service';
 import { CodesModal } from '../../../modal/codes-modal/codes-modal';
 import { AppRoutePaths } from '../../../app.routes';
 
@@ -22,8 +23,11 @@ import { AppRoutePaths } from '../../../app.routes';
   styleUrls: ['./report-found-page.scss']
 })
 export class ReportFoundPage implements OnInit {
+  @ViewChild(ItemReportForm) reportForm!: ItemReportForm;
+
   private router = inject(Router);
   private itemService = inject(ItemService);
+  private toastService = inject(ToastService);
 
   protected isSubmitting = signal<boolean>(false);
   protected submissionError = signal<string | null>(null);
@@ -82,6 +86,15 @@ export class ReportFoundPage implements OnInit {
 
     request$.pipe(
       tap((response: Report) => {
+        this.reportForm.clearPhotos();
+
+        if (this.isAdminMode) {
+          this.toastService.showSuccess(this.isEditMode() ?
+              'Report updated successfully' : 'Report submitted successfully');
+          this.router.navigate([AppRoutePaths.FOUND_ITEM_MANAGEMENT]);
+          return;
+        }
+
         if (this.isEditMode()) {
           this.router.navigate([this.postEditRoute]);
           return;
@@ -97,7 +110,7 @@ export class ReportFoundPage implements OnInit {
         }
       }),
       catchError((err: HttpErrorResponse) => {
-        this.submissionError.set('Submission failed. Please try again.');
+        this.toastService.showError('Submission failed. Please try again.');
         return EMPTY;
       }),
       finalize(() => this.isSubmitting.set(false))

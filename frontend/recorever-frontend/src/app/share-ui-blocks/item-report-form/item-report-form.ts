@@ -88,6 +88,7 @@ export class ItemReportForm implements OnInit, AfterViewInit {
   @Input() isEditMode = false;
   @Input() formType: 'lost' | 'found' = 'lost';
   @Input() isAdminView = false;
+  @Input() isSubmitting = false;
 
   @Output() formSubmitted = new EventEmitter<ReportSubmissionWithFiles>();
   @Output() formCancelled = new EventEmitter<void>();
@@ -105,7 +106,6 @@ export class ItemReportForm implements OnInit, AfterViewInit {
   protected filteredLocations!: Observable<string[]>;
   protected allLocations: string[] = [];
   protected maxDate = new Date();
-  protected isSubmitting = false;
   protected loadingMessage = 'Submitting...';
   protected submissionError: string | null = null;
   protected showConfirmationModal = false;
@@ -523,7 +523,6 @@ export class ItemReportForm implements OnInit, AfterViewInit {
   }
 
   private proceedWithSubmission(): void {
-    this.isSubmitting = true;
     this.loadingMessage = this.isEditMode ? 
                 'Updating Report...' : 'Submitting...';
 
@@ -575,11 +574,15 @@ export class ItemReportForm implements OnInit, AfterViewInit {
     };
 
     this.formSubmitted.emit(finalPayload);
+  }
 
-    this.selectedFilesPreview.forEach((p: FilePreview) =>
-        URL.revokeObjectURL(p.url));
+  public clearPhotos(): void {
+    this.selectedFilesPreview
+      .forEach((p: FilePreview) => URL.revokeObjectURL(p.url));
     this.selectedFiles = [];
     this.selectedFilesPreview = [];
+    this.photoUrlsFormArray.clear();
+    this.cdr.detectChanges();
   }
 
   public handleSubmissionError(errorMessage: string): void {

@@ -6,6 +6,7 @@
       [isAdminView]="isAdminMode"
       [initialData]="initialData()"
       [isEditMode]="isEditMode()"
+      [isSubmitting]="isSubmitting()"
       (formSubmitted)="handleSubmission($event)"
       (formCancelled)="handleCancel()" />
 
