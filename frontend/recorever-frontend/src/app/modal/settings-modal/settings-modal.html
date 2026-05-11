@@ -13,6 +13,7 @@
 
     <h2>
       @if (currentView() === 'MENU') { Settings }
+      @if (currentView() === 'BACKUP_RESTORE') { Backup & Restore }
       @if (currentView() === 'CHANGE_PASSWORD') { Change Password }
       @if (currentView() === 'DELETE_ACCOUNT') { Delete Account }
       @if (currentView() === 'PASSWORD_CHANGE_SUCCESS') { Success }
@@ -27,6 +28,16 @@
 
   @if (currentView() === 'MENU') {
     <div class="menu-list">
+      @if (userRole() === 'SUPERADMIN') {
+        <div class="menu-item backup-item" (click)="toggleView('BACKUP_RESTORE')">
+          <div class="item-content text-success">
+            <mat-icon class="item-icon">storage</mat-icon>
+            <span>Backup & Restore</span>
+          </div>
+          <mat-icon class="text-success">chevron_right</mat-icon>
+        </div>
+      }
+
       <div class="menu-item" (click)="toggleView('CHANGE_PASSWORD')">
         <div class="item-content">
           <mat-icon class="item-icon">lock</mat-icon>
@@ -42,6 +53,29 @@
           <span>Delete Account</span>
         </div>
         <mat-icon class="text-danger">chevron_right</mat-icon>
+      </div>
+    </div>
+  }
+
+  @if (currentView() === 'BACKUP_RESTORE') {
+    <div class="backup-restore-content">
+      <p class="description">Manage database backups and system restoration.</p>
+      
+      <div class="action-section">
+        <button mat-flat-button color="primary" (click)="onExportBackup()">
+          <mat-icon>download</mat-icon> Create Backup Now
+        </button>
+
+        <div class="restore-zone">
+          <button mat-stroked-button (click)="fileInput.click()">
+            <mat-icon>upload_file</mat-icon> Restore
+          </button>
+          <input #fileInput 
+                type="file" 
+                class="hidden-file-input" 
+                (change)="onFileSelected($event)" 
+                accept=".sql">
+        </div>
       </div>
     </div>
   }

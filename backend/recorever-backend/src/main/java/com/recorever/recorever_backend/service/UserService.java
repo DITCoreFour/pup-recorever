@@ -144,11 +144,11 @@ public class UserService {
     }
 
     private int getAdminUserId() {
-        return repo.findFirstByRoleAndIsDeletedFalse("superadmin")
+        return repo.findFirstByRoleAndIsDeletedFalse("admin")
                 .map(User::getUserId)
                 .orElseGet(() -> 
-                    // Fallback to standard admin if no superadmin is found
-                    repo.findFirstByRoleAndIsDeletedFalse("admin")
+                    // Fallback to standard superadmin if no admin is found
+                    repo.findFirstByRoleAndIsDeletedFalse("superadmin")
                         .map(User::getUserId)
                         .orElse(1) // Safety fallback
                 );
@@ -386,6 +386,14 @@ public class UserService {
                 return Map.of("error", "Email is already in use.");
             }
             user.setEmail(email);
+        }
+
+        if (programId != null) {
+            user.setProgramId(programId);
+        }
+        
+        if (year != null) {
+            user.setYear(year);
         }
 
         if (profilePicture != null && !profilePicture.isEmpty()) {

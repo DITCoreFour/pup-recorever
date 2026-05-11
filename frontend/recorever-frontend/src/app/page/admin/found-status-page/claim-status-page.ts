@@ -12,7 +12,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Params, ActivatedRoute } from '@angular/router';
-import { Subject, BehaviorSubject, of } from 'rxjs';
+import { Subject, BehaviorSubject, of, Observable } from 'rxjs';
 import { catchError, switchMap, takeUntil, tap } from 'rxjs/operators';
 
 import { ItemService } from '../../../core/services/item-service';
@@ -22,7 +22,6 @@ import { ToastService } from '../../../core/services/toast-service';
 import {
   Report,
   ReportFilters,
-  ReportStatus,
   PaginatedResponse,
   ReportStatusEnum
 } from '../../../models/item-model';
@@ -87,7 +86,7 @@ export class ClaimStatusPage implements OnInit, AfterViewInit, OnDestroy {
   public currentStatusFilter = signal<StatusFilter>('All Statuses');
   public highlightId = signal<number | null>(null);
   public currentSurrenderedLocationFilter = signal('');
-  public showDeleteModal = signal<boolean>(false);
+  public showDeleteModal = signal(false);
   public itemToDelete = signal<Report | null>(null);
 
   public currentFilter = signal<FilterState>({
@@ -105,16 +104,9 @@ export class ClaimStatusPage implements OnInit, AfterViewInit, OnDestroy {
     return user?.role === 'admin';
   });
 
-  public locations = computed((): string[] => {
-    const locs = this.reports()
-      .map((r: Report) => r.location)
-      .filter((l: string) => !!l);
-    return [...new Set(locs)];
-  });
-
-  protected filteredReports = computed(() => {
-    let data = this.reports().filter(
-      r => r.status.status_id !== ReportStatusEnum.CLAIMED
+  protected filteredReports = computed((): Report[] => {
+    let data = this.reports().filter((r: Report): boolean =>
+      r.status.status_id !== ReportStatusEnum.CLAIMED
     );
 
     const filter = this.currentFilter();
@@ -122,27 +114,29 @@ export class ClaimStatusPage implements OnInit, AfterViewInit, OnDestroy {
 
     if (filter.location) {
       const locTerm = filter.location.toLowerCase();
-      data = data.filter((r: Report) =>
+      data = data.filter((r: Report): boolean =>
         (r.location || '').toLowerCase().includes(locTerm)
       );
     }
 
     const categoryFilter = this.currentCategoryFilter();
     if (categoryFilter && categoryFilter.length > 0) {
-      data = data.filter((r: Report) => 
-        categoryFilter.includes((r as any).category_name)
-      );
+      data = data.filter((r: Report): boolean => {
+        const catName = r.category?.category_name;
+        return catName ? categoryFilter.includes(catName) : false;
+      });
     }
 
     if (surrenderedFilter) {
-      data = data.filter((r: Report) => 
-        (r as any).surrendered_location_name === surrenderedFilter
-      );
+      data = data.filter((r: Report): boolean => {
+        const locName = r.surrendered_location?.surrendered_location_name;
+        return locName === surrenderedFilter;
+      });
     }
 
     if (filter.date) {
       const filterDate = new Date(filter.date).setHours(0, 0, 0, 0);
-      data = data.filter((r: Report) => {
+      data = data.filter((r: Report): boolean => {
         const reportDate = new Date(r.date_reported).setHours(0, 0, 0, 0);
         return reportDate === filterDate;
       });
@@ -161,25 +155,35 @@ export class ClaimStatusPage implements OnInit, AfterViewInit, OnDestroy {
     });
   });
 
+  private mapStatusToId(status: string): number | undefined {
+    if (status === 'All Statuses') return undefined;
+    switch (status.toLowerCase()) {
+      case 'pending': return ReportStatusEnum.PENDING;
+      case 'approved': return ReportStatusEnum.APPROVED;
+      case 'rejected': return ReportStatusEnum.REJECTED;
+      case 'claimed': return ReportStatusEnum.CLAIMED;
+      case 'resolved': return ReportStatusEnum.RESOLVED;
+      case 'matched': return ReportStatusEnum.MATCHED;
+      default: return undefined;
+    }
+  }
+
   public ngOnInit(): void {
     this.route.queryParams
       .pipe(takeUntil(this.destroy$))
-      .subscribe((params: Params) => {
+      .subscribe((params: Params): void => {
         const hId = params['highlightId'];
         this.highlightId.set(hId ? Number(hId) : null);
       });
 
     this.refreshTrigger$.pipe(
       tap((): void => this.isLoading.set(true)),
-      switchMap(() => {
+      switchMap((): Observable<PaginatedResponse<Report>> => {
         const currentStatus = this.currentStatusFilter();
-        let statusId: number | undefined = undefined;
-        if (currentStatus !== 'All Statuses') {
-          statusId = (currentStatus as any).status_id ?? currentStatus;
-        }
+        const statusId = this.mapStatusToId(currentStatus);
 
         const filters: ReportFilters = {
-          type: 'found' as const,
+          type: 'found',
           status_id: statusId,
           query: this.searchQuery(),
           page: this.currentPage(),
@@ -193,9 +197,10 @@ export class ClaimStatusPage implements OnInit, AfterViewInit, OnDestroy {
         }
 
         return this.itemService.getReports(filters).pipe(
-          tap((response: PaginatedResponse<Report>) => 
-              this.reportCache.set(cacheKey, response)),
-          catchError(() => of({ 
+          tap((response: PaginatedResponse<Report>): void => {
+              this.reportCache.set(cacheKey, response);
+          }),
+          catchError((): Observable<PaginatedResponse<Report>> => of({ 
             items: [], 
             totalPages: 1, 
             totalItems: 0, 
@@ -204,7 +209,7 @@ export class ClaimStatusPage implements OnInit, AfterViewInit, OnDestroy {
         );
       }),
       takeUntil(this.destroy$)
-    ).subscribe((response: PaginatedResponse<Report>) => {
+    ).subscribe((response: PaginatedResponse<Report>): void => {
       this.reports.update((existing: Report[]) =>
         this.currentPage() === 1 ? response.items :
             [...existing, ...response.items]
@@ -216,10 +221,10 @@ export class ClaimStatusPage implements OnInit, AfterViewInit, OnDestroy {
 
   public ngAfterViewInit(): void {
     this.observer = new IntersectionObserver(([entry]: 
-            IntersectionObserverEntry[]) => {
+            IntersectionObserverEntry[]): void => {
       if (entry.isIntersecting && !this.isLoading() &&
           this.currentPage() < this.totalPages()) {
-        this.currentPage.update((p: number) => p + 1);
+        this.currentPage.update((p: number): number => p + 1);
         this.refreshTrigger$.next();
       }
     }, { rootMargin: '100px' });
@@ -267,7 +272,8 @@ export class ClaimStatusPage implements OnInit, AfterViewInit, OnDestroy {
   }
 
   public onViewDetails(reportId: number): void {
-    const report = this.reports().find((r: Report) => r.report_id === reportId);
+    const report = this.reports().find((r: Report): boolean => 
+        r.report_id === reportId);
     if (report) {
       this.selectedReport.set(report);
     }
@@ -336,7 +342,7 @@ export class ClaimStatusPage implements OnInit, AfterViewInit, OnDestroy {
     this.itemService.deleteReport(item.report_id).subscribe({
       next: (): void => {
         this.reports.update((items: Report[]) =>
-          items.filter((r: Report) => r.report_id !== item.report_id)
+          items.filter((r: Report): boolean => r.report_id !== item.report_id)
         );
         this.showDeleteModal.set(false);
         this.itemToDelete.set(null);

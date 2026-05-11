@@ -105,7 +105,8 @@
             type="text"
             matInput
             formControlName="location"
-            [matAutocomplete]="auto" />
+            [matAutocomplete]="auto"
+            #locationTrigger="matAutocompleteTrigger"/>
         <mat-autocomplete #auto="matAutocomplete">
           @for (location of filteredLocations | async; track location) {
             <mat-option [value]="location">{{ location }}</mat-option>
@@ -256,10 +257,12 @@
     <button 
       type="submit" 
       class="btn btn-submit" 
-      [disabled]="isSubmitting"
+      [disabled]="reportForm.invalid ||
+                  (selectedFilesPreview.length === 0 &&
+                   reportForm.controls.photoUrls.length === 0) ||
+                  isSubmitting"
       [title]="reportForm.invalid || imageError
         ? 'Please fill out all required fields correctly' : ''">
-      
       <div class="loading-container">
         @if (isSubmitting) {
           <mat-spinner diameter="18" strokeWidth="3"></mat-spinner>

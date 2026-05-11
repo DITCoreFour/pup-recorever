@@ -25,7 +25,7 @@ export const AppRoutePaths = {
   ADMIN_MY_REPORTS: '/admin/my-reports',
   ADMIN_REPORT_LOST: '/admin/report-lost',
   ADMIN_REPORT_FOUND: '/admin/report-found',
-  HELP_PAGE: '/help-page',
+  HELP_PAGE: '/app/help-page',
 };
 
 export const routes: Routes = [
@@ -178,6 +178,14 @@ export const routes: Routes = [
         loadComponent: () =>
             import('./page/shared-page/my-reports-page/my-reports-page')
           .then(m => m.MyReportsPage)
+      },
+      { path: 'profile',
+        loadComponent: () => import('./page/user/profile-page/profile-page')
+          .then(m => m.ProfilePage)
+      },
+      { path: 'profile/:id',
+        loadComponent: () => import('./page/user/profile-page/profile-page')
+          .then(m => m.ProfilePage)
       },
       {
         path: 'report-lost',

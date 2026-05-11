@@ -1,12 +1,14 @@
 import { 
   Component, OnInit, AfterViewInit, OnDestroy, 
-  inject, signal, computed, ViewChild, ElementRef, HostListener 
+  inject, signal, computed, ViewChild, ElementRef, HostListener,
+  DestroyRef
 } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { toSignal, takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { HttpErrorResponse } from '@angular/common/http';
 import { 
-  BehaviorSubject, Subject, catchError, of, switchMap, 
-  takeUntil, tap, finalize, take 
+  BehaviorSubject, catchError, of, switchMap, 
+  tap, finalize, take, Observable
 } from 'rxjs';
 
 import { ItemService } from '../../../core/services/item-service';
@@ -60,11 +62,11 @@ export type MyReportStatusFilter = {
   styleUrls: ['./my-reports-page.scss']
 })
 export class MyReportsPage implements OnInit, AfterViewInit, OnDestroy {
-  private itemService: ItemService = inject(ItemService);
-  private authService: AuthService = inject(AuthService);
-  private claimService: ClaimService = inject(ClaimService);
+  private itemService = inject(ItemService);
+  private authService = inject(AuthService);
+  private claimService = inject(ClaimService);
+  private destroyRef = inject(DestroyRef);
 
-  private destroy$ = new Subject<void>();
   private refreshTrigger$ = new BehaviorSubject<void>(undefined);
 
   @ViewChild('scrollAnchor') public scrollAnchor!: ElementRef;
@@ -107,6 +109,10 @@ export class MyReportsPage implements OnInit, AfterViewInit, OnDestroy {
   public currentStatus = signal<MyReportStatusFilter>(
       this.availableStatuses[0]
   );
+
+  public isAllActive = computed((): boolean => {
+    return this.itemType() === 'all' && this.currentStatus().value === null;
+  });
 
   public visibleReports = computed((): Report[] => {
     let reports = [...this.allReports()];
@@ -164,7 +170,10 @@ export class MyReportsPage implements OnInit, AfterViewInit, OnDestroy {
   }
 
   public ngOnInit(): void {
-    this.authService.currentUser$.pipe(take(1)).subscribe({
+    this.authService.currentUser$.pipe(
+      take(1),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe({
       next: (user: User | null): void => {
         if (user && user.user_id) {
           this.filters.update((f: ReportFilters) => 
@@ -176,20 +185,21 @@ export class MyReportsPage implements OnInit, AfterViewInit, OnDestroy {
 
     this.refreshTrigger$.pipe(
       tap((): void => this.isLoading.set(true)),
-      switchMap(() => {
+      switchMap((): Observable<PaginatedResponse<Report>> => {
         const currentFilters = this.filters();
         return this.itemService.getReports({
           ...currentFilters,
           page: this.currentPage(),
           size: this.pageSize()
         }).pipe(
-          catchError(() => of({ 
+          catchError((err: HttpErrorResponse): 
+                Observable<PaginatedResponse<Report>> => of({ 
               items: [], totalPages: 1, totalItems: 0, currentPage: 1 
           })),
           finalize((): void => this.isLoading.set(false))
         );
       }),
-      takeUntil(this.destroy$)
+      takeUntilDestroyed(this.destroyRef)
     ).subscribe({
       next: (res: PaginatedResponse<Report>): void => {
         this.allReports.update((existing: Report[]) =>
@@ -218,8 +228,6 @@ export class MyReportsPage implements OnInit, AfterViewInit, OnDestroy {
 
   public ngOnDestroy(): void {
     if (this.observer) this.observer.disconnect();
-    this.destroy$.next();
-    this.destroy$.complete();
   }
 
   private resetPagination(): void {
@@ -236,6 +244,11 @@ export class MyReportsPage implements OnInit, AfterViewInit, OnDestroy {
   public setStatus(statusObj: MyReportStatusFilter): void {
     this.currentStatus.set(statusObj);
     this.isStatusOpen.set(false);
+  }
+
+  public resetFilters(): void {
+    this.itemType.set('all');
+    this.currentStatus.set(this.availableStatuses[0]);
   }
 
   public toggleType(type: ItemType): void {

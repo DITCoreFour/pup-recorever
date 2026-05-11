@@ -8,13 +8,18 @@ import {
   signal,
   computed,
   inject,
-  ElementRef,
-  Renderer2,
+  ViewChild,
+  AfterViewInit,
   DestroyRef
 } from '@angular/core';
-import { toObservable } from '@angular/core/rxjs-interop';
-import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { CommonModule, DOCUMENT } from '@angular/common';
+import {
+  FormBuilder,
+  FormGroup,
+  FormControl,
+  ReactiveFormsModule
+} from '@angular/forms';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
@@ -23,17 +28,21 @@ import { MatNativeDateModule } from '@angular/material/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
-import { MatAutocompleteModule } from '@angular/material/autocomplete';
-import { ScrollDispatcher, ScrollingModule } from '@angular/cdk/scrolling';
+import { 
+  MatAutocompleteModule, 
+  MatAutocompleteTrigger 
+} from '@angular/material/autocomplete';
 
+import { Observable, fromEvent } from 'rxjs';
 import {
   debounceTime,
   distinctUntilChanged,
-  switchMap,
+  map,
   startWith
 } from 'rxjs/operators';
-import { Observable, of, combineLatest } from 'rxjs';
+
 import { ItemService } from '../../core/services/item-service';
+import { Category, SurrenderLocation } from '../../models/item-model';
 
 export type FilterState = {
   sort: 'newest' | 'oldest';
@@ -44,11 +53,29 @@ export type FilterState = {
   surrenderedLocation?: string;
 };
 
+export type RawFilterValue = Partial<{
+  sort: 'newest' | 'oldest' | null;
+  date: Date | null;
+  location: string | null;
+  status: string | null;
+  category: string[] | null;
+  surrenderedLocation: string | null;
+}>;
+
+export type FilterFormType = FormGroup<{
+  sort: FormControl<'newest' | 'oldest' | null>;
+  date: FormControl<Date | null>;
+  location: FormControl<string | null>;
+  status: FormControl<string | null>;
+  category: FormControl<string[] | null>;
+  surrenderedLocation: FormControl<string | null>;
+}>;
+
 @Component({
   selector: 'app-filter',
   standalone: true,
   imports: [
-   CommonModule,
+    CommonModule,
     ReactiveFormsModule,
     MatFormFieldModule,
     MatSelectModule,
@@ -57,22 +84,19 @@ export type FilterState = {
     MatButtonModule,
     MatIconModule,
     MatInputModule,
-    MatAutocompleteModule,
-    ScrollingModule
+    MatAutocompleteModule
   ],
   templateUrl: './filter.html',
   styleUrl: './filter.scss',
   encapsulation: ViewEncapsulation.None
 })
-export class Filter implements OnInit {
-  public locations = input<string[]>([]);
+export class Filter implements OnInit, AfterViewInit {
   public itemType = input<'lost' | 'found'>('lost');
-  public genericLabels = input<boolean>(false);
-  public isUserPage = input<boolean>(false);
-  
-  public isAdminPage = input<boolean>(false);
+  public genericLabels = input(false);
+  public isUserPage = input(false);
+  public isAdminPage = input(false);
   public adminStatusOptions = input<string[]>([]);
-  public initialAdminStatus = input<string>('All Statuses');
+  public initialAdminStatus = input('All Statuses');
 
   public categories = input<string[]>([
     'Electronics', 'Clothing', 'Accessories', 'Documents', 'Wallets/Bags'
@@ -80,20 +104,21 @@ export class Filter implements OnInit {
 
   @Output() public filterChange = new EventEmitter<FilterState>();
 
-  protected filterForm: FormGroup;
-  protected isDefaultState = signal<boolean>(true);
-  protected isFilterVisible = signal<boolean>(false);
-  protected filteredLocations$: Observable<string[]> = of([]);
+  @ViewChild('locationTrigger') 
+  public autoTrigger!: MatAutocompleteTrigger;
+
+  protected filterForm: FilterFormType;
+  protected isDefaultState = signal(true);
+  protected isFilterVisible = signal(false);
+  
+  protected filteredLocations$!: Observable<string[]>;
   protected fetchedCategories = signal<string[]>([]);
   protected fetchedSurrenderedLocs = signal<string[]>([]);
+  protected allLocations: string[] = [];
 
-  private locations$ = toObservable(this.locations);
-
-  private scrollDispatcher = inject(ScrollDispatcher);
-  private elementRef = inject(ElementRef);
-  private renderer = inject(Renderer2);
   private destroyRef = inject(DestroyRef);
   private itemService = inject(ItemService);
+  private document = inject(DOCUMENT);
 
   protected dateLabel = computed((): string => {
     if (this.genericLabels()) return 'Date';
@@ -107,28 +132,44 @@ export class Filter implements OnInit {
 
   constructor(private fb: FormBuilder) {
     this.filterForm = this.fb.group({
-      sort: ['newest'],
-      date: [null],
-      location: [''],
-      status: ['unresolved'],
-      category: [[] as string[]],
-      surrenderedLocation: ['']
-    });
-
-    this.destroyRef.onDestroy(() => {
-      this.toggleParentScroll(true);
-    });
+      sort: new FormControl<'newest' | 'oldest'>('newest'),
+      date: new FormControl<Date | null>(null),
+      location: new FormControl(''),
+      status: new FormControl('unresolved'),
+      category: new FormControl<string[]>([]),
+      surrenderedLocation: new FormControl('')
+    }) as FilterFormType;
   }
 
   public ngOnInit(): void {
+    this.itemService.getTopLocations()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (locations: string[]): void => {
+          this.allLocations = locations || [];
+          this.setupFiltering();
+        },
+        error: (): void => {
+          this.allLocations = [];
+          this.setupFiltering();
+        }
+      });
 
-    this.itemService.getCategories().subscribe(cats => {
-    this.fetchedCategories.set(cats.map(c => c.category_name));
-  });
-  
-  this.itemService.getSurrenderLocations().subscribe(locs => {
-    this.fetchedSurrenderedLocs.set(locs.map(l => l.surrendered_location_name));
-  });
+    this.itemService.getCategories()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((cats: Category[]): void => {
+        this.fetchedCategories.set(
+            cats.map((c: Category) => c.category_name)
+        );
+      });
+    
+    this.itemService.getSurrenderLocations()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((locs: SurrenderLocation[]): void => {
+        this.fetchedSurrenderedLocs.set(
+            locs.map((l: SurrenderLocation) => l.surrendered_location_name)
+        );
+      });
 
     if (this.isAdminPage()) {
       const initialStatus = this.adminStatusOptions().length > 0 
@@ -139,62 +180,75 @@ export class Filter implements OnInit {
           { emitEvent: false });
     }
 
-    const locControl = this.filterForm.get('location');
-    if (locControl) {
-      this.filteredLocations$ = combineLatest([
-        locControl.valueChanges.pipe(
-          startWith(locControl.value || ''),
-          debounceTime(300),
-          distinctUntilChanged()
-        ),
-        this.locations$
-      ]).pipe(
-        switchMap(([value, locations]: [string | null, string[]]): Observable<string[]> => {
-          const filterValue = (value || '').trim();
-          if (filterValue.length === 0) return of(locations);
-          return this.itemService.searchLocations(filterValue);
-        })
-      );
-    }
-
     this.filterForm.valueChanges
       .pipe(
         debounceTime(300),
-        distinctUntilChanged((prev, curr) =>
-            JSON.stringify(prev) === JSON.stringify(curr))
+        distinctUntilChanged((prev: RawFilterValue, curr: RawFilterValue): boolean => 
+            JSON.stringify(prev) === JSON.stringify(curr)),
+        takeUntilDestroyed(this.destroyRef)
       )
-      .subscribe((value: Partial<FilterState>) => {
-        this.updateDefaultState(value);
-        this.emitFilter(value);
+      .subscribe((value: RawFilterValue): void => {
+        const mappedState: Partial<FilterState> = {
+          sort: (value.sort as 'newest' | 'oldest') || 'newest',
+          date: value.date || null,
+          location: value.location || '',
+          status: value.status || undefined,
+          category: value.category || undefined,
+          surrenderedLocation: value.surrenderedLocation || undefined
+        };
+        this.updateDefaultState(mappedState);
+        this.emitFilter(mappedState);
       });
   }
 
-  protected onLocationPanelOpened(): void {
-    this.toggleParentScroll(false);
+  public ngAfterViewInit(): void {
+    fromEvent(this.document, 'scroll', { capture: true })
+      .pipe(
+        debounceTime(10), 
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe((): void => {
+        if (this.autoTrigger && this.autoTrigger.panelOpen) {
+          this.autoTrigger.closePanel();
+        }
+      });
   }
 
-  protected onLocationPanelClosed(): void {
-    this.toggleParentScroll(true);
-  }
-
-  private toggleParentScroll(enable: boolean): void {
-    const scrollContainers =
-        this.scrollDispatcher.getAncestorScrollContainers(this.elementRef);
-    if (scrollContainers && scrollContainers.length > 0) {
-      const containerRef = scrollContainers[0].getElementRef();
-      const value = enable ? '' : 'hidden';
-      this.renderer.setStyle(containerRef.nativeElement, 'overflow', value);
+  private setupFiltering(): void {
+    const locControl = this.filterForm.controls.location;
+    if (locControl) {
+      this.filteredLocations$ = locControl.valueChanges.pipe(
+        startWith(locControl.value || ''),
+        map((val: string | null): string[] => this.filterLocations(val || ''))
+      );
     }
   }
 
+  private filterLocations(value: string): string[] {
+    const filterValue = value.trim().toLowerCase();
+    
+    if (!filterValue) {
+      return this.allLocations.slice(0, 5);
+    }
+
+    return this.allLocations.filter((option: string): boolean =>
+      option.toLowerCase().includes(filterValue)
+    );
+  }
+
   protected resetFilters(): void {
-    const currentStatus = this.filterForm.get('status')?.value || 'unresolved';
+    let defaultStatus = 'unresolved';
+    if (this.isAdminPage()) {
+      defaultStatus = this.adminStatusOptions().length > 0
+          ? this.initialAdminStatus()
+          : 'All Statuses';
+    }
 
     this.filterForm.patchValue({
       sort: 'newest',
       date: null,
       location: '',
-      status: currentStatus,
+      status: defaultStatus,
       category: [],
       surrenderedLocation: ''
     });
@@ -202,27 +256,38 @@ export class Filter implements OnInit {
 
   protected clearLocation(event: Event): void {
     event.stopPropagation();
-    this.filterForm.get('location')?.setValue('');
+    this.filterForm.controls.location.setValue('');
   }
 
   protected toggleFilter(): void {
-    this.isFilterVisible.update(value => !value);
+    this.isFilterVisible.update((value: boolean) => !value);
   }
 
   private updateDefaultState(formValue: Partial<FilterState>): void {
     const isLocationEmpty = !formValue.location || formValue.location === '';
     
-    let isDefault = formValue.sort === 'newest' && formValue.date === null && isLocationEmpty;
+    let isDefault = formValue.sort === 'newest' &&
+        formValue.date === null &&
+        isLocationEmpty;
     
     if (this.isUserPage()) {
-      const isCategoryEmpty = !formValue.category || formValue.category.length === 0;
-      isDefault = isDefault && isCategoryEmpty;
+      const isCategoryEmpty = !formValue.category ||
+          formValue.category.length === 0;
+      const isUnresolved = formValue.status === 'unresolved';
+      isDefault = isDefault && isCategoryEmpty && isUnresolved;
     }
 
     if (this.isAdminPage()) {
-      const isSurrenderedLocationEmpty = !formValue.surrenderedLocation 
+      const isSurrenderedLocEmpty = !formValue.surrenderedLocation 
           || formValue.surrenderedLocation === '';
-      isDefault = isDefault && isSurrenderedLocationEmpty;
+      
+      const defaultAdminStatus = this.adminStatusOptions().length > 0
+          ? this.initialAdminStatus()
+          : 'All Statuses';
+      
+      const isStatusDefault = formValue.status === defaultAdminStatus;
+
+      isDefault = isDefault && isSurrenderedLocEmpty && isStatusDefault;
     }
 
     this.isDefaultState.set(isDefault || false);

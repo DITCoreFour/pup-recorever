@@ -19,7 +19,8 @@ import {
   switchMap,
   takeUntil,
   Subject,
-  BehaviorSubject
+  BehaviorSubject,
+  Observable
 } from 'rxjs';
 
 import {
@@ -98,19 +99,12 @@ export class LostStatusPage implements OnInit, AfterViewInit, OnDestroy {
   public highlightId = signal<number | null>(null);
   public currentSurrenderedLocationFilter = signal('');
   public currentCategoryFilter = signal<string[]>([]);
-  public showDeleteModal = signal<boolean>(false);
+  public showDeleteModal = signal(false);
   public itemToDelete = signal<Report | null>(null);
 
   public readonly statusFilters: LostReportStatusFilter[] = [
     'All Statuses', 'pending', 'approved', 'rejected'
   ];
-
-  public locations = computed((): string[] => {
-    const locs = this.reports()
-      .map((r: Report) => r.location)
-      .filter((l: string) => !!l);
-    return [...new Set(locs)];
-  });
 
   public sortedReports = computed((): Report[] => {
     let data = [...this.reports()];
@@ -121,15 +115,17 @@ export class LostStatusPage implements OnInit, AfterViewInit, OnDestroy {
 
     const categoryFilter = this.currentCategoryFilter();
     if (categoryFilter && categoryFilter.length > 0) {
-      data = data.filter((r: Report) => 
-        categoryFilter.includes((r as any).category_name)
-      );
+      data = data.filter((r: Report): boolean => {
+        const catName = r.category?.category_name;
+        return catName ? categoryFilter.includes(catName) : false;
+      });
     }
 
     if (surrenderedFilter) {
-      data = data.filter((r: Report) => 
-        (r as any).surrendered_location_name === surrenderedFilter
-      );
+      data = data.filter((r: Report): boolean => {
+        const locName = r.surrendered_location?.surrendered_location_name;
+        return locName === surrenderedFilter;
+      });
     }
 
     if (dateFilter) {
@@ -141,14 +137,7 @@ export class LostStatusPage implements OnInit, AfterViewInit, OnDestroy {
 
     if (locationFilter) {
       const term = locationFilter.toLowerCase();
-      data = data.filter((r: Report) =>
-        (r.location || '').toLowerCase().includes(term)
-      );
-    }
-
-    if (surrenderedFilter) {
-      const term = surrenderedFilter.toLowerCase();
-      data = data.filter((r: Report) =>
+      data = data.filter((r: Report): boolean =>
         (r.location || '').toLowerCase().includes(term)
       );
     }
@@ -174,7 +163,7 @@ export class LostStatusPage implements OnInit, AfterViewInit, OnDestroy {
 
     if (state.category !== undefined) {
       this.currentCategoryFilter.set(state.category);
-}
+    }
 
     if (state.status !== undefined && 
         state.status !== this.currentStatusFilter()) {
@@ -183,23 +172,32 @@ export class LostStatusPage implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
+  private mapStatusToId(status: string): number | undefined {
+    if (status === 'All Statuses') return undefined;
+    switch (status.toLowerCase()) {
+      case 'pending': return ReportStatusEnum.PENDING;
+      case 'approved': return ReportStatusEnum.APPROVED;
+      case 'rejected': return ReportStatusEnum.REJECTED;
+      case 'claimed': return ReportStatusEnum.CLAIMED;
+      case 'resolved': return ReportStatusEnum.RESOLVED;
+      case 'matched': return ReportStatusEnum.MATCHED;
+      default: return undefined;
+    }
+  }
+
   public ngOnInit(): void {
     this.route.queryParams
       .pipe(takeUntil(this.destroy$))
-      .subscribe((params: Params) => {
+      .subscribe((params: Params): void => {
         const hId = params['highlightId'];
         this.highlightId.set(hId ? Number(hId) : null);
       });
 
     this.refreshTrigger$.pipe(
       tap((): void => this.isLoading.set(true)),
-      switchMap(() => {
+      switchMap((): Observable<PaginatedResponse<Report>> => {
         const currentStatus = this.currentStatusFilter();
-
-        let statusId: number | undefined = undefined;
-        if (currentStatus !== 'All Statuses') {
-          statusId = (currentStatus as any).status_id ?? currentStatus;
-        }
+        const statusId = this.mapStatusToId(currentStatus);
 
         const filters: ReportFilters = {
           type: 'lost' as const,
@@ -216,9 +214,10 @@ export class LostStatusPage implements OnInit, AfterViewInit, OnDestroy {
         }
 
         return this.itemService.getReports(filters).pipe(
-          tap((response: PaginatedResponse<Report>) => 
-              this.reportCache.set(cacheKey, response)),
-          catchError(() => {
+          tap((response: PaginatedResponse<Report>): void => {
+              this.reportCache.set(cacheKey, response);
+          }),
+          catchError((): Observable<PaginatedResponse<Report>> => {
             this.isError.set(true);
             return of({
                 items: [],
@@ -230,8 +229,8 @@ export class LostStatusPage implements OnInit, AfterViewInit, OnDestroy {
         );
       }),
       takeUntil(this.destroy$)
-    ).subscribe((response: PaginatedResponse<Report>) => {
-      const filtered = response.items.filter(item =>
+    ).subscribe((response: PaginatedResponse<Report>): void => {
+      const filtered = response.items.filter((item: Report): boolean =>
         item.status?.status_id !== ReportStatusEnum.RESOLVED
       );
 
@@ -246,10 +245,10 @@ export class LostStatusPage implements OnInit, AfterViewInit, OnDestroy {
 
   public ngAfterViewInit(): void {
     this.observer = new IntersectionObserver(([entry]: 
-            IntersectionObserverEntry[]) => {
+            IntersectionObserverEntry[]): void => {
       if (entry.isIntersecting && !this.isLoading()
             && this.currentPage() < this.totalPages()) {
-        this.currentPage.update((p: number) => p + 1);
+        this.currentPage.update((p: number): number => p + 1);
         this.refreshTrigger$.next();
       }
     }, { rootMargin: '150px' });
@@ -269,7 +268,7 @@ export class LostStatusPage implements OnInit, AfterViewInit, OnDestroy {
     if (!item) return;
 
     this.adminService.updateReportStatus(item.report_id, newStatus).subscribe({
-      next: () => {
+      next: (): void => {
         this.onStatusUpdated();
           this.toastService.showSuccess(
             `Item marked as ${this.getStatusNameById(newStatus)} successfully.`

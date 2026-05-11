@@ -147,8 +147,15 @@ export class ItemService {
     if (filters.page) params = params.set('page', filters.page.toString());
     if (filters.size) params = params.set('size', filters.size.toString());
     if (filters.type) params = params.set('type', filters.type);
+    
     if (filters.status_id) {
-      params = params.set('status', filters.status_id);
+      if (Array.isArray(filters.status_id)) {
+        filters.status_id.forEach(id => {
+          params = params.append('status', id.toString());
+        });
+      } else {
+        params = params.set('status', filters.status_id.toString());
+      }
     }
 
     if (filters.user_id) {
@@ -185,14 +192,16 @@ export class ItemService {
     );
   }
 
-  updateMatchStatus(matchId: number, status: string): Observable<any> {
-    return this.http.put(`${this.apiUrl}/match/${matchId}`, { status });
+  updateMatchStatus(matchId: number, statusId: number): Observable<any> {
+    return this.http.put(`${this.apiUrl}/match/${matchId}`, { statusId: statusId });
   }
 
-  getMatchForReport(reportId: number): Observable<MatchResponseDTO | undefined> {
+  getMatchForReport(
+      reportId: number
+  ): Observable<MatchResponseDTO | undefined> {
     return this.http.get<MatchResponseDTO[]>(`${this.apiUrl}/matches`).pipe(
-      map((matches) =>
-        matches.find(m => m.lost_report_id === reportId ||
+      map((matches: MatchResponseDTO[]) =>
+        matches.find((m: MatchResponseDTO) => m.lost_report_id === reportId ||
             m.found_report_id === reportId)
       )
     );
@@ -204,7 +213,7 @@ export class ItemService {
     }
 
     return this.http.get<string[]>(`${this.apiUrl}/reports/top-locations`).pipe(
-      tap(locations => this.cachedLocations = locations)
+      tap((locations: string[]) => this.cachedLocations = locations)
     );
   }
 
@@ -231,13 +240,19 @@ export class ItemService {
     );
   }
 
-  getPotentialMatches(reportId: number, claimantId: number): Observable<Report[]> {
+  getPotentialMatches(
+      reportId: number, 
+      claimantId: number
+  ): Observable<Report[]> {
     return this.http.get<Report[]>(
       `${this.apiUrl}/reports/${reportId}/potential-matches/${claimantId}`
     );
   }
 
-  keepReportActive(reportId: number): Observable<any> {
-    return this.http.post(`${this.apiUrl}/reports/${reportId}/keep-active`, {});
+  keepReportActive(reportId: number): Observable<void> {
+    return this.http.post<void>(
+        `${this.apiUrl}/reports/${reportId}/keep-active`, 
+        {}
+    );
   }
 }

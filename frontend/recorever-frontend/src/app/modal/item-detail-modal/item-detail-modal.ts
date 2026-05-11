@@ -12,6 +12,7 @@ import { TimeAgoPipe } from '../../pipes/time-ago.pipe';
 import { environment } from '../../../environments/environment';
 import { Router } from '@angular/router';
 import { CodesModal } from '../codes-modal/codes-modal';
+import { AuthService } from '../../core/auth/auth-service';
 
 @Component({
   selector: 'app-item-detail-modal',
@@ -33,6 +34,7 @@ import { CodesModal } from '../codes-modal/codes-modal';
 })
 export class ItemDetailModal {
   private router = inject(Router);
+  private authService = inject(AuthService);
 
   item = input.required<Report>();
   userProfilePicture = input<string | null>(null);
@@ -64,13 +66,17 @@ export class ItemDetailModal {
 
   protected currentImageIndex = signal<number>(0);
 
+  effectiveAdmin = computed((): boolean => {
+    return this.isAdmin() || this.authService.isAdmin();
+  });
+
   isEditable = computed((): boolean => {
-  return this.item().status.status_id === ReportStatusEnum.PENDING
-      || this.isAdmin();
+    return this.item().status.status_id === ReportStatusEnum.PENDING
+        || this.effectiveAdmin();
   });
 
   isRemovable = computed((): boolean => {
-  return this.item().type === 'lost' || this.isAdmin();
+    return this.item().type === 'lost' || this.effectiveAdmin();
   });
 
   removeTooltip = computed((): string => {
@@ -155,10 +161,12 @@ export class ItemDetailModal {
   }
 
   navigateToProfile(): void {
+    if (!this.effectiveAdmin()) return;
+
     const userId = this.item().user_id;
     if (userId) {
       this.onClose();
-      this.router.navigate(['/app/profile', userId]);
+      this.router.navigate(['/admin/profile', userId]); 
     }
   }
 
@@ -197,9 +205,12 @@ export class ItemDetailModal {
     }
 
     const reportData = this.item();
-    const path = reportData.type === 'lost'
-      ? '/app/report-lost'
-      : '/app/report-found';
+
+    const path = this.effectiveAdmin()
+      ? (reportData.type ===
+          'lost' ? '/admin/report-lost' : '/admin/report-found')
+      : (reportData.type ===
+          'lost' ? '/app/report-lost' : '/app/report-found');
 
     this.router.navigate([path], {
       state: {
@@ -258,9 +269,9 @@ export class ItemDetailModal {
   });
 
   surrenderedLocationName = computed((): string | null => {
-    const r = this.item() as any;
-    if (r.type === 'found' && r.surrendered_location_name) {
-      return r.surrendered_location_name;
+    const r = this.item();
+    if (r.type === 'found' && r.surrendered_location?.surrendered_location_name) {
+      return r.surrendered_location.surrendered_location_name;
     }
     return null;
   });

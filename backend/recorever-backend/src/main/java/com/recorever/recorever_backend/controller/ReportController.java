@@ -180,14 +180,19 @@ public class ReportController {
             @Valid @ModelAttribute ReportCreationDTO reportDto) {
 
         User authenticatedUser = (User) authentication.getPrincipal();
-        int userId = authenticatedUser.getUserId();
+        boolean isAdmin = authenticatedUser.getRole().equalsIgnoreCase("ADMIN");
+
+        String reporterName = isAdmin ? reportDto.getReported_by() : null;
+        Integer reporterUserId = isAdmin ? reportDto.getReported_by_user_id() : null;
+        String reporterEmail = isAdmin ? reportDto.getReporter_email() : null;
+        String reporterPhone = isAdmin ? reportDto.getReporter_phone() : null;
 
         Map<String, Object> creationResult = service.create(
-                userId,
-                reportDto.getReported_by_user_id(),
-                reportDto.getReported_by(),
-                reportDto.getReporter_email(),
-                reportDto.getReporter_phone(),
+                authenticatedUser.getUserId(),
+                reporterUserId,
+                reporterName,
+                reporterEmail,
+                reporterPhone,
                 reportDto.getStatus(),
                 reportDto.getType(),
                 reportDto.getCategory_id(),
@@ -245,20 +250,22 @@ public class ReportController {
     @GetMapping("/reports")
     public ResponseEntity<Map<String, Object>> getReports(
             @RequestParam(required = false) String type,
-            @RequestParam(required = false) Integer status,
+            @RequestParam(required = false) List<Integer> status,
             @RequestParam(required = false) String category,
             @RequestParam(required = false) Integer user_id,
             @RequestParam(required = false) String query,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size) {
 
-        String statusName = null;
-        if (status != null) {
-            statusName = statusService.getById(status).getStatusName();
+        List<String> statusNames = null;
+        if (status != null && !status.isEmpty()) {
+            statusNames = status.stream()
+                    .map(id -> statusService.getById(id).getStatusName())
+                    .collect(Collectors.toList());
         }
 
         Map<String, Object> serviceResponse = service.searchReports(
-                user_id, type, statusName, category, query, page, size);
+                user_id, type, statusNames, category, query, page, size);
 
         @SuppressWarnings("unchecked")
         List<Report> reports = (List<Report>) serviceResponse.get("items");

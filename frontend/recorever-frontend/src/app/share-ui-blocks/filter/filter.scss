@@ -1,21 +1,44 @@
 .filter-bar-container {
   display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
+  flex-wrap: nowrap;
+  align-items: center; 
   gap: 9px;
+  overflow-x: auto; 
+  padding-bottom: 8px; 
+
+  &::-webkit-scrollbar {
+    height: 6px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 4px;
+  }
 
   .all-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
     height: 56px;
-    min-width: 80px;
+    padding: 0 16px;
     border-radius: 4px;
     font-weight: 500;
     margin-top: 0;
+    white-space: nowrap; 
+    flex-shrink: 0; 
 
-  &.active-all-btn {
+    &.active-all-btn {
       background-color: #ad1111;
       color: white;
-  }}
+    }
 
+    mat-icon {
+      margin-left: -4px;
+    }
+  }
 
   .filter-field {
     .mat-mdc-form-field-subscript-wrapper {
@@ -28,9 +51,9 @@
   }
 
   .fixed-size {
-    flex: 0 0 200px;
-    width: 180px;
-    min-width: 150px;
+    flex: 1 1 auto; 
+    min-width: 150px; 
+    width: auto;
   }
 
   .vertical-divider {
@@ -38,12 +61,35 @@
     height: 56px;
     background-color: #d1d5db;
     margin: 0 4px;
-    
+    flex-shrink: 0; 
   }
 }
 
 .mobile-toggle-btn {
   display: none !important;
+}
+
+@media (min-width: 769px) and (max-width: 1150px) {
+  .filter-bar-container {
+    gap: 6px;
+
+    .all-btn {
+      min-width: 56px;
+      padding: 0;
+      
+      .btn-text {
+        display: none;
+      }
+
+      mat-icon {
+        margin-left: 0;
+      }
+    }
+
+    .fixed-size {
+      min-width: 115px;
+    }
+  }
 }
 
 @media (max-width: 768px) {
@@ -58,11 +104,22 @@
   }
 
   .filter-bar-container {
-    flex-direction: column;
+    flex-direction: column; 
     align-items: stretch;
+    flex-wrap: nowrap;
+    overflow-x: visible; 
+    padding-bottom: 0;
 
     &.mobile-hidden {
       display: none;
+    }
+
+    .all-btn {
+      width: 100%;
+      
+      .btn-text {
+        display: inline;
+      }
     }
 
     .all-btn,
@@ -71,6 +128,7 @@
       width: 100%;
       flex: 1 1 auto;
       max-width: none;
+      min-width: unset;
       margin-bottom: 8px;
     }
   }

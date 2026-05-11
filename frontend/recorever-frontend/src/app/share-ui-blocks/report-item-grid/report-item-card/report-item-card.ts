@@ -22,6 +22,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { environment } from '../../../../environments/environment';
 import { Router } from '@angular/router';
 import { CodesModal } from '../../../modal/codes-modal/codes-modal';
+import { AuthService } from '../../../core/auth/auth-service';
 
 @Component({
   selector: 'app-report-item-card',
@@ -51,6 +52,7 @@ export class ReportItemCard {
   isHighlighted = input<boolean>(false);
 
   private router = inject(Router);
+  private authService = inject(AuthService);
 
   protected readonly ReportStatusEnum = ReportStatusEnum;
 
@@ -84,8 +86,12 @@ export class ReportItemCard {
            this.report().status.status_id !== ReportStatusEnum.RESOLVED;
   });
 
+  effectiveAdmin = computed((): boolean => {
+    return this.isAdmin() || this.authService.isAdmin();
+  });
+
   isRemovable = computed((): boolean => {
-    return this.report().type === 'lost' || this.isAdmin();
+    return this.report().type === 'lost' || this.effectiveAdmin();
   });
 
   removeTooltip = computed((): string => {
@@ -95,10 +101,8 @@ export class ReportItemCard {
   });
 
   shouldShowCodeAutomatically = computed((): boolean => {
-    const adminStatus = this.isAdmin();
-    return adminStatus;
+    return this.effectiveAdmin();
   });
-
   photoUrls = computed((): string[] => {
     const report = this.report();
     if (report.images && report.images.length > 0) {
@@ -161,7 +165,7 @@ export class ReportItemCard {
 
   isEditable = computed((): boolean => {
     return this.report().status.status_id === ReportStatusEnum.PENDING
-      || this.isAdmin();
+      || this.effectiveAdmin();
   });
 
   public getCodeButtonLabel(): string {
@@ -199,8 +203,8 @@ export class ReportItemCard {
 
   public onEdit(event: Event): void {
     const reportData: Report = this.report();
-    
-    const path: string = this.isAdmin()
+
+    const path: string = this.effectiveAdmin()
       ? (reportData.type === 'lost' 
           ? AppRoutePaths.ADMIN_REPORT_LOST 
           : AppRoutePaths.ADMIN_REPORT_FOUND)

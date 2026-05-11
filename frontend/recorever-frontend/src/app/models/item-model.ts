@@ -57,20 +57,13 @@ export type Report = {
 
 export type ReportFilters = {
   type?: 'lost' | 'found';
-  status_id?: number;
+  status_id?: number | number[];
   location?: string;
   query?: string;
   user_id?: number;
   page?: number;
   size?: number;
 };
-
-export enum StandardLocations {
-  ZONTA_PARK = 'Zonta Park',
-  LOCATION_ONE = 'Location 1',
-  LOCATION_TWO = 'Location 2',
-  OTHERS = 'Others...',
-}
 
 export const StandardRelativeDateFilters: string[] = [
   'Past hour',
