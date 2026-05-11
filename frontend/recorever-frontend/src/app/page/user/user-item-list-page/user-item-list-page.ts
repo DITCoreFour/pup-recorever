@@ -110,13 +110,6 @@ export class UserItemListPage implements OnInit, AfterViewInit, OnDestroy {
   public currentStatusFilter = signal<string>('unresolved');
   public currentCategoryFilter = signal<string[]>([]);
 
-  protected locations = computed(() => {
-    const locs = this.allReports()
-      .map(r => r.location)
-      .filter(l => !!l);
-    return [...new Set(locs)] as string[];
-  });
-
   public allReports = signal<Report[]>([]);
   public isLoading = signal<boolean>(true);
   public error = signal<string | null>(null);

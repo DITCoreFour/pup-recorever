@@ -106,13 +106,6 @@ export class LostStatusPage implements OnInit, AfterViewInit, OnDestroy {
     'All Statuses', 'pending', 'approved', 'rejected'
   ];
 
-  public locations = computed((): string[] => {
-    const locs = this.reports()
-      .map((r: Report) => r.location)
-      .filter((l: string) => !!l);
-    return [...new Set(locs)];
-  });
-
   public sortedReports = computed((): Report[] => {
     let data = [...this.reports()];
     const sortType = this.currentSort();

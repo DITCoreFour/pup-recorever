@@ -104,13 +104,6 @@ export class ClaimStatusPage implements OnInit, AfterViewInit, OnDestroy {
     return user?.role === 'admin';
   });
 
-  public locations = computed((): string[] => {
-    const locs = this.reports()
-      .map((r: Report): string => r.location)
-      .filter((l: string): boolean => !!l);
-    return [...new Set(locs)];
-  });
-
   protected filteredReports = computed((): Report[] => {
     let data = this.reports().filter((r: Report): boolean =>
       r.status.status_id !== ReportStatusEnum.CLAIMED

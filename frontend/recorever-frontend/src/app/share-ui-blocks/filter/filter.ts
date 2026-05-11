@@ -8,18 +8,18 @@ import {
   signal,
   computed,
   inject,
-  ElementRef,
-  Renderer2,
+  ViewChild,
+  AfterViewInit,
   DestroyRef
 } from '@angular/core';
-import { toObservable } from '@angular/core/rxjs-interop';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DOCUMENT } from '@angular/common';
 import {
   FormBuilder,
   FormGroup,
   FormControl,
   ReactiveFormsModule
 } from '@angular/forms';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
@@ -28,18 +28,20 @@ import { MatNativeDateModule } from '@angular/material/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
-import { MatAutocompleteModule } from '@angular/material/autocomplete';
-import { ScrollDispatcher, ScrollingModule } from '@angular/cdk/scrolling';
+import { 
+  MatAutocompleteModule, 
+  MatAutocompleteTrigger 
+} from '@angular/material/autocomplete';
 
+import { Observable, fromEvent } from 'rxjs';
 import {
   debounceTime,
   distinctUntilChanged,
-  switchMap,
+  map,
   startWith
 } from 'rxjs/operators';
-import { Observable, of, combineLatest } from 'rxjs';
-import { ItemService } from '../../core/services/item-service';
 
+import { ItemService } from '../../core/services/item-service';
 import { Category, SurrenderLocation } from '../../models/item-model';
 
 export type FilterState = {
@@ -82,17 +84,14 @@ export type FilterFormType = FormGroup<{
     MatButtonModule,
     MatIconModule,
     MatInputModule,
-    MatAutocompleteModule,
-    ScrollingModule
+    MatAutocompleteModule
   ],
   templateUrl: './filter.html',
   styleUrl: './filter.scss',
   encapsulation: ViewEncapsulation.None
 })
-export class Filter implements OnInit {
-  public locations = input<string[]>([]);
+export class Filter implements OnInit, AfterViewInit {
   public itemType = input<'lost' | 'found'>('lost');
-  
   public genericLabels = input(false);
   public isUserPage = input(false);
   public isAdminPage = input(false);
@@ -105,22 +104,21 @@ export class Filter implements OnInit {
 
   @Output() public filterChange = new EventEmitter<FilterState>();
 
+  @ViewChild('locationTrigger') 
+  public autoTrigger!: MatAutocompleteTrigger;
+
   protected filterForm: FilterFormType;
-  
   protected isDefaultState = signal(true);
   protected isFilterVisible = signal(false);
   
-  protected filteredLocations$: Observable<string[]> = of([]);
+  protected filteredLocations$!: Observable<string[]>;
   protected fetchedCategories = signal<string[]>([]);
   protected fetchedSurrenderedLocs = signal<string[]>([]);
+  protected allLocations: string[] = [];
 
-  private locations$ = toObservable(this.locations);
-
-  private scrollDispatcher = inject(ScrollDispatcher);
-  private elementRef = inject(ElementRef);
-  private renderer = inject(Renderer2);
   private destroyRef = inject(DestroyRef);
   private itemService = inject(ItemService);
+  private document = inject(DOCUMENT);
 
   protected dateLabel = computed((): string => {
     if (this.genericLabels()) return 'Date';
@@ -141,25 +139,37 @@ export class Filter implements OnInit {
       category: new FormControl<string[]>([]),
       surrenderedLocation: new FormControl('')
     }) as FilterFormType;
-
-    this.destroyRef.onDestroy((): void => {
-      this.toggleParentScroll(true);
-    });
   }
 
   public ngOnInit(): void {
-    this.itemService.getCategories().subscribe((cats: Category[]): void => {
-      this.fetchedCategories.set(
-          cats.map((c: Category) => c.category_name)
-      );
-    });
+    this.itemService.getTopLocations()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (locations: string[]): void => {
+          this.allLocations = locations || [];
+          this.setupFiltering();
+        },
+        error: (): void => {
+          this.allLocations = [];
+          this.setupFiltering();
+        }
+      });
+
+    this.itemService.getCategories()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((cats: Category[]): void => {
+        this.fetchedCategories.set(
+            cats.map((c: Category) => c.category_name)
+        );
+      });
     
-    this.itemService.getSurrenderLocations().subscribe(
-        (locs: SurrenderLocation[]): void => {
-      this.fetchedSurrenderedLocs.set(
-          locs.map((l: SurrenderLocation) => l.surrendered_location_name)
-      );
-    });
+    this.itemService.getSurrenderLocations()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((locs: SurrenderLocation[]): void => {
+        this.fetchedSurrenderedLocs.set(
+            locs.map((l: SurrenderLocation) => l.surrendered_location_name)
+        );
+      });
 
     if (this.isAdminPage()) {
       const initialStatus = this.adminStatusOptions().length > 0 
@@ -170,30 +180,12 @@ export class Filter implements OnInit {
           { emitEvent: false });
     }
 
-    const locControl = this.filterForm.get('location');
-    if (locControl) {
-      this.filteredLocations$ = combineLatest([
-        locControl.valueChanges.pipe(
-          startWith(locControl.value || ''),
-          debounceTime(300),
-          distinctUntilChanged()
-        ),
-        this.locations$
-      ]).pipe(
-        switchMap(([val, locs]: [string | null, string[]]):
-            Observable<string[]> => {
-          const filterValue = (val || '').trim();
-          if (filterValue.length === 0) return of(locs);
-          return this.itemService.searchLocations(filterValue);
-        })
-      );
-    }
-
     this.filterForm.valueChanges
       .pipe(
         debounceTime(300),
-        distinctUntilChanged((prev: RawFilterValue, curr: RawFilterValue): 
-            boolean => JSON.stringify(prev) === JSON.stringify(curr))
+        distinctUntilChanged((prev: RawFilterValue, curr: RawFilterValue): boolean => 
+            JSON.stringify(prev) === JSON.stringify(curr)),
+        takeUntilDestroyed(this.destroyRef)
       )
       .subscribe((value: RawFilterValue): void => {
         const mappedState: Partial<FilterState> = {
@@ -209,22 +201,39 @@ export class Filter implements OnInit {
       });
   }
 
-  protected onLocationPanelOpened(): void {
-    this.toggleParentScroll(false);
+  public ngAfterViewInit(): void {
+    fromEvent(this.document, 'scroll', { capture: true })
+      .pipe(
+        debounceTime(10), 
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe((): void => {
+        if (this.autoTrigger && this.autoTrigger.panelOpen) {
+          this.autoTrigger.closePanel();
+        }
+      });
   }
 
-  protected onLocationPanelClosed(): void {
-    this.toggleParentScroll(true);
-  }
-
-  private toggleParentScroll(enable: boolean): void {
-    const scrollContainers =
-        this.scrollDispatcher.getAncestorScrollContainers(this.elementRef);
-    if (scrollContainers && scrollContainers.length > 0) {
-      const containerRef = scrollContainers[0].getElementRef();
-      const value = enable ? '' : 'hidden';
-      this.renderer.setStyle(containerRef.nativeElement, 'overflow', value);
+  private setupFiltering(): void {
+    const locControl = this.filterForm.controls.location;
+    if (locControl) {
+      this.filteredLocations$ = locControl.valueChanges.pipe(
+        startWith(locControl.value || ''),
+        map((val: string | null): string[] => this.filterLocations(val || ''))
+      );
     }
+  }
+
+  private filterLocations(value: string): string[] {
+    const filterValue = value.trim().toLowerCase();
+    
+    if (!filterValue) {
+      return this.allLocations.slice(0, 5);
+    }
+
+    return this.allLocations.filter((option: string): boolean =>
+      option.toLowerCase().includes(filterValue)
+    );
   }
 
   protected resetFilters(): void {
@@ -247,7 +256,7 @@ export class Filter implements OnInit {
 
   protected clearLocation(event: Event): void {
     event.stopPropagation();
-    this.filterForm.get('location')?.setValue('');
+    this.filterForm.controls.location.setValue('');
   }
 
   protected toggleFilter(): void {

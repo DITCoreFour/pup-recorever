@@ -65,13 +65,6 @@ export type ReportFilters = {
   size?: number;
 };
 
-export enum StandardLocations {
-  ZONTA_PARK = 'Zonta Park',
-  LOCATION_ONE = 'Location 1',
-  LOCATION_TWO = 'Location 2',
-  OTHERS = 'Others...',
-}
-
 export const StandardRelativeDateFilters: string[] = [
   'Past hour',
   'Past 24 hours',
