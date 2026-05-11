@@ -103,8 +103,9 @@ export class MatchDetailModal implements OnInit {
     if (!id) return;
 
     this.isLoading.set(true);
+    const statusIdValue = 2;
 
-    this.itemService.updateMatchStatus(id, 'Confirmed').subscribe({
+    this.itemService.updateMatchStatus(id, statusIdValue).subscribe({
       next: () => {
         this.step = 'success';
         this.isLoading.set(false);

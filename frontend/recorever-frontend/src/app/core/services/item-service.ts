@@ -147,8 +147,15 @@ export class ItemService {
     if (filters.page) params = params.set('page', filters.page.toString());
     if (filters.size) params = params.set('size', filters.size.toString());
     if (filters.type) params = params.set('type', filters.type);
+    
     if (filters.status_id) {
-      params = params.set('status', filters.status_id);
+      if (Array.isArray(filters.status_id)) {
+        filters.status_id.forEach(id => {
+          params = params.append('status', id.toString());
+        });
+      } else {
+        params = params.set('status', filters.status_id.toString());
+      }
     }
 
     if (filters.user_id) {
@@ -185,8 +192,8 @@ export class ItemService {
     );
   }
 
-  updateMatchStatus(matchId: number, status: string): Observable<void> {
-    return this.http.put<void>(`${this.apiUrl}/match/${matchId}`, { status });
+  updateMatchStatus(matchId: number, statusId: number): Observable<any> {
+    return this.http.put(`${this.apiUrl}/match/${matchId}`, { statusId: statusId });
   }
 
   getMatchForReport(

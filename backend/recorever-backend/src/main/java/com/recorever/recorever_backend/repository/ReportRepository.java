@@ -24,7 +24,7 @@ public interface ReportRepository extends JpaRepository<Report, Integer> {
            "WHERE r.isDeleted = false " +
            "AND (:userId IS NULL OR r.userId = :userId) " +
            "AND (:type IS NULL OR r.type = :type) " +
-           "AND (:statusName IS NULL OR r.status.statusName = :statusName) " +
+           "AND (:statusName IS NULL OR r.status.statusName IN :statusName) " +
            "AND (:categoryName IS NULL OR r.category.categoryName = :categoryName) " +
            "AND (:query IS NULL OR LOWER(r.itemName) LIKE LOWER(CONCAT('%',:query,'%')) " +
            "OR LOWER(r.description) LIKE LOWER(CONCAT('%',:query,'%')) " +
@@ -35,7 +35,7 @@ public interface ReportRepository extends JpaRepository<Report, Integer> {
     List<Report> searchReports(
             @Param("userId") Integer userId,
             @Param("type") String type,
-            @Param("statusName") String statusName,
+            @Param("statusName") List<String> statusName,
             @Param("categoryName") String categoryName,
             @Param("query") String query,
             Pageable pageable);
@@ -45,7 +45,7 @@ public interface ReportRepository extends JpaRepository<Report, Integer> {
            "WHERE r.isDeleted = false " +
            "AND (:userId IS NULL OR r.userId = :userId) " +
            "AND (:type IS NULL OR r.type = :type) " +
-           "AND (:statusName IS NULL OR r.status.statusName = :statusName) " +
+           "AND (:statusName IS NULL OR r.status.statusName IN :statusName) " +
            "AND (:query IS NULL OR LOWER(r.itemName) LIKE LOWER(CONCAT('%',:query,'%')) " +
            "OR LOWER(r.description) LIKE LOWER(CONCAT('%',:query,'%')) " +
            "OR LOWER(r.location) LIKE LOWER(CONCAT('%',:query,'%')) " +
@@ -54,7 +54,7 @@ public interface ReportRepository extends JpaRepository<Report, Integer> {
     int countSearchReports(
             @Param("userId") Integer userId,
             @Param("type") String type,
-            @Param("statusName") String statusName,
+            @Param("statusName") List<String> statusName,
             @Param("query") String query);
 
     List<Report> findByStatus_StatusNameAndIsDeletedFalseOrderByDateReportedDesc(String statusName);
