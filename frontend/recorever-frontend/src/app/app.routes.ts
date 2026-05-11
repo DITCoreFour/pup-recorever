@@ -215,7 +215,14 @@ export const routes: Routes = [
           import('./page/admin/admin-dashboard-page/admin-dashboard-page')
             .then(m => m.AdminDashboardPage)
       },
-      { 
+      {
+        path: 'user-management',
+        loadComponent: () =>
+          import('./page/admin/user-management-page/user-management-page')
+            .then(m => m.UserManagementPage),
+        title: 'User Management'
+      },
+      {
         path: 'master-data',
         loadComponent: () =>
           import('./page/admin/master-data-page/master-data-page')

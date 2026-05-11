@@ -81,6 +81,11 @@ public class User implements UserDetails {
         return firstName + " " + lastName;
     }
 
+    @Transient
+    public String getStatus() {
+        return isDeleted ? "Inactive" : "Active";
+    }
+
     @Override
     public String getPassword() {
         return this.passwordHash;

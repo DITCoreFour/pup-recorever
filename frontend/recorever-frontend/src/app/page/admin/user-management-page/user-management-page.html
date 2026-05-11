@@ -1,0 +1,70 @@
+<div class="page-container">
+  <header class="page-header">
+    <div class="header-title-row">
+      <mat-icon class="header-icon">group</mat-icon>
+      <h2 class="header-text">User Management</h2>
+    </div>
+  </header>
+
+  <div class="management-card">
+    <div class="toolbar">
+      <div class="search-wrapper">
+        <input
+          type="text"
+          class="search-input"
+          placeholder="Search name, email..."
+          [formControl]="searchControl">
+        <mat-icon class="search-icon">search</mat-icon>
+      </div>
+
+      <button class="add-account-btn" (click)="openAddUserModal()">
+        <mat-icon>person_add</mat-icon>
+        Add Account
+      </button>
+    </div>
+
+    <div class="table-container">
+      <table class="user-table">
+        <thead>
+          <tr>
+            <th class="sortable" (click)="toggleSort('name')">
+              Name <mat-icon class="sort-arrow">unfold_more</mat-icon>
+            </th>
+            <th>Email</th>
+            <th>Assigned Location</th>
+            <th>Role</th>
+            <th class="sortable" (click)="toggleSort('status')">
+              Status <mat-icon class="sort-arrow">expand_more</mat-icon>
+            </th>
+            <th class="actions-col">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (user of users(); track user.id) {
+            <tr class="user-row">
+              <td class="name-cell">{{ user.name }}</td>
+              <td class="email-cell">{{ user.email }}</td>
+              <td class="location-cell">{{ user.location }}</td>
+              <td>
+                <span class="badge badge-role">{{ user.role }}</span>
+              </td>
+              <td>
+                <span class="badge badge-status" [class.active]="user.status === 'Active'">
+                  {{ user.status }}
+                </span>
+              </td>
+              <td class="actions-cell">
+                <button class="btn-text edit" (click)="editUser(user)">Edit</button>
+                <button class="btn-text delete" (click)="deleteUser(user)">Delete</button>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="6" class="empty-state">No users found.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
