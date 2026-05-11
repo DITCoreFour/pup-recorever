@@ -42,8 +42,8 @@
         <button 
             type="button" 
             class="type-btn" 
-            [class.active]="itemType() === 'all'" 
-            (click)="toggleType('all')">
+            [class.active]="isAllActive()" 
+            (click)="resetFilters()">
           All
         </button>
         <button 

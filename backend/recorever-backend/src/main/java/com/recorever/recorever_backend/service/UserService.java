@@ -1,11 +1,15 @@
 package com.recorever.recorever_backend.service;
 
 import com.recorever.recorever_backend.config.JwtUtil;
+import com.recorever.recorever_backend.dto.AdminRegistrationDTO;
 import com.recorever.recorever_backend.model.SecurityCode;
+import com.recorever.recorever_backend.model.SurrenderedLocation;
 import com.recorever.recorever_backend.model.User;
 import com.recorever.recorever_backend.repository.UserRepository;
 import com.recorever.recorever_backend.repository.ReportRepository;
 import com.recorever.recorever_backend.repository.SecurityCodeRepository;
+import com.recorever.recorever_backend.repository.SurrenderedLocationRepository;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Service;
@@ -13,7 +17,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.List;
 
 @Service
 public class UserService {
@@ -31,14 +37,118 @@ public class UserService {
     private SecurityCodeRepository securityCodeRepo;
 
     @Autowired
+    private SurrenderedLocationRepository locationRepo;
+
+    @Autowired
     private EmailService emailService;
 
+    public List<User> getRawAdminsByRole(String role) {
+        return repo.findAllByRole(role);
+    }
+
+    public String getAdminLocationName(int adminId) {
+        return locationRepo.findByAdminIdAndIsDeletedFalse(adminId)
+                .map(SurrenderedLocation::getSurrenderedLocationName)
+                .orElse("Unassigned");
+    }
+
+    @Transactional
+    public User registerAdminAccount(AdminRegistrationDTO dto) {
+        // 1. Search for existing user (Search and Promote Logic)
+        // We use findByEmail instead of findByEmailAndIsDeletedFalse because we want 
+        // to find them even if they were previously soft-deleted.
+        Optional<User> existingUser = repo.findByEmail(dto.getEmail());
+        
+        User user;
+        if (existingUser.isPresent()) {
+            // SCENARIO: User exists, promote them to ADMIN
+            user = existingUser.get();
+            user.setRole("ADMIN");
+            user.setDeleted(false); // Make them active immediately
+        } else {
+            // SCENARIO: Brand new user
+            user = new User();
+            
+            // Split full name from DTO
+            String[] nameParts = dto.getName().split(" ", 2);
+            user.setFirstName(nameParts[0]);
+            user.setLastName(nameParts.length > 1 ? nameParts[1] : "");
+            
+            user.setEmail(dto.getEmail());
+            // Using BCrypt just like your student register method
+            user.setPasswordHash(BCrypt.hashpw(dto.getPassword(), BCrypt.gensalt()));
+            user.setRole("ADMIN");
+            user.setDeleted(false); // Admins created by Superadmin don't need verification
+            user.setCreatedAt(LocalDateTime.now().toString());
+        }
+        
+        // Save to users table
+        User savedUser = repo.save(user);
+
+        // 2. Handle Location Assignment in the separate table
+        SurrenderedLocation location = locationRepo
+            .findByAdminIdAndIsDeletedFalse(savedUser.getUserId())
+            .orElse(new SurrenderedLocation());
+
+        location.setAdminId(savedUser.getUserId());
+        location.setSurrenderedLocationName(dto.getAssignedLocation());
+        location.setDeleted(false);
+        
+        locationRepo.save(location);
+
+        return savedUser;
+    }
+
+    @Transactional
+    public User updateAdminAccount(int userId, AdminRegistrationDTO dto) {
+        // 1. Find the existing user
+        User user = repo.findById(userId)
+            .orElseThrow(() -> new IllegalArgumentException("Admin not found with ID: " + userId));
+
+        // 2. Update basic info (Skip password!)
+        String[] nameParts = dto.getName().split(" ", 2);
+        user.setFirstName(nameParts[0]);
+        user.setLastName(nameParts.length > 1 ? nameParts[1] : "");
+        user.setEmail(dto.getEmail());
+        
+        User savedUser = repo.save(user);
+
+        // 3. Update the Location in the separate table
+        SurrenderedLocation location = locationRepo
+            .findByAdminIdAndIsDeletedFalse(userId)
+            .orElse(new SurrenderedLocation());
+
+        location.setAdminId(savedUser.getUserId());
+        location.setSurrenderedLocationName(dto.getAssignedLocation());
+        location.setDeleted(false);
+        
+        locationRepo.save(location);
+
+        return savedUser;
+    }
+
+    @Transactional
+    public void softDeleteAdminAccount(int userId) {
+        // 1. Mark the User as deleted
+        User user = repo.findById(userId)
+            .orElseThrow(() -> new IllegalArgumentException("Admin not found with ID: " + userId));
+        
+        user.setDeleted(true); 
+        repo.save(user);
+
+        // 2. Mark the Location assignment as deleted
+        locationRepo.findByAdminIdAndIsDeletedFalse(userId).ifPresent(location -> {
+            location.setDeleted(true);
+            locationRepo.save(location);
+        });
+    }
+
     private int getAdminUserId() {
-        return repo.findFirstByRoleAndIsDeletedFalse("superadmin")
+        return repo.findFirstByRoleAndIsDeletedFalse("admin")
                 .map(User::getUserId)
                 .orElseGet(() -> 
-                    // Fallback to standard admin if no superadmin is found
-                    repo.findFirstByRoleAndIsDeletedFalse("admin")
+                    // Fallback to standard superadmin if no admin is found
+                    repo.findFirstByRoleAndIsDeletedFalse("superadmin")
                         .map(User::getUserId)
                         .orElse(1) // Safety fallback
                 );
@@ -276,6 +386,14 @@ public class UserService {
                 return Map.of("error", "Email is already in use.");
             }
             user.setEmail(email);
+        }
+
+        if (programId != null) {
+            user.setProgramId(programId);
+        }
+        
+        if (year != null) {
+            user.setYear(year);
         }
 
         if (profilePicture != null && !profilePicture.isEmpty()) {

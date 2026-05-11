@@ -28,6 +28,7 @@ import {
 } from 'rxjs/operators';
 import { of } from 'rxjs';
 import { Router } from '@angular/router';
+import { AuthService } from '../../core/auth/auth-service';
 
 // Material Imports
 import { MatMenuModule } from '@angular/material/menu';
@@ -96,6 +97,7 @@ export class ClaimFormModal implements OnInit {
   private datePipe = inject(DatePipe);
   private toastService = inject(ToastService);
   private router = inject(Router);
+  private authService = inject(AuthService);
 
   @Input({ required: true }) claimData!: Claim | Report;
   @Input() isReadOnly: boolean = false;
@@ -562,9 +564,9 @@ export class ClaimFormModal implements OnInit {
   });
 
   protected surrenderedLocationName = computed((): string | null => {
-    const r = this.report() as any;
-    if (r?.type === 'found' && r?.surrendered_location_name) {
-      return r.surrendered_location_name;
+    const r = this.report();
+    if (r?.type === 'found' && r?.surrendered_location?.surrendered_location_name) {
+      return r.surrendered_location.surrendered_location_name;
     }
     return null;
   });
@@ -588,5 +590,19 @@ export class ClaimFormModal implements OnInit {
   public onDelete(): void {
     this.deleteClicked.emit();
     this.onClose();
+  }
+
+  protected effectiveAdmin = computed((): boolean => {
+    return this.authService.isAdmin();
+  });
+
+  protected navigateToProfile(): void {
+    if (!this.effectiveAdmin()) return;
+
+    const userId = this.report()?.user_id;
+    if (userId) {
+      this.onClose();
+      this.router.navigate(['/admin/profile', userId]);
+    }
   }
 }

@@ -210,6 +210,19 @@ $claimed-dark: #333333;
   }
 }
 
+.clickable-profile {
+  cursor: pointer;
+  transition: opacity 0.2s ease-in-out;
+
+  &:hover {
+    opacity: 0.5;
+
+    .username {
+      text-decoration: underline;
+    }
+  }
+}
+
 .image-section {
   margin-bottom: 20px;
   border-radius: 12px;
@@ -403,7 +416,7 @@ $claimed-dark: #333333;
     &:active { transform: scale(0.98); }
 
     &.verified, &.approved, &.matched { background-color: $verified-green; }
-    &.pending { background-color: $pending-yellow; color: black; }
+    &.pending { background-color: $pending-yellow; }
     &.claimed { background-color: $claimed-dark; }
     &.denied, &.rejected { background-color: $denied-red; }
     &.resolved { background-color: $claimed-dark; }

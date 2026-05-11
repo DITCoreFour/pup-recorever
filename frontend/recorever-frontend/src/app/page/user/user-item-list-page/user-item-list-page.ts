@@ -110,13 +110,6 @@ export class UserItemListPage implements OnInit, AfterViewInit, OnDestroy {
   public currentStatusFilter = signal<string>('unresolved');
   public currentCategoryFilter = signal<string[]>([]);
 
-  protected locations = computed(() => {
-    const locs = this.allReports()
-      .map(r => r.location)
-      .filter(l => !!l);
-    return [...new Set(locs)] as string[];
-  });
-
   public allReports = signal<Report[]>([]);
   public isLoading = signal<boolean>(true);
   public error = signal<string | null>(null);
@@ -189,7 +182,10 @@ export class UserItemListPage implements OnInit, AfterViewInit, OnDestroy {
       )
       .subscribe((type: ItemType) => {
         this.itemType.set(type);
-        this.filters.set({ type, status_id: ReportStatusEnum.APPROVED });
+        this.filters.set({ 
+          type, 
+          status_id: [ReportStatusEnum.APPROVED, ReportStatusEnum.MATCHED] 
+        });
         this.resetPagination();
       });
     this.refreshTrigger$.pipe(
@@ -262,17 +258,19 @@ export class UserItemListPage implements OnInit, AfterViewInit, OnDestroy {
 
   private applyStatusFilter(statusVal: string, type: ItemType): void {
     const isResolved = statusVal === 'resolved';
-    let apiStatusId: ReportStatusEnum;
-
-    if (type === 'found') {
-      apiStatusId = isResolved ?
-                    ReportStatusEnum.CLAIMED : ReportStatusEnum.APPROVED;
+    
+    if (isResolved) {
+      const apiStatusId = type === 'found' ? 
+        ReportStatusEnum.CLAIMED : ReportStatusEnum.RESOLVED;
+      
+      this.filters.update(curr => ({ ...curr, status_id: apiStatusId }));
     } else {
-      apiStatusId = isResolved ?
-                    ReportStatusEnum.RESOLVED : ReportStatusEnum.APPROVED;
+      this.filters.update(curr => ({ 
+        ...curr, 
+        status_id: [ReportStatusEnum.APPROVED, ReportStatusEnum.MATCHED] 
+      }));
     }
-
-    this.filters.update(curr => ({ ...curr, status_id: apiStatusId }));
+  
     this.resetPagination();
   }
 
