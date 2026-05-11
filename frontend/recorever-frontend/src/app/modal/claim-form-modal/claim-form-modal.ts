@@ -429,8 +429,8 @@ export class ClaimFormModal implements OnInit {
     this.isSaving.set(true);
     const reportId = this.report()?.report_id;
     if (reportId) {
-      this.adminService.updateReportStatus(reportId, newStatusId).pipe(
-        tap(() => {
+      this.adminService.updateReportStatus(reportId, newStatusId).subscribe({
+        next: () => {
           this.report.update(r => {
             if (!r) return null;
 
@@ -448,13 +448,18 @@ export class ClaimFormModal implements OnInit {
               }
             };
           });
-        }),
-        finalize(() => {
           this.isSaving.set(false);
           this.closeDropdown();
           this.statusChange.emit(newStatusId);
-        })
-      ).subscribe();
+        },
+        error: (err) => {
+          console.error('Failed to update status', err);
+          this.toastService.showError('Failed to update status.' +
+              'Please try again.');
+          this.isSaving.set(false);
+          this.closeDropdown();
+        }
+      });
     } else {
       this.isSaving.set(false);
     }
@@ -508,8 +513,8 @@ export class ClaimFormModal implements OnInit {
         matching_lost_report_id: this.selectedLostReportId()
       };
 
-      this.claimService.createManualClaim(payload).pipe(
-        tap(() => {
+      this.claimService.createManualClaim(payload).subscribe({
+        next: () => {
           this.report.update(r => r ? {
             ...r,
             status: {
@@ -518,13 +523,17 @@ export class ClaimFormModal implements OnInit {
               status_name: 'claimed'
             }
           } : null);
-        }),
-        finalize(() => {
           this.isSaving.set(false);
           this.statusChange.emit(ReportStatusEnum.CLAIMED);
           this.onClose();
-        })
-      ).subscribe();
+        },
+        error: (err) => {
+          console.error('Failed to save claim', err);
+          this.toastService.showError('Failed to submit the claim.' +
+              ' Please check your connection and try again.');
+          this.isSaving.set(false);
+        }
+      });
     } else if (this.activeClaim()) {
        this.isSaving.set(false);
        this.onClose();
