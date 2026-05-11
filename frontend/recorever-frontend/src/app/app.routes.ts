@@ -25,7 +25,7 @@ export const AppRoutePaths = {
   ADMIN_MY_REPORTS: '/admin/my-reports',
   ADMIN_REPORT_LOST: '/admin/report-lost',
   ADMIN_REPORT_FOUND: '/admin/report-found',
-  HELP_PAGE: '/help-page',
+  HELP_PAGE: '/app/help-page',
 };
 
 export const routes: Routes = [
