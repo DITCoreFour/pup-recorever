@@ -239,12 +239,30 @@ export class ClaimFormModal implements OnInit {
       debounceTime(500), 
       distinctUntilChanged(),
       tap(() => this.isSearchingUsers.set(true)),
-      switchMap(term => this.userService.searchUsers(term).pipe(
-        finalize(() => this.isSearchingUsers.set(false))
-      ))
+      switchMap(term => {
+        if (!navigator.onLine) {
+           this.toastService.showError
+              ('You are currently offline. Cannot search users.');
+           this.isSearchingUsers.set(false);
+           return of([]);
+        }
+
+        return this.userService.searchUsers(term).pipe(
+          catchError((err) => {
+            console.error('Failed to search users', err);
+            this.toastService.showError
+                ('Network error while searching for users.');
+            return of([]); 
+          }),
+          finalize(() => this.isSearchingUsers.set(false))
+        );
+      })
     ).subscribe({
       next: users => this.filteredUsers.set(users),
-      error: () => this.isSearchingUsers.set(false)
+      error: () => {
+        this.isSearchingUsers.set(false);
+        this.filteredUsers.set([]);
+      }
     });
   }
 
