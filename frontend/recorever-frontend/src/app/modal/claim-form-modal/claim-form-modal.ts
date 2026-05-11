@@ -17,6 +17,7 @@ import {
   Validators,
   FormsModule
 } from '@angular/forms';
+import { of, forkJoin } from 'rxjs';
 import {
   switchMap,
   finalize,
@@ -24,9 +25,9 @@ import {
   debounceTime,
   distinctUntilChanged,
   map,
-  filter
+  filter,
+  catchError
 } from 'rxjs/operators';
-import { of } from 'rxjs';
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/auth/auth-service';
 
@@ -270,15 +271,61 @@ export class ClaimFormModal implements OnInit {
     this.matchingLostReports.set([]);
     this.selectedLostReportId.set(null);
 
-    this.itemService.getPotentialMatches(currentFoundItem.report_id, userId)
-      .pipe(
+    const potential$ = this.itemService.getPotentialMatches
+      (currentFoundItem.report_id, userId).pipe(
+      catchError(() => of([] as Report[]))
+    );
+
+    const userLostReports$ = this.itemService.getReports
+      ({ type: 'lost', user_id: userId }).pipe(
+      map(res => res.items || []),
+      catchError(() => of([] as Report[]))
+    );
+
+    const exactMatch$ = this.itemService.getMatchForReport
+      (currentFoundItem.report_id).pipe(
+      switchMap(match => {
+        if (match && match.lost_report_id) {
+          return this.itemService.getReportById(match.lost_report_id).pipe(
+            catchError(() => of(null))
+          );
+        }
+        return of(null);
+      }),
+      catchError(() => of(null))
+    );
+
+    forkJoin([potential$, userLostReports$, exactMatch$]).pipe(
       finalize(() => this.isSearchingReports.set(false))
     ).subscribe({
-      next: (matches) => {
-        this.matchingLostReports.set(matches);
+      next: ([potential, userReports, exact]) => {
+        const combinedMap = new Map<number, Report>();
+
+        potential.forEach(r => combinedMap.set(r.report_id, r));
+        userReports.forEach(r => combinedMap.set(r.report_id, r));
+        
+        if (exact && exact.report_id) {
+          combinedMap.set(exact.report_id, exact);
+        }
+
+        const finalMatches = Array.from(combinedMap.values()).filter(r => {
+          if (exact && r.report_id === exact.report_id) return true;
+          return r.status?.status_id !== this.REPORT_STATUS.CLAIMED &&
+                 r.status?.status_id !== this.REPORT_STATUS.RESOLVED &&
+                 r.status?.status_id !== this.REPORT_STATUS.REJECTED;
+        });
+
+        this.matchingLostReports.set(finalMatches);
+
+        if (exact && exact.report_id) {
+          this.selectedLostReportId.set(exact.report_id);
+        } else if (finalMatches.length > 0 && currentFoundItem.status?.status_id
+              === this.REPORT_STATUS.MATCHED) {
+          this.selectedLostReportId.set(finalMatches[0].report_id);
+        }
       },
-      error: () => this.toastService
-          .showError('Failed to fetch matching reports')
+      error: () => this.toastService.showError
+          ('Failed to fetch matching reports')
     });
   }
 
@@ -499,7 +546,8 @@ export class ClaimFormModal implements OnInit {
     const formValues = this.claimForm.getRawValue();
 
     const cName = typeof formValues.claimantName === 'object'
-      ? formValues.claimantName.name
+      ? `${formValues.claimantName.first_name} 
+      ${formValues.claimantName.last_name}`
       : formValues.claimantName;
 
     if (this.activeReport()) {
