@@ -14,6 +14,11 @@ import java.util.Optional;
 @Repository
 public interface UserRepository extends JpaRepository<User, Integer> {
 
+    @Query("SELECT u FROM User u WHERE u.role = :role ")
+    List<User> findAllByRole(
+        @Param("role") String role
+    );
+
     @Query("SELECT u FROM User u WHERE u.email = :email " +
            "AND u.isDeleted = false")
     Optional<User> findByEmailAndIsDeletedFalse(

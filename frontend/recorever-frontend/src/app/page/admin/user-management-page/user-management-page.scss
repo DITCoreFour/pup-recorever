@@ -1,0 +1,203 @@
+// Variables based on the image palette
+$primary-red: #b91c1c;
+$bg-light: #f9fafb;
+$border-color: #e5e7eb;
+$text-main: #374151;
+$text-muted: #6b7280;
+$badge-purple-bg: #f3e8ff;
+$badge-purple-text: #7e22ce;
+$badge-green-bg: #dcfce7;
+$badge-green-text: #15803d;
+
+.page-container {
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  padding: 2rem;
+  max-width: 1150px;
+  margin: 0 auto;
+  min-height: 80vh;
+}
+
+.page-header {
+  margin-bottom: 1rem;
+  border-bottom: 1px solid $border-color;
+  padding-bottom: 1rem;
+
+  .header-title-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: $primary-red;
+
+    .header-icon {
+      font-size: 24px;
+      width: 24px;
+      height: 24px;
+    }
+
+    .header-text {
+      font-size: 1.1rem;
+      font-weight: 500;
+      margin: 0;
+    }
+  }
+}
+
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  gap: 1rem;
+
+  .search-wrapper {
+    position: relative;
+    flex: 1;
+    max-width: 500px;
+
+    .search-input {
+      width: 100%;
+      padding: 0.6rem 1rem 0.6rem 2.5rem;
+      border: 1px solid $border-color;
+      border-radius: 9999px; // Pill shape as seen in image
+      background: $bg-light;
+      font-size: 0.9rem;
+      outline: none;
+
+      &:focus {
+        border-color: #9ca3af;
+      }
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #9ca3af;
+      font-size: 20px;
+    }
+  }
+
+  .add-account-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: $primary-red;
+    color: white;
+    border: none;
+    padding: 0.6rem 1.2rem;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: opacity 0.2s;
+
+    &:hover {
+      opacity: 0.9;
+    }
+
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+  }
+}
+
+.table-container {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.user-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+
+  th {
+    padding: 1rem 1.5rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: $text-main;
+    border-bottom: 1px solid $border-color;
+    white-space: nowrap;
+
+    &.sortable {
+      cursor: pointer;
+      &:hover { background: #fcfcfc; }
+    }
+
+    .sort-arrow {
+      font-size: 14px;
+      vertical-align: middle;
+      color: #9ca3af;
+    }
+  }
+
+  .user-row {
+    border-bottom: 1px solid #f9fafb;
+    
+    &:hover {
+      background-color: #fafafa;
+    }
+
+    td {
+      padding: 1.2rem 1.5rem;
+      font-size: 0.875rem;
+      color: $text-main;
+    }
+  }
+}
+
+// Badge Styles matching the UI screenshot
+.badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: inline-block;
+
+  &.badge-role {
+    background: $badge-purple-bg;
+    color: $badge-purple-text;
+  }
+
+  &.badge-status {
+    background: #f3f4f6;
+    color: #6b7280;
+
+    &.active {
+      background: $badge-green-bg;
+      color: $badge-green-text;
+    }
+  }
+}
+
+.actions-cell {
+  white-space: nowrap;
+  
+  .btn-text {
+    background: none;
+    border: none;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    margin-left: 0.75rem;
+
+    &.edit { color: $text-main; }
+    &.delete { color: $primary-red; }
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+.empty-state {
+  padding: 3rem;
+  text-align: center;
+  color: $text-muted;
+  font-style: italic;
+}
