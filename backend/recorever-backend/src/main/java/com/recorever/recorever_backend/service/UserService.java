@@ -278,6 +278,14 @@ public class UserService {
             user.setEmail(email);
         }
 
+        if (programId != null) {
+            user.setProgramId(programId);
+        }
+        
+        if (year != null) {
+            user.setYear(year);
+        }
+
         if (profilePicture != null && !profilePicture.isEmpty()) {
             user.setProfilePicture(profilePicture);
         }
