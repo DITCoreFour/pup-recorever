@@ -328,9 +328,9 @@ export class ClaimFormModal implements OnInit {
 
         const finalMatches = Array.from(combinedMap.values()).filter(r => {
           if (exact && r.report_id === exact.report_id) return true;
-          return r.status?.status_id !== this.REPORT_STATUS.CLAIMED &&
-                 r.status?.status_id !== this.REPORT_STATUS.RESOLVED &&
-                 r.status?.status_id !== this.REPORT_STATUS.REJECTED;
+          
+          return r.status?.status_id === this.REPORT_STATUS.APPROVED ||
+                 r.status?.status_id === this.REPORT_STATUS.MATCHED;
         });
 
         this.matchingLostReports.set(finalMatches);
