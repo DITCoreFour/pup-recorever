@@ -19,6 +19,7 @@ import {
   FormControl,
   ReactiveFormsModule
 } from '@angular/forms';
+
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -51,6 +52,15 @@ export type FilterState = {
   status?: string;
   category?: string[];
   surrenderedLocation?: string;
+};
+
+type ResetValue = {
+  sort: 'newest' | 'oldest';
+  date: Date | null;
+  location: string;
+  status: string;
+  category: string[];
+  surrenderedLocation: string;
 };
 
 export type RawFilterValue = Partial<{
@@ -119,6 +129,7 @@ export class Filter implements OnInit, AfterViewInit {
   private destroyRef = inject(DestroyRef);
   private itemService = inject(ItemService);
   private document = inject(DOCUMENT);
+  private fb = inject(FormBuilder);
 
   protected dateLabel = computed((): string => {
     if (this.genericLabels()) return 'Date';
@@ -130,7 +141,7 @@ export class Filter implements OnInit, AfterViewInit {
     return this.itemType() === 'found' ? 'Location Found' : 'Location Lost';
   });
 
-  constructor(private fb: FormBuilder) {
+  constructor() {
     this.filterForm = this.fb.group({
       sort: new FormControl<'newest' | 'oldest'>('newest'),
       date: new FormControl<Date | null>(null),
@@ -239,19 +250,21 @@ export class Filter implements OnInit, AfterViewInit {
   protected resetFilters(): void {
     let defaultStatus = 'unresolved';
     if (this.isAdminPage()) {
-      defaultStatus = this.adminStatusOptions().length > 0
-          ? this.initialAdminStatus()
-          : 'All Statuses';
+      defaultStatus = 'All Statuses';
     }
 
-    this.filterForm.patchValue({
+    const resetValue: ResetValue = {
       sort: 'newest',
       date: null,
       location: '',
       status: defaultStatus,
       category: [],
       surrenderedLocation: ''
-    });
+    };
+
+    this.filterForm.reset(resetValue, { emitEvent: false });
+    this.updateDefaultState(resetValue);
+    this.emitFilter(resetValue);
   }
 
   protected clearLocation(event: Event): void {
@@ -265,32 +278,26 @@ export class Filter implements OnInit, AfterViewInit {
 
   private updateDefaultState(formValue: Partial<FilterState>): void {
     const isLocationEmpty = !formValue.location || formValue.location === '';
+    const isDateEmpty = formValue.date === null;
+    const isSortDefault = formValue.sort === 'newest';
     
-    let isDefault = formValue.sort === 'newest' &&
-        formValue.date === null &&
-        isLocationEmpty;
+    let isDefault = isSortDefault && isDateEmpty && isLocationEmpty;
     
     if (this.isUserPage()) {
-      const isCategoryEmpty = !formValue.category ||
-          formValue.category.length === 0;
+      const isCategoryEmpty = !formValue.category || formValue.category.length === 0;
       const isUnresolved = formValue.status === 'unresolved';
       isDefault = isDefault && isCategoryEmpty && isUnresolved;
     }
 
     if (this.isAdminPage()) {
-      const isSurrenderedLocEmpty = !formValue.surrenderedLocation 
-          || formValue.surrenderedLocation === '';
-      
-      const defaultAdminStatus = this.adminStatusOptions().length > 0
-          ? this.initialAdminStatus()
-          : 'All Statuses';
-      
-      const isStatusDefault = formValue.status === defaultAdminStatus;
+      const isSurrenderedLocEmpty = !formValue.surrenderedLocation || formValue.surrenderedLocation === '';
+      const isStatusDefault = formValue.status === 'All Statuses';
+      const isCategoryEmpty = !formValue.category || formValue.category.length === 0;
 
-      isDefault = isDefault && isSurrenderedLocEmpty && isStatusDefault;
+      isDefault = isDefault && isSurrenderedLocEmpty && isStatusDefault && isCategoryEmpty;
     }
 
-    this.isDefaultState.set(isDefault || false);
+    this.isDefaultState.set(isDefault);
   }
 
   private emitFilter(formValue: Partial<FilterState>): void {
@@ -311,6 +318,7 @@ export class Filter implements OnInit, AfterViewInit {
         state.status = formValue.status || 'All Statuses';
       }
       state.surrenderedLocation = formValue.surrenderedLocation || '';
+      state.category = formValue.category || [];
     }
 
     this.filterChange.emit(state);

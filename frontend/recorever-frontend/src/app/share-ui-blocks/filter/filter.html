@@ -17,7 +17,6 @@
       <mat-form-field appearance="outline" class="filter-field fixed-size">
         <mat-label>Status</mat-label>
         <mat-select formControlName="status">
-          
           <mat-option value="All Statuses">All Statuses</mat-option>
           
           @for (status of adminStatusOptions(); track status) {
@@ -31,7 +30,7 @@
       </mat-form-field>
       <div class="vertical-divider"></div>
     }
-  }
+}
 
   @if (isUserPage()) {
     <mat-form-field appearance="outline" class="filter-field fixed-size">
