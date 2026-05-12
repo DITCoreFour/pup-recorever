@@ -81,15 +81,17 @@
       <input matEndDate formControlName="end" placeholder="End Date" readonly>
     </mat-date-range-input>
 
-    @if (filterForm.get('dateRange.start')?.value ||
+    <div matSuffix style="display: flex; align-items: center;">
+      @if (filterForm.get('dateRange.start')?.value ||
         filterForm.get('dateRange.end')?.value) {
-      <button mat-icon-button matSuffix type="button"
-          (click)="clearDate($event)">
-        <mat-icon>close</mat-icon>
-      </button>
-    }
+        <button mat-icon-button type="button"
+            (click)="clearDate($event)">
+          <mat-icon>close</mat-icon>
+        </button>
+      }
+      <mat-datepicker-toggle [for]="picker"></mat-datepicker-toggle>
+    </div>
     
-    <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
     <mat-date-range-picker #picker></mat-date-range-picker>
   </mat-form-field>
 
