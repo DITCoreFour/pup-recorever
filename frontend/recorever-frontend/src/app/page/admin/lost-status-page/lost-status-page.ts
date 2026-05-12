@@ -93,7 +93,10 @@ export class LostStatusPage implements OnInit, AfterViewInit, OnDestroy {
   private currentSearchQuery = signal('');
 
   public currentSort = signal<'newest' | 'oldest'>('newest');
-  public currentDateFilter = signal<Date | null>(null);
+  
+  public currentStartDateFilter = signal<Date | null>(null);
+  public currentEndDateFilter = signal<Date | null>(null);
+  
   public currentLocationFilter = signal('');
   public currentStatusFilter = signal<LostReportStatusFilter>('All Statuses');
   public highlightId = signal<number | null>(null);
@@ -109,9 +112,10 @@ export class LostStatusPage implements OnInit, AfterViewInit, OnDestroy {
   public sortedReports = computed((): Report[] => {
     let data = [...this.reports()];
     const sortType = this.currentSort();
-    const dateFilter = this.currentDateFilter();
     const locationFilter = this.currentLocationFilter();
     const surrenderedFilter = this.currentSurrenderedLocationFilter();
+    const startDateFilter = this.currentStartDateFilter();
+    const endDateFilter = this.currentEndDateFilter();
 
     const categoryFilter = this.currentCategoryFilter();
     if (categoryFilter && categoryFilter.length > 0) {
@@ -128,11 +132,22 @@ export class LostStatusPage implements OnInit, AfterViewInit, OnDestroy {
       });
     }
 
-    if (dateFilter) {
-      const filterDateStr = dateFilter.toDateString();
-      data = data.filter((r: Report) => 
-        new Date(r.date_lost_found || '').toDateString() === filterDateStr
-      );
+    if (startDateFilter || endDateFilter) {
+      const startTime = startDateFilter ? new Date(startDateFilter).setHours(0, 0, 0, 0) : null;
+      const endTime = endDateFilter ? new Date(endDateFilter).setHours(23, 59, 59, 999) : null;
+
+      data = data.filter((r: Report): boolean => {
+        const reportTimeStr = r.date_lost_found || r.date_reported || '';
+        if (!reportTimeStr) return false;
+        
+        const reportTime = new Date(reportTimeStr).getTime();
+        let inRange = true;
+        
+        if (startTime !== null && reportTime < startTime) inRange = false;
+        if (endTime !== null && reportTime > endTime) inRange = false;
+        
+        return inRange;
+      });
     }
 
     if (locationFilter) {
@@ -157,7 +172,10 @@ export class LostStatusPage implements OnInit, AfterViewInit, OnDestroy {
 
   public onFilterChange(state: FilterState): void {
     this.currentSort.set(state.sort);
-    this.currentDateFilter.set(state.date);
+
+    this.currentStartDateFilter.set(state.startDate);
+    this.currentEndDateFilter.set(state.endDate);
+    
     this.currentLocationFilter.set(state.location);
     this.currentSurrenderedLocationFilter.set(state.surrenderedLocation || '');
 

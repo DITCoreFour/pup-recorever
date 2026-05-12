@@ -104,9 +104,11 @@ export class UserItemListPage implements OnInit, AfterViewInit, OnDestroy {
   public selectedItem = signal<Report | null>(null);
 
   public currentSort = signal<'newest' | 'oldest'>('newest');
-  public currentDateFilter = signal<Date | null>(null);
-  public currentLocationFilter = signal<string>('');
   
+  public currentStartDateFilter = signal<Date | null>(null);
+  public currentEndDateFilter = signal<Date | null>(null);
+  
+  public currentLocationFilter = signal<string>('');
   public currentStatusFilter = signal<string>('unresolved');
   public currentCategoryFilter = signal<string[]>([]);
 
@@ -121,36 +123,50 @@ export class UserItemListPage implements OnInit, AfterViewInit, OnDestroy {
 
   public visibleReports = computed((): Report[] => {
     let reports = [...this.allReports()];
-    const dateFilter = this.currentDateFilter();
+    
+    const startDateFilter = this.currentStartDateFilter();
+    const endDateFilter = this.currentEndDateFilter();
+    
     const locationFilter = this.currentLocationFilter();
     const categoryFilter = this.currentCategoryFilter();
     const sort = this.currentSort();
 
-    if (dateFilter) {
-        const filterDateStr = this.datePipe.transform(dateFilter, 'yyyy-MM-dd');
-        reports = reports.filter(report => {
+    if (startDateFilter || endDateFilter) {
+        const startStr = startDateFilter ?
+            this.datePipe.transform(startDateFilter, 'yyyy-MM-dd') : null;
+        const endStr = endDateFilter ?
+            this.datePipe.transform(endDateFilter, 'yyyy-MM-dd') : null;
+
+        reports = reports.filter((report: Report): boolean => {
             const reportDateStr =
                 this.datePipe.transform(report.date_lost_found, 'yyyy-MM-dd');
-            return reportDateStr === filterDateStr;
+            if (!reportDateStr) return false;
+
+            let inRange = true;
+            if (startStr && reportDateStr < startStr) inRange = false;
+            if (endStr && reportDateStr > endStr) inRange = false;
+            
+            return inRange;
         });
     }
 
     if (locationFilter) {
-      reports = reports.filter(r =>
+      reports = reports.filter((r: Report): boolean =>
         r.location.toLowerCase().includes(locationFilter.toLowerCase())
       );
     }
 
-
     if (categoryFilter && categoryFilter.length > 0) {
-      reports = reports.filter(r => {
+      reports = reports.filter((r: Report): boolean => {
+      
         const catName = ((r as any).category_name || r.category?.category_name
             || '').toLowerCase().trim();
-        return categoryFilter.some(cat => cat.toLowerCase().trim() === catName);
+        return categoryFilter.some((cat: string): boolean => 
+            cat.toLowerCase().trim() === catName);
       });
     }
 
-    reports.sort((a, b) => {
+    reports.sort((a: Report, b: Report): number => {
         const dateA = new Date(a.date_reported).getTime();
         const dateB = new Date(b.date_reported).getTime();
         return sort === 'newest' ? dateB - dateA : dateA - dateB;
@@ -158,6 +174,7 @@ export class UserItemListPage implements OnInit, AfterViewInit, OnDestroy {
 
     return reports;
   });
+
   public codeModalTitle = computed((): string => {
     const item = this.viewCodeItem();
     if (!item) return '';
@@ -188,8 +205,9 @@ export class UserItemListPage implements OnInit, AfterViewInit, OnDestroy {
         });
         this.resetPagination();
       });
+      
     this.refreshTrigger$.pipe(
-      tap(() => this.isLoading.set(true)),
+      tap((): void => this.isLoading.set(true)),
       switchMap(() => {
         const currentFilters = this.filters();
         const pageToFetch = this.currentPage();
@@ -207,7 +225,7 @@ export class UserItemListPage implements OnInit, AfterViewInit, OnDestroy {
       }),
       takeUntil(this.destroy$)
     ).subscribe((res: PaginatedResponse<Report>) => {
-      this.allReports.update(existing =>
+      this.allReports.update((existing: Report[]) =>
         this.currentPage() === 1 ? res.items : [...existing, ...res.items]
       );
       this.totalPages.set(res.totalPages);
@@ -219,7 +237,7 @@ export class UserItemListPage implements OnInit, AfterViewInit, OnDestroy {
       this.observer = new IntersectionObserver(([entry]) => {
         if (entry.isIntersecting && !this.isLoading() &&
             this.currentPage() < this.totalPages()) {
-              this.currentPage.update(p => p + 1);
+              this.currentPage.update((p: number): number => p + 1);
               this.refreshTrigger$.next();
         }
       }, { rootMargin: '150px' });
@@ -241,7 +259,10 @@ export class UserItemListPage implements OnInit, AfterViewInit, OnDestroy {
 
   public onFilterChange(state: FilterState): void {
     this.currentSort.set(state.sort);
-    this.currentDateFilter.set(state.date);
+    
+    this.currentStartDateFilter.set(state.startDate);
+    this.currentEndDateFilter.set(state.endDate);
+    
     this.currentLocationFilter.set(state.location);
 
     if (state.category !== undefined) {
@@ -292,7 +313,7 @@ export class UserItemListPage implements OnInit, AfterViewInit, OnDestroy {
     const reports = this.allReports();
     const suggestions = new Set<string>();
 
-    reports.forEach(report => {
+    reports.forEach((report: Report) => {
         if (report.item_name.toLowerCase().includes(lowerQuery)) {
             suggestions.add(report.item_name);
         }

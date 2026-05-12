@@ -17,6 +17,7 @@
       <mat-form-field appearance="outline" class="filter-field fixed-size">
         <mat-label>Status</mat-label>
         <mat-select formControlName="status">
+          
           <mat-option value="All Statuses">All Statuses</mat-option>
           
           @for (status of adminStatusOptions(); track status) {
@@ -30,7 +31,7 @@
       </mat-form-field>
       <div class="vertical-divider"></div>
     }
-}
+  }
 
   @if (isUserPage()) {
     <mat-form-field appearance="outline" class="filter-field fixed-size">
@@ -71,11 +72,25 @@
     </mat-select>
   </mat-form-field>
 
-  <mat-form-field appearance="outline" class="filter-field fixed-size">
+  <mat-form-field appearance="outline" class="filter-field fixed-size"
+      (click)="picker.open()">
     <mat-label>{{ dateLabel() }}</mat-label>
-    <input matInput [matDatepicker]="picker" formControlName="date" readonly>
+    <mat-date-range-input formGroupName="dateRange" [rangePicker]="picker">
+      <input matStartDate formControlName="start"
+        placeholder="Start Date" readonly>
+      <input matEndDate formControlName="end" placeholder="End Date" readonly>
+    </mat-date-range-input>
+
+    @if (filterForm.get('dateRange.start')?.value ||
+        filterForm.get('dateRange.end')?.value) {
+      <button mat-icon-button matSuffix type="button"
+          (click)="clearDate($event)">
+        <mat-icon>close</mat-icon>
+      </button>
+    }
+    
     <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
-    <mat-datepicker #picker></mat-datepicker>
+    <mat-date-range-picker #picker></mat-date-range-picker>
   </mat-form-field>
 
   <mat-form-field appearance="outline" class="filter-field fixed-size">

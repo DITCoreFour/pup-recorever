@@ -47,7 +47,8 @@ import { Category, SurrenderLocation } from '../../models/item-model';
 
 export type FilterState = {
   sort: 'newest' | 'oldest';
-  date: Date | null;
+  startDate: Date | null;
+  endDate: Date | null;
   location: string;
   status?: string;
   category?: string[];
@@ -56,7 +57,10 @@ export type FilterState = {
 
 type ResetValue = {
   sort: 'newest' | 'oldest';
-  date: Date | null;
+  dateRange: {
+    start: Date | null;
+    end: Date | null;
+  };
   location: string;
   status: string;
   category: string[];
@@ -65,7 +69,7 @@ type ResetValue = {
 
 export type RawFilterValue = Partial<{
   sort: 'newest' | 'oldest' | null;
-  date: Date | null;
+  dateRange: Partial<{ start: Date | null; end: Date | null }> | null;
   location: string | null;
   status: string | null;
   category: string[] | null;
@@ -74,7 +78,10 @@ export type RawFilterValue = Partial<{
 
 export type FilterFormType = FormGroup<{
   sort: FormControl<'newest' | 'oldest' | null>;
-  date: FormControl<Date | null>;
+  dateRange: FormGroup<{
+    start: FormControl<Date | null>;
+    end: FormControl<Date | null>;
+  }>;
   location: FormControl<string | null>;
   status: FormControl<string | null>;
   category: FormControl<string[] | null>;
@@ -132,7 +139,7 @@ export class Filter implements OnInit, AfterViewInit {
   private fb = inject(FormBuilder);
 
   protected dateLabel = computed((): string => {
-    if (this.genericLabels()) return 'Date';
+    if (this.genericLabels()) return 'Date Range';
     return this.itemType() === 'found' ? 'Date Found' : 'Date Lost';
   });
 
@@ -144,7 +151,10 @@ export class Filter implements OnInit, AfterViewInit {
   constructor() {
     this.filterForm = this.fb.group({
       sort: new FormControl<'newest' | 'oldest'>('newest'),
-      date: new FormControl<Date | null>(null),
+      dateRange: this.fb.group({
+        start: new FormControl<Date | null>(null),
+        end: new FormControl<Date | null>(null)
+      }),
       location: new FormControl(''),
       status: new FormControl('unresolved'),
       category: new FormControl<string[]>([]),
@@ -195,14 +205,15 @@ export class Filter implements OnInit, AfterViewInit {
       .pipe(
         debounceTime(300),
         distinctUntilChanged((prev: RawFilterValue, curr: RawFilterValue):
-        boolean =>
+          boolean =>
             JSON.stringify(prev) === JSON.stringify(curr)),
         takeUntilDestroyed(this.destroyRef)
       )
       .subscribe((value: RawFilterValue): void => {
         const mappedState: Partial<FilterState> = {
           sort: (value.sort as 'newest' | 'oldest') || 'newest',
-          date: value.date || null,
+          startDate: value.dateRange?.start || null,
+          endDate: value.dateRange?.end || null,
           location: value.location || '',
           status: value.status || undefined,
           category: value.category || undefined,
@@ -256,7 +267,7 @@ export class Filter implements OnInit, AfterViewInit {
 
     const resetValue: ResetValue = {
       sort: 'newest',
-      date: null,
+      dateRange: { start: null, end: null },
       location: '',
       status: defaultStatus,
       category: [],
@@ -273,20 +284,24 @@ export class Filter implements OnInit, AfterViewInit {
     this.filterForm.controls.location.setValue('');
   }
 
+  protected clearDate(event: Event): void {
+    event.stopPropagation();
+    this.filterForm.controls.dateRange.setValue({ start: null, end: null });
+  }
+
   protected toggleFilter(): void {
     this.isFilterVisible.update((value: boolean) => !value);
   }
 
   private updateDefaultState(formValue: Partial<FilterState>): void {
     const isLocationEmpty = !formValue.location || formValue.location === '';
-    const isDateEmpty = formValue.date === null;
+    const isDateEmpty = formValue.startDate === null && formValue.endDate === null;
     const isSortDefault = formValue.sort === 'newest';
     
     let isDefault = isSortDefault && isDateEmpty && isLocationEmpty;
     
     if (this.isUserPage()) {
-      const isCategoryEmpty = !formValue.category ||
-          formValue.category.length === 0;
+      const isCategoryEmpty = !formValue.category || formValue.category.length === 0;
       const isUnresolved = formValue.status === 'unresolved';
       isDefault = isDefault && isCategoryEmpty && isUnresolved;
     }
@@ -297,10 +312,8 @@ export class Filter implements OnInit, AfterViewInit {
         isSurrenderedLocEmpty = !formValue.surrenderedLocation ||
             formValue.surrenderedLocation === '';
       }
-      
       const isStatusDefault = formValue.status === 'All Statuses';
-      const isCategoryEmpty = !formValue.category ||
-          formValue.category.length === 0;
+      const isCategoryEmpty = !formValue.category || formValue.category.length === 0;
 
       isDefault = isDefault && isSurrenderedLocEmpty &&
           isStatusDefault && isCategoryEmpty;
@@ -312,7 +325,8 @@ export class Filter implements OnInit, AfterViewInit {
   private emitFilter(formValue: Partial<FilterState>): void {
     const state: FilterState = {
       sort: (formValue.sort as 'newest' | 'oldest') || 'newest',
-      date: formValue.date || null,
+      startDate: formValue.startDate || null,
+      endDate: formValue.endDate || null,
       location: formValue.location || '',
       category: formValue.category || []
     };
