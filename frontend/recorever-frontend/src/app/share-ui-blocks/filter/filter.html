@@ -104,7 +104,7 @@
     </mat-autocomplete>
   </mat-form-field>
 
-  @if (isAdminPage()) {
+  @if (isAdminPage() && itemType() === 'found') {
     <mat-form-field appearance="outline" class="filter-field fixed-size">
       <mat-label>Surrendered Location</mat-label>
       <mat-select formControlName="surrenderedLocation">

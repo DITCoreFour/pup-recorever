@@ -194,7 +194,8 @@ export class Filter implements OnInit, AfterViewInit {
     this.filterForm.valueChanges
       .pipe(
         debounceTime(300),
-        distinctUntilChanged((prev: RawFilterValue, curr: RawFilterValue): boolean => 
+        distinctUntilChanged((prev: RawFilterValue, curr: RawFilterValue):
+        boolean =>
             JSON.stringify(prev) === JSON.stringify(curr)),
         takeUntilDestroyed(this.destroyRef)
       )
@@ -284,17 +285,25 @@ export class Filter implements OnInit, AfterViewInit {
     let isDefault = isSortDefault && isDateEmpty && isLocationEmpty;
     
     if (this.isUserPage()) {
-      const isCategoryEmpty = !formValue.category || formValue.category.length === 0;
+      const isCategoryEmpty = !formValue.category ||
+          formValue.category.length === 0;
       const isUnresolved = formValue.status === 'unresolved';
       isDefault = isDefault && isCategoryEmpty && isUnresolved;
     }
 
     if (this.isAdminPage()) {
-      const isSurrenderedLocEmpty = !formValue.surrenderedLocation || formValue.surrenderedLocation === '';
+      let isSurrenderedLocEmpty = true;
+      if (this.itemType() === 'found') {
+        isSurrenderedLocEmpty = !formValue.surrenderedLocation ||
+            formValue.surrenderedLocation === '';
+      }
+      
       const isStatusDefault = formValue.status === 'All Statuses';
-      const isCategoryEmpty = !formValue.category || formValue.category.length === 0;
+      const isCategoryEmpty = !formValue.category ||
+          formValue.category.length === 0;
 
-      isDefault = isDefault && isSurrenderedLocEmpty && isStatusDefault && isCategoryEmpty;
+      isDefault = isDefault && isSurrenderedLocEmpty &&
+          isStatusDefault && isCategoryEmpty;
     }
 
     this.isDefaultState.set(isDefault);
@@ -317,7 +326,11 @@ export class Filter implements OnInit, AfterViewInit {
       if (this.adminStatusOptions().length > 0) {
         state.status = formValue.status || 'All Statuses';
       }
-      state.surrenderedLocation = formValue.surrenderedLocation || '';
+      
+      if (this.itemType() === 'found') {
+        state.surrenderedLocation = formValue.surrenderedLocation || '';
+      }
+      
       state.category = formValue.category || [];
     }
 
