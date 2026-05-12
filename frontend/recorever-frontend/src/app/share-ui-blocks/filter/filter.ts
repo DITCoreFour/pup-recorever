@@ -275,8 +275,19 @@ export class Filter implements OnInit, AfterViewInit {
     };
 
     this.filterForm.reset(resetValue, { emitEvent: false });
-    this.updateDefaultState(resetValue);
-    this.emitFilter(resetValue);
+
+    const mappedDefaultState: Partial<FilterState> = {
+      sort: 'newest',
+      startDate: null,
+      endDate: null,
+      location: '',
+      status: defaultStatus,
+      category: [],
+      surrenderedLocation: ''
+    };
+
+    this.updateDefaultState(mappedDefaultState);
+    this.emitFilter(mappedDefaultState);
   }
 
   protected clearLocation(event: Event): void {
@@ -294,29 +305,30 @@ export class Filter implements OnInit, AfterViewInit {
   }
 
   private updateDefaultState(formValue: Partial<FilterState>): void {
-    const isLocationEmpty = !formValue.location || formValue.location === '';
-    const isDateEmpty = formValue.startDate === null && formValue.endDate === null;
-    const isSortDefault = formValue.sort === 'newest';
+
+    const isLocationEmpty = !formValue.location || formValue.location.trim() === '';
+    const isDateEmpty = !formValue.startDate && !formValue.endDate;
     
-    let isDefault = isSortDefault && isDateEmpty && isLocationEmpty;
+    const isSortDefault = !formValue.sort || formValue.sort === 'newest';
+
+    const isCategoryEmpty = !formValue.category || formValue.category.length === 0;
+
+    let isDefault = isSortDefault && isDateEmpty && isLocationEmpty && isCategoryEmpty;
     
     if (this.isUserPage()) {
-      const isCategoryEmpty = !formValue.category || formValue.category.length === 0;
       const isUnresolved = formValue.status === 'unresolved';
-      isDefault = isDefault && isCategoryEmpty && isUnresolved;
+      isDefault = isDefault && isUnresolved;
     }
 
     if (this.isAdminPage()) {
       let isSurrenderedLocEmpty = true;
       if (this.itemType() === 'found') {
-        isSurrenderedLocEmpty = !formValue.surrenderedLocation ||
-            formValue.surrenderedLocation === '';
+        isSurrenderedLocEmpty = !formValue.surrenderedLocation || formValue.surrenderedLocation === '';
       }
-      const isStatusDefault = formValue.status === 'All Statuses';
-      const isCategoryEmpty = !formValue.category || formValue.category.length === 0;
+      
+      const isStatusDefault = !formValue.status || formValue.status === 'All Statuses';
 
-      isDefault = isDefault && isSurrenderedLocEmpty &&
-          isStatusDefault && isCategoryEmpty;
+      isDefault = isDefault && isSurrenderedLocEmpty && isStatusDefault;
     }
 
     this.isDefaultState.set(isDefault);
