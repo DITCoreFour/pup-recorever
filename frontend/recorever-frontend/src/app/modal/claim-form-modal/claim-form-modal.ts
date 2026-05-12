@@ -135,6 +135,7 @@ export class ClaimFormModal implements OnInit {
   protected matchingLostReports = signal<Report[]>([]);
   protected isSearchingReports = signal(false);
   protected selectedLostReportId = signal<number | null>(null);
+  protected isOfflineSearch = signal(false);
   
   // Signal to control zoom state
   protected isZoomed = signal(false);
@@ -223,11 +224,13 @@ export class ClaimFormModal implements OnInit {
   }
 
   private setupUserSearch(): void {
-    if (this.isReadOnly) return;
+  if (this.isReadOnly) return;
 
     this.claimForm.get('claimantName')?.valueChanges.pipe(
       map(value => typeof value === 'string' ? value.trim() : ''),
       tap(term => {
+        this.isOfflineSearch.set(false); 
+        
         if (!term) {
           this.filteredUsers.set([]);
           this.isSearchingUsers.set(false);
@@ -241,10 +244,9 @@ export class ClaimFormModal implements OnInit {
       tap(() => this.isSearchingUsers.set(true)),
       switchMap(term => {
         if (!navigator.onLine) {
-           this.toastService.showError
-              ('You are currently offline. Cannot search users.');
-           this.isSearchingUsers.set(false);
-           return of([]);
+            this.isOfflineSearch.set(true);
+            this.isSearchingUsers.set(false);
+            return of([]);
         }
 
         return this.userService.searchUsers(term).pipe(
@@ -327,24 +329,31 @@ export class ClaimFormModal implements OnInit {
         }
 
         const finalMatches = Array.from(combinedMap.values()).filter(r => {
-          if (exact && r.report_id === exact.report_id) return true;
+          const isVerified = r.status?.status_id ===
+              this.REPORT_STATUS.APPROVED;
+          const isOwnedByUser = r.user_id === userId;
           
-          return r.status?.status_id === this.REPORT_STATUS.APPROVED ||
-                 r.status?.status_id === this.REPORT_STATUS.MATCHED;
+          return isVerified && isOwnedByUser;
         });
 
         this.matchingLostReports.set(finalMatches);
 
-        if (exact && exact.report_id) {
+        if (exact && exact.report_id && finalMatches.some(m => m.report_id
+          === exact.report_id)) {
           this.selectedLostReportId.set(exact.report_id);
-        } else if (finalMatches.length > 0 && currentFoundItem.status?.status_id
-              === this.REPORT_STATUS.MATCHED) {
-          this.selectedLostReportId.set(finalMatches[0].report_id);
         }
       },
       error: () => this.toastService.showError
           ('Failed to fetch matching reports')
     });
+  }
+
+  protected toggleLostReportSelection(reportId: number): void {
+    if (this.selectedLostReportId() === reportId) {
+      this.selectedLostReportId.set(null);
+    } else {
+      this.selectedLostReportId.set(reportId);
+    }
   }
 
   protected getUserAvatar(user: User): string {
