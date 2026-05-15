@@ -241,6 +241,12 @@
                   @if (isSearchingUsers()) {
                     <mat-icon matSuffix class="spinning-loader">sync</mat-icon>
                   }
+                  @if (isOfflineSearch()) {
+                    <mat-hint class="offline-warning">
+                      <mat-icon class="warning-icon">warning</mat-icon>
+                      You are currently offline. Cannot search existing users.
+                    </mat-hint>
+                  }
                 </mat-form-field>
 
                 <mat-autocomplete #auto="matAutocomplete"
@@ -271,7 +277,7 @@
               }
             </div>
 
-            <div class="row">
+            <div class="row" [class.adjust-for-warning]="isOfflineSearch()">
               <mat-form-field appearance="outline" class="full-width">
                 <mat-label>Claim Date</mat-label>
                 <input matInput formControlName="claimDate" readonly>
@@ -295,15 +301,16 @@
               } @else if (matchingLostReports().length > 0) {
                 <mat-radio-group
                     [value]="selectedLostReportId()"
-                    (change)="selectedLostReportId.set($event.value)"
                     class="matching-list">
                   @for (report of matchingLostReports();
                        track report.report_id) {
                     <div class="matching-card"
                          [class.selected]="selectedLostReportId() ===
-                          report.report_id"
-                         (click)="selectedLostReportId.set(report.report_id)">
-                      <mat-radio-button [value]="report.report_id">
+                            report.report_id"
+                         (click)="toggleLostReportSelection(report.report_id)">
+                      
+                      <mat-radio-button [value]="report.report_id"
+                        style="pointer-events: none;">
                         <div class="matching-info">
                           <span class="matching-name">
                             {{ report.item_name }}

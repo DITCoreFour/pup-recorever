@@ -91,7 +91,8 @@ export class ClaimStatusPage implements OnInit, AfterViewInit, OnDestroy {
 
   public currentFilter = signal<FilterState>({
     sort: 'newest',
-    date: null,
+    startDate: null,
+    endDate: null,
     location: ''
   });
 
@@ -134,11 +135,20 @@ export class ClaimStatusPage implements OnInit, AfterViewInit, OnDestroy {
       });
     }
 
-    if (filter.date) {
-      const filterDate = new Date(filter.date).setHours(0, 0, 0, 0);
+    if (filter.startDate || filter.endDate) {
+      const startTime = filter.startDate ?
+          new Date(filter.startDate).setHours(0, 0, 0, 0) : null;
+      const endTime = filter.endDate ?
+          new Date(filter.endDate).setHours(23, 59, 59, 999) : null;
+
       data = data.filter((r: Report): boolean => {
-        const reportDate = new Date(r.date_reported).setHours(0, 0, 0, 0);
-        return reportDate === filterDate;
+        const reportTime = new Date(r.date_reported).getTime();
+        let inRange = true;
+        
+        if (startTime !== null && reportTime < startTime) inRange = false;
+        if (endTime !== null && reportTime > endTime) inRange = false;
+        
+        return inRange;
       });
     }
 

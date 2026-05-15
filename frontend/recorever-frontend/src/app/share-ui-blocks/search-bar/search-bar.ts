@@ -12,7 +12,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatOptionModule } from '@angular/material/core';
 import { Subject } from 'rxjs';
-import { debounceTime, distinctUntilChanged, filter, map, tap } from 'rxjs/operators';
+import { debounceTime, distinctUntilChanged, map } from 'rxjs/operators';
 
 @Component({
   selector: 'app-search-bar',
@@ -33,7 +33,6 @@ export class SearchBarComponent implements OnInit {
 
   searchControl = new FormControl<string>('');
   
-  private searchHistory: Set<string> = new Set<string>();
   private searchSubject = new Subject<string>();
   private destroyRef = inject(DestroyRef);
 
@@ -53,18 +52,7 @@ export class SearchBarComponent implements OnInit {
         takeUntilDestroyed(this.destroyRef),
         debounceTime(400),
         map((term: string) => term.trim()),
-        distinctUntilChanged(),
-        filter((term: string) => {
-          if (term.length === 0) {
-            return true;
-          }
-          return !this.searchHistory.has(term);
-        }),
-        tap((term: string) => {
-          if (term.length > 0) {
-            this.searchHistory.add(term);
-          }
-        })
+        distinctUntilChanged()
       )
       .subscribe((term: string) => {
         this.search.emit(term);

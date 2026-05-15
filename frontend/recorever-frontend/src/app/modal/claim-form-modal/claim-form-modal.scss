@@ -632,6 +632,27 @@ $claimed-dark: #333333;
   }
 }
 
+.adjust-for-warning {
+  margin-top: 18px;
+  transition: margin-top 0.2s ease-in-out; 
+}
+
+.offline-warning {
+  color: #e6a23c;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+  white-space: nowrap;
+
+  .warning-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    color: #e6a23c;
+  }
+}
+
 .user-option {
   display: flex;
   align-items: center;

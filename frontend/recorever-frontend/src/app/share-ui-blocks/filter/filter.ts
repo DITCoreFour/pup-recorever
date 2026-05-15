@@ -19,6 +19,7 @@ import {
   FormControl,
   ReactiveFormsModule
 } from '@angular/forms';
+
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -46,16 +47,29 @@ import { Category, SurrenderLocation } from '../../models/item-model';
 
 export type FilterState = {
   sort: 'newest' | 'oldest';
-  date: Date | null;
+  startDate: Date | null;
+  endDate: Date | null;
   location: string;
   status?: string;
   category?: string[];
   surrenderedLocation?: string;
 };
 
+type ResetValue = {
+  sort: 'newest' | 'oldest';
+  dateRange: {
+    start: Date | null;
+    end: Date | null;
+  };
+  location: string;
+  status: string;
+  category: string[];
+  surrenderedLocation: string;
+};
+
 export type RawFilterValue = Partial<{
   sort: 'newest' | 'oldest' | null;
-  date: Date | null;
+  dateRange: Partial<{ start: Date | null; end: Date | null }> | null;
   location: string | null;
   status: string | null;
   category: string[] | null;
@@ -64,7 +78,10 @@ export type RawFilterValue = Partial<{
 
 export type FilterFormType = FormGroup<{
   sort: FormControl<'newest' | 'oldest' | null>;
-  date: FormControl<Date | null>;
+  dateRange: FormGroup<{
+    start: FormControl<Date | null>;
+    end: FormControl<Date | null>;
+  }>;
   location: FormControl<string | null>;
   status: FormControl<string | null>;
   category: FormControl<string[] | null>;
@@ -119,9 +136,10 @@ export class Filter implements OnInit, AfterViewInit {
   private destroyRef = inject(DestroyRef);
   private itemService = inject(ItemService);
   private document = inject(DOCUMENT);
+  private fb = inject(FormBuilder);
 
   protected dateLabel = computed((): string => {
-    if (this.genericLabels()) return 'Date';
+    if (this.genericLabels()) return 'Date Range';
     return this.itemType() === 'found' ? 'Date Found' : 'Date Lost';
   });
 
@@ -130,10 +148,13 @@ export class Filter implements OnInit, AfterViewInit {
     return this.itemType() === 'found' ? 'Location Found' : 'Location Lost';
   });
 
-  constructor(private fb: FormBuilder) {
+  constructor() {
     this.filterForm = this.fb.group({
       sort: new FormControl<'newest' | 'oldest'>('newest'),
-      date: new FormControl<Date | null>(null),
+      dateRange: this.fb.group({
+        start: new FormControl<Date | null>(null),
+        end: new FormControl<Date | null>(null)
+      }),
       location: new FormControl(''),
       status: new FormControl('unresolved'),
       category: new FormControl<string[]>([]),
@@ -183,14 +204,16 @@ export class Filter implements OnInit, AfterViewInit {
     this.filterForm.valueChanges
       .pipe(
         debounceTime(300),
-        distinctUntilChanged((prev: RawFilterValue, curr: RawFilterValue): boolean => 
+        distinctUntilChanged((prev: RawFilterValue, curr: RawFilterValue):
+          boolean =>
             JSON.stringify(prev) === JSON.stringify(curr)),
         takeUntilDestroyed(this.destroyRef)
       )
       .subscribe((value: RawFilterValue): void => {
         const mappedState: Partial<FilterState> = {
           sort: (value.sort as 'newest' | 'oldest') || 'newest',
-          date: value.date || null,
+          startDate: value.dateRange?.start || null,
+          endDate: value.dateRange?.end || null,
           location: value.location || '',
           status: value.status || undefined,
           category: value.category || undefined,
@@ -239,19 +262,32 @@ export class Filter implements OnInit, AfterViewInit {
   protected resetFilters(): void {
     let defaultStatus = 'unresolved';
     if (this.isAdminPage()) {
-      defaultStatus = this.adminStatusOptions().length > 0
-          ? this.initialAdminStatus()
-          : 'All Statuses';
+      defaultStatus = 'All Statuses';
     }
 
-    this.filterForm.patchValue({
+    const resetValue: ResetValue = {
       sort: 'newest',
-      date: null,
+      dateRange: { start: null, end: null },
       location: '',
       status: defaultStatus,
       category: [],
       surrenderedLocation: ''
-    });
+    };
+
+    this.filterForm.reset(resetValue, { emitEvent: false });
+
+    const mappedDefaultState: Partial<FilterState> = {
+      sort: 'newest',
+      startDate: null,
+      endDate: null,
+      location: '',
+      status: defaultStatus,
+      category: [],
+      surrenderedLocation: ''
+    };
+
+    this.updateDefaultState(mappedDefaultState);
+    this.emitFilter(mappedDefaultState);
   }
 
   protected clearLocation(event: Event): void {
@@ -259,44 +295,50 @@ export class Filter implements OnInit, AfterViewInit {
     this.filterForm.controls.location.setValue('');
   }
 
+  protected clearDate(event: Event): void {
+    event.stopPropagation();
+    this.filterForm.controls.dateRange.setValue({ start: null, end: null });
+  }
+
   protected toggleFilter(): void {
     this.isFilterVisible.update((value: boolean) => !value);
   }
 
   private updateDefaultState(formValue: Partial<FilterState>): void {
-    const isLocationEmpty = !formValue.location || formValue.location === '';
+
+    const isLocationEmpty = !formValue.location || formValue.location.trim() === '';
+    const isDateEmpty = !formValue.startDate && !formValue.endDate;
     
-    let isDefault = formValue.sort === 'newest' &&
-        formValue.date === null &&
-        isLocationEmpty;
+    const isSortDefault = !formValue.sort || formValue.sort === 'newest';
+
+    const isCategoryEmpty = !formValue.category || formValue.category.length === 0;
+
+    let isDefault = isSortDefault && isDateEmpty && isLocationEmpty && isCategoryEmpty;
     
     if (this.isUserPage()) {
-      const isCategoryEmpty = !formValue.category ||
-          formValue.category.length === 0;
       const isUnresolved = formValue.status === 'unresolved';
-      isDefault = isDefault && isCategoryEmpty && isUnresolved;
+      isDefault = isDefault && isUnresolved;
     }
 
     if (this.isAdminPage()) {
-      const isSurrenderedLocEmpty = !formValue.surrenderedLocation 
-          || formValue.surrenderedLocation === '';
+      let isSurrenderedLocEmpty = true;
+      if (this.itemType() === 'found') {
+        isSurrenderedLocEmpty = !formValue.surrenderedLocation || formValue.surrenderedLocation === '';
+      }
       
-      const defaultAdminStatus = this.adminStatusOptions().length > 0
-          ? this.initialAdminStatus()
-          : 'All Statuses';
-      
-      const isStatusDefault = formValue.status === defaultAdminStatus;
+      const isStatusDefault = !formValue.status || formValue.status === 'All Statuses';
 
       isDefault = isDefault && isSurrenderedLocEmpty && isStatusDefault;
     }
 
-    this.isDefaultState.set(isDefault || false);
+    this.isDefaultState.set(isDefault);
   }
 
   private emitFilter(formValue: Partial<FilterState>): void {
     const state: FilterState = {
       sort: (formValue.sort as 'newest' | 'oldest') || 'newest',
-      date: formValue.date || null,
+      startDate: formValue.startDate || null,
+      endDate: formValue.endDate || null,
       location: formValue.location || '',
       category: formValue.category || []
     };
@@ -310,7 +352,12 @@ export class Filter implements OnInit, AfterViewInit {
       if (this.adminStatusOptions().length > 0) {
         state.status = formValue.status || 'All Statuses';
       }
-      state.surrenderedLocation = formValue.surrenderedLocation || '';
+      
+      if (this.itemType() === 'found') {
+        state.surrenderedLocation = formValue.surrenderedLocation || '';
+      }
+      
+      state.category = formValue.category || [];
     }
 
     this.filterChange.emit(state);

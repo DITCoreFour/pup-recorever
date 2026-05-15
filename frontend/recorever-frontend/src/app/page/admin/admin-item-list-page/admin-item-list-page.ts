@@ -127,7 +127,8 @@ export class AdminItemListPage implements OnInit, AfterViewInit, OnDestroy {
   public itemToUnarchive = signal<Report | null>(null);
 
   public currentSort = signal<'newest' | 'oldest'>('newest');
-  public currentDateFilter = signal<Date | null>(null);
+  public currentStartDateFilter = signal<Date | null>(null);
+  public currentEndDateFilter = signal<Date | null>(null);
   public currentLocationFilter = signal('');
   public currentStatusFilter = signal('pending');
   public currentSurrenderedLocation = signal('');
@@ -141,31 +142,37 @@ export class AdminItemListPage implements OnInit, AfterViewInit, OnDestroy {
   public error = signal<string | null>(null);
 
   public visibleReports = computed((): Report[] => {
-    let reports = [...this.allReports()];
+  let reports = [...this.allReports()];
 
-    const query = this.searchQuery().toLowerCase().trim();
-    if (query) {
-      reports = reports.filter((r: Report): boolean =>
-        r.item_name.toLowerCase().includes(query) ||
-        r.description.toLowerCase().includes(query) ||
-        r.location.toLowerCase().includes(query)
-      );
-    }
+  const query = this.searchQuery().toLowerCase().trim();
+  if (query) {
+    reports = reports.filter((r: Report): boolean =>
+      r.item_name.toLowerCase().includes(query) ||
+      r.description.toLowerCase().includes(query) ||
+      r.location.toLowerCase().includes(query)
+    );
+  }
 
-    const dateFilter = this.currentDateFilter();
-    const locationFilter = this.currentLocationFilter();
-    const surrenderedLoc = this.currentSurrenderedLocation();
-    const sort = this.currentSort();
+  const startDateFilter = this.currentStartDateFilter();
+  const endDateFilter = this.currentEndDateFilter();
+  const locationFilter = this.currentLocationFilter();
+  const surrenderedLoc = this.currentSurrenderedLocation();
+  const sort = this.currentSort();
 
-    if (dateFilter) {
-      const filterDateStr = 
-          this.datePipe.transform(dateFilter, 'yyyy-MM-dd');
-      reports = reports.filter((report: Report): boolean => {
-        const reportDateStr = 
-            this.datePipe.transform(report.date_lost_found, 'yyyy-MM-dd');
-        return reportDateStr === filterDateStr;
-      });
-    }
+  if (startDateFilter || endDateFilter) {
+    const startStr = startDateFilter ? this.datePipe.transform(startDateFilter, 'yyyy-MM-dd') : null;
+    const endStr = endDateFilter ? this.datePipe.transform(endDateFilter, 'yyyy-MM-dd') : null;
+
+    reports = reports.filter((report: Report): boolean => {
+      const reportDateStr = this.datePipe.transform(report.date_lost_found, 'yyyy-MM-dd');
+      if (!reportDateStr) return false;
+
+      let inRange = true;
+      if (startStr && reportDateStr < startStr) inRange = false;
+      if (endStr && reportDateStr > endStr) inRange = false;
+      return inRange;
+    });
+  }
 
     if (locationFilter) {
       reports = reports.filter((r: Report): boolean =>
@@ -337,7 +344,8 @@ export class AdminItemListPage implements OnInit, AfterViewInit, OnDestroy {
 
   public onFilterChange(state: FilterState): void {
     this.currentSort.set(state.sort);
-    this.currentDateFilter.set(state.date);
+    this.currentStartDateFilter.set(state.startDate);
+    this.currentEndDateFilter.set(state.endDate);
     this.currentLocationFilter.set(state.location);
 
     if (state.category !== undefined) {

@@ -17,6 +17,7 @@ import {
   Validators,
   FormsModule
 } from '@angular/forms';
+import { of, forkJoin } from 'rxjs';
 import {
   switchMap,
   finalize,
@@ -24,9 +25,9 @@ import {
   debounceTime,
   distinctUntilChanged,
   map,
-  filter
+  filter,
+  catchError
 } from 'rxjs/operators';
-import { of } from 'rxjs';
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/auth/auth-service';
 
@@ -134,6 +135,7 @@ export class ClaimFormModal implements OnInit {
   protected matchingLostReports = signal<Report[]>([]);
   protected isSearchingReports = signal(false);
   protected selectedLostReportId = signal<number | null>(null);
+  protected isOfflineSearch = signal(false);
   
   // Signal to control zoom state
   protected isZoomed = signal(false);
@@ -222,11 +224,13 @@ export class ClaimFormModal implements OnInit {
   }
 
   private setupUserSearch(): void {
-    if (this.isReadOnly) return;
+  if (this.isReadOnly) return;
 
     this.claimForm.get('claimantName')?.valueChanges.pipe(
       map(value => typeof value === 'string' ? value.trim() : ''),
       tap(term => {
+        this.isOfflineSearch.set(false); 
+        
         if (!term) {
           this.filteredUsers.set([]);
           this.isSearchingUsers.set(false);
@@ -238,12 +242,29 @@ export class ClaimFormModal implements OnInit {
       debounceTime(500), 
       distinctUntilChanged(),
       tap(() => this.isSearchingUsers.set(true)),
-      switchMap(term => this.userService.searchUsers(term).pipe(
-        finalize(() => this.isSearchingUsers.set(false))
-      ))
+      switchMap(term => {
+        if (!navigator.onLine) {
+            this.isOfflineSearch.set(true);
+            this.isSearchingUsers.set(false);
+            return of([]);
+        }
+
+        return this.userService.searchUsers(term).pipe(
+          catchError((err) => {
+            console.error('Failed to search users', err);
+            this.toastService.showError
+                ('Network error while searching for users.');
+            return of([]); 
+          }),
+          finalize(() => this.isSearchingUsers.set(false))
+        );
+      })
     ).subscribe({
       next: users => this.filteredUsers.set(users),
-      error: () => this.isSearchingUsers.set(false)
+      error: () => {
+        this.isSearchingUsers.set(false);
+        this.filteredUsers.set([]);
+      }
     });
   }
 
@@ -270,16 +291,69 @@ export class ClaimFormModal implements OnInit {
     this.matchingLostReports.set([]);
     this.selectedLostReportId.set(null);
 
-    this.itemService.getPotentialMatches(currentFoundItem.report_id, userId)
-      .pipe(
+    const potential$ = this.itemService.getPotentialMatches
+      (currentFoundItem.report_id, userId).pipe(
+      catchError(() => of([] as Report[]))
+    );
+
+    const userLostReports$ = this.itemService.getReports
+      ({ type: 'lost', user_id: userId }).pipe(
+      map(res => res.items || []),
+      catchError(() => of([] as Report[]))
+    );
+
+    const exactMatch$ = this.itemService.getMatchForReport
+      (currentFoundItem.report_id).pipe(
+      switchMap(match => {
+        if (match && match.lost_report_id) {
+          return this.itemService.getReportById(match.lost_report_id).pipe(
+            catchError(() => of(null))
+          );
+        }
+        return of(null);
+      }),
+      catchError(() => of(null))
+    );
+
+    forkJoin([potential$, userLostReports$, exactMatch$]).pipe(
       finalize(() => this.isSearchingReports.set(false))
     ).subscribe({
-      next: (matches) => {
-        this.matchingLostReports.set(matches);
+      next: ([potential, userReports, exact]) => {
+        const combinedMap = new Map<number, Report>();
+
+        potential.forEach(r => combinedMap.set(r.report_id, r));
+        userReports.forEach(r => combinedMap.set(r.report_id, r));
+        
+        if (exact && exact.report_id) {
+          combinedMap.set(exact.report_id, exact);
+        }
+
+        const finalMatches = Array.from(combinedMap.values()).filter(r => {
+          const isVerified = r.status?.status_id ===
+              this.REPORT_STATUS.APPROVED;
+          const isOwnedByUser = r.user_id === userId;
+          
+          return isVerified && isOwnedByUser;
+        });
+
+        this.matchingLostReports.set(finalMatches);
+
+        if (exact && exact.report_id && finalMatches.some(m => m.report_id
+          === exact.report_id)) {
+          this.selectedLostReportId.set(exact.report_id);
+        }
       },
-      error: () => this.toastService
-          .showError('Failed to fetch matching reports')
+      error: () => this.toastService.showError
+          ('Failed to fetch matching reports')
     });
+  }
+
+  protected toggleLostReportSelection(reportId: number): void {
+    if (this.selectedLostReportId() === reportId) {
+      this.selectedLostReportId.set(null);
+    } else {
+      this.selectedLostReportId.set(reportId);
+    }
   }
 
   protected getUserAvatar(user: User): string {
@@ -429,8 +503,8 @@ export class ClaimFormModal implements OnInit {
     this.isSaving.set(true);
     const reportId = this.report()?.report_id;
     if (reportId) {
-      this.adminService.updateReportStatus(reportId, newStatusId).pipe(
-        tap(() => {
+      this.adminService.updateReportStatus(reportId, newStatusId).subscribe({
+        next: () => {
           this.report.update(r => {
             if (!r) return null;
 
@@ -448,13 +522,18 @@ export class ClaimFormModal implements OnInit {
               }
             };
           });
-        }),
-        finalize(() => {
           this.isSaving.set(false);
           this.closeDropdown();
           this.statusChange.emit(newStatusId);
-        })
-      ).subscribe();
+        },
+        error: (err) => {
+          console.error('Failed to update status', err);
+          this.toastService.showError('Failed to update status.' +
+              'Please try again.');
+          this.isSaving.set(false);
+          this.closeDropdown();
+        }
+      });
     } else {
       this.isSaving.set(false);
     }
@@ -494,7 +573,8 @@ export class ClaimFormModal implements OnInit {
     const formValues = this.claimForm.getRawValue();
 
     const cName = typeof formValues.claimantName === 'object'
-      ? formValues.claimantName.name
+      ? `${formValues.claimantName.first_name} 
+      ${formValues.claimantName.last_name}`
       : formValues.claimantName;
 
     if (this.activeReport()) {
@@ -508,8 +588,8 @@ export class ClaimFormModal implements OnInit {
         matching_lost_report_id: this.selectedLostReportId()
       };
 
-      this.claimService.createManualClaim(payload).pipe(
-        tap(() => {
+      this.claimService.createManualClaim(payload).subscribe({
+        next: () => {
           this.report.update(r => r ? {
             ...r,
             status: {
@@ -518,13 +598,17 @@ export class ClaimFormModal implements OnInit {
               status_name: 'claimed'
             }
           } : null);
-        }),
-        finalize(() => {
           this.isSaving.set(false);
           this.statusChange.emit(ReportStatusEnum.CLAIMED);
           this.onClose();
-        })
-      ).subscribe();
+        },
+        error: (err) => {
+          console.error('Failed to save claim', err);
+          this.toastService.showError('Failed to submit the claim.' +
+              ' Please check your connection and try again.');
+          this.isSaving.set(false);
+        }
+      });
     } else if (this.activeClaim()) {
        this.isSaving.set(false);
        this.onClose();
