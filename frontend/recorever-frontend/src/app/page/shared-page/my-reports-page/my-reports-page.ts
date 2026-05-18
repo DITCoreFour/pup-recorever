@@ -124,11 +124,15 @@ export class MyReportsPage implements OnInit, AfterViewInit, OnDestroy {
       reports = reports.filter((r: Report) => r.type === type);
     }
 
-    if (statusFilter.value !== null) {
-      reports = reports.filter((r: Report) => 
-          r.status.status_id === statusFilter.value
-      );
-    }
+      if (statusFilter.value !== null) {
+        reports = reports.filter((r: Report) => {
+          if (statusFilter.value === ReportStatusEnum.APPROVED) {
+            return r.status.status_id === ReportStatusEnum.APPROVED || 
+                  r.status.status_id === ReportStatusEnum.MATCHED;
+          }
+          return r.status.status_id === statusFilter.value;
+        });
+      }
 
     if (query) {
       reports = reports.filter((r: Report) => 
