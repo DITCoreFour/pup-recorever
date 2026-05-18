@@ -57,8 +57,10 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no root@72.61.120.30 << 'EOF'
           fuser -k 8081/tcp || true
-          nohup java -jar /var/opt/dev-backend/*.jar \
-            > /root/recorever-dev-backend.log 2>&1 &
+          cd /var/opt/dev-backend/
+          export $(grep -v '^#' .env | xargs)
+          nohup java -jar *.jar > /root/recorever-dev-backend.log 2>&1 &
+          sleep 3
           EOF
 
   # --- PRODUCTION JOB ---
